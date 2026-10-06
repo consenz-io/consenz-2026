@@ -22,7 +22,7 @@ function sideGaps(rect, vw, vh) {
     top: rect.top - ARROW_SIZE - MARGIN,
     bottom: vh - rect.bottom - ARROW_SIZE - MARGIN,
     left: rect.left - ARROW_SIZE - MARGIN,
-    right: vw - rect.right - ARROW_SIZE - MARGIN,
+    right: vw - rect.right - ARROW_SIZE - MARGIN
   };
 }
 
@@ -42,7 +42,7 @@ function computePosition(rect, preferred, isRTL, bubbleH = TOOLTIP_HEIGHT) {
     top: gaps.top >= bubbleH,
     bottom: gaps.bottom >= bubbleH,
     left: gaps.left >= TOOLTIP_WIDTH,
-    right: gaps.right >= TOOLTIP_WIDTH,
+    right: gaps.right >= TOOLTIP_WIDTH
   };
 
   if (preferred !== 'auto' && fits[preferred]) return preferred;
@@ -50,7 +50,7 @@ function computePosition(rect, preferred, isRTL, bubbleH = TOOLTIP_HEIGHT) {
   // Auto-flip priority — try every side until one fits without hiding the target.
   // Prefer vertical placement (bottom/top) first, then horizontal.
   const priority = ['bottom', 'top', 'right', 'left'];
-  const found = priority.find(p => fits[p]);
+  const found = priority.find((p) => fits[p]);
   if (found) return found;
 
   // Nothing fits the full bubble. Never overlap the target — instead pick the
@@ -59,7 +59,7 @@ function computePosition(rect, preferred, isRTL, bubbleH = TOOLTIP_HEIGHT) {
   // A horizontal side (left/right) is picked when it has clearly more room,
   // which handles tall, vertically-centered targets that leave little space
   // above or below (as in the voting-bar step).
-  return Object.keys(gaps).reduce((a, b) => (gaps[b] > gaps[a] ? b : a), 'bottom');
+  return Object.keys(gaps).reduce((a, b) => gaps[b] > gaps[a] ? b : a, 'bottom');
 }
 
 // `bubbleH` is the measured bubble height (fallback to estimate). The bubble is
@@ -77,38 +77,38 @@ function getTooltipStyle(rect, position, bubbleH = TOOLTIP_HEIGHT) {
   const clampX = (x) => Math.max(8, Math.min(vw - TOOLTIP_WIDTH - 8, x));
 
   switch (position) {
-    case 'top': {
-      // Bubble sits ABOVE the target: its bottom edge is just above target.top.
-      // Cap its height to the gap above so it never reaches into the target.
-      const gap = Math.max(80, gaps.top);
-      const h = Math.min(bubbleH, gap);
-      const bottom = rect.top - ARROW_SIZE - 8;
-      return {
-        left: clampX(centerX - TOOLTIP_WIDTH / 2),
-        top: Math.max(8, bottom - h),
-        maxHeight: gap,
-      };
-    }
-    case 'bottom': {
-      // Bubble sits BELOW the target: its top edge is just below target.bottom.
-      // Cap its height to the gap below so it never reaches into the target.
-      const gap = Math.max(80, gaps.bottom);
-      return {
-        left: clampX(centerX - TOOLTIP_WIDTH / 2),
-        top: rect.bottom + ARROW_SIZE + 8,
-        maxHeight: gap,
-      };
-    }
+    case 'top':{
+        // Bubble sits ABOVE the target: its bottom edge is just above target.top.
+        // Cap its height to the gap above so it never reaches into the target.
+        const gap = Math.max(80, gaps.top);
+        const h = Math.min(bubbleH, gap);
+        const bottom = rect.top - ARROW_SIZE - 8;
+        return {
+          left: clampX(centerX - TOOLTIP_WIDTH / 2),
+          top: Math.max(8, bottom - h),
+          maxHeight: gap
+        };
+      }
+    case 'bottom':{
+        // Bubble sits BELOW the target: its top edge is just below target.bottom.
+        // Cap its height to the gap below so it never reaches into the target.
+        const gap = Math.max(80, gaps.bottom);
+        return {
+          left: clampX(centerX - TOOLTIP_WIDTH / 2),
+          top: rect.bottom + ARROW_SIZE + 8,
+          maxHeight: gap
+        };
+      }
     case 'left':
       return {
         left: rect.left - ARROW_SIZE - 8,
         top: Math.max(8, Math.min(vh - bubbleH - 8, centerY - bubbleH / 2)),
-        transform: 'translateX(-100%)',
+        transform: 'translateX(-100%)'
       };
     case 'right':
       return {
         left: rect.right + ARROW_SIZE + 8,
-        top: Math.max(8, Math.min(vh - bubbleH - 8, centerY - bubbleH / 2)),
+        top: Math.max(8, Math.min(vh - bubbleH - 8, centerY - bubbleH / 2))
       };
     default:
       return { left: clampX(centerX - TOOLTIP_WIDTH / 2), top: rect.bottom + ARROW_SIZE + 8 };
@@ -128,19 +128,19 @@ function renderBodyWithButtonHighlight(body) {
       const inner = part.slice(1, -1);
       const isPro = proTerms.includes(inner);
       const isCon = conTerms.includes(inner);
-      const colorClasses = isPro
-        ? 'bg-green-100 text-green-800 border-green-400'
-        : isCon
-        ? 'bg-red-100 text-red-800 border-red-400'
-        : 'bg-blue-100 text-blue-800 border-blue-300';
+      const colorClasses = isPro ?
+      'bg-green-100 text-green-800 border-green-400' :
+      isCon ?
+      'bg-red-100 text-red-800 border-red-400' :
+      'bg-blue-100 text-blue-800 border-blue-300';
       return (
         <span
           key={i}
-          className={`inline-flex items-center ${colorClasses} font-bold px-1.5 py-0.5 rounded border shadow-sm mx-0.5`}
-        >
+          className={`inline-flex items-center ${colorClasses} font-bold px-1.5 py-0.5 rounded border shadow-sm mx-0.5`}>
+          
           {part}
-        </span>
-      );
+        </span>);
+
     }
     return <React.Fragment key={i}>{part}</React.Fragment>;
   });
@@ -151,20 +151,20 @@ function ArrowEl({ position, isRTL }) {
   const styles = {
     top: {
       className: `${base} border-l-[10px] border-r-[10px] border-t-[10px] border-l-transparent border-r-transparent border-b-transparent border-t-white`,
-      style: { bottom: -10, left: '50%', transform: 'translateX(-50%)' },
+      style: { bottom: -10, left: '50%', transform: 'translateX(-50%)' }
     },
     bottom: {
       className: `${base} border-l-[10px] border-r-[10px] border-b-[10px] border-l-transparent border-r-transparent border-t-transparent border-b-white`,
-      style: { top: -10, left: '50%', transform: 'translateX(-50%)' },
+      style: { top: -10, left: '50%', transform: 'translateX(-50%)' }
     },
     left: {
       className: `${base} border-t-[10px] border-b-[10px] border-l-[10px] border-t-transparent border-b-transparent border-r-transparent border-l-white`,
-      style: { right: -10, top: '50%', transform: 'translateY(-50%)' },
+      style: { right: -10, top: '50%', transform: 'translateY(-50%)' }
     },
     right: {
       className: `${base} border-t-[10px] border-b-[10px] border-r-[10px] border-t-transparent border-b-transparent border-l-transparent border-r-white`,
-      style: { left: -10, top: '50%', transform: 'translateY(-50%)' },
-    },
+      style: { left: -10, top: '50%', transform: 'translateY(-50%)' }
+    }
   };
   const s = styles[position] || styles.bottom;
   return <div className={s.className} style={s.style} />;
@@ -185,7 +185,7 @@ export default function TutorialTooltip({
   isSummary,
   isInterstitial,
   onOpenPointsModal,
-  onRequestSkip,
+  onRequestSkip
 }) {
   const { language } = useLanguage();
   const heading = tTutorial(step.heading, language);
@@ -325,7 +325,7 @@ export default function TutorialTooltip({
     const bubbleH = tooltipRef.current.getBoundingClientRect().height || TOOLTIP_HEIGHT;
     const rp = computePosition(rect, step.tooltipPosition, isRTL, bubbleH);
     const next = getTooltipStyle(rect, rp, bubbleH);
-    setResolvedPosition((prevRp) => (prevRp === rp ? prevRp : rp));
+    setResolvedPosition((prevRp) => prevRp === rp ? prevRp : rp);
     setPos((prev) => {
       if (!prev) return next;
       if (prev.top === next.top && prev.left === next.left && prev.transform === next.transform) return prev;
@@ -346,12 +346,12 @@ export default function TutorialTooltip({
 
   // Summary step — centered card, no arrow, finish button
   if (isSummary) {
-    const summaryStyle = mobile
-      ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', transform: 'none' }
-      : { width: TOOLTIP_WIDTH + 40, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+    const summaryStyle = mobile ?
+    { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', transform: 'none' } :
+    { width: TOOLTIP_WIDTH + 40, left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
     return createPortal(
       <>
-      {!hasExternalConfirm && showConfirm && (
+      {!hasExternalConfirm && showConfirm &&
         <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
             <p className="text-slate-800 font-semibold text-center text-base">
@@ -364,26 +364,26 @@ export default function TutorialTooltip({
               <Button variant="outline" className="flex-1" onClick={() => setShowConfirm(false)}>
                 {tTutorial('ui.continue', language)}
               </Button>
-              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => { setShowConfirm(false); onSkip(); }}>
+              <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => {setShowConfirm(false);onSkip();}}>
                 {tTutorial('ui.exit', language)}
               </Button>
             </div>
           </div>
         </div>
-      )}
+        }
       <div
-        className="fixed shadow-2xl border-2 border-blue-300 p-5 text-center"
-        style={{ borderRadius: mobile ? '16px 16px 0 0' : '16px', zIndex: 99999, background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)', ...summaryStyle }}
-        dir={isRTL ? 'rtl' : 'ltr'}
-        role="dialog"
-        aria-modal="false"
-        aria-label={heading}
-      >
+          className="fixed shadow-2xl border-2 border-blue-300 p-5 text-center"
+          style={{ borderRadius: mobile ? '16px 16px 0 0' : '16px', zIndex: 99999, background: 'linear-gradient(135deg, #ffffff 0%, #f0f4ff 100%)', ...summaryStyle }}
+          dir={isRTL ? 'rtl' : 'ltr'}
+          role="dialog"
+          aria-modal="false"
+          aria-label={heading}>
+          
         <button
-          onClick={handleSkipRequest}
-          className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors"
-          aria-label={isRTL ? 'סגור' : 'Close'}
-        >
+            onClick={handleSkipRequest}
+            className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors"
+            aria-label={isRTL ? 'סגור' : 'Close'}>
+            
           <X className="w-4 h-4" />
         </button>
 
@@ -396,34 +396,34 @@ export default function TutorialTooltip({
 
           {/* Progress dots */}
           <div className="flex items-center gap-1.5 justify-center mt-1">
-            {Array.from({ length: totalSteps }).map((_, i) => (
+            {Array.from({ length: totalSteps }).map((_, i) =>
               <div
                 key={i}
                 className={`rounded-full transition-all duration-200 ${
-                  i === stepIndex
-                    ? 'w-4 h-2 bg-blue-600'
-                    : i < stepIndex
-                    ? 'w-2 h-2 bg-blue-300'
-                    : 'w-2 h-2 bg-slate-200'
-                }`}
-              />
-            ))}
+                i === stepIndex ?
+                'w-4 h-2 bg-blue-600' :
+                i < stepIndex ?
+                'w-2 h-2 bg-blue-300' :
+                'w-2 h-2 bg-slate-200'}`
+                } />
+
+              )}
           </div>
 
           <div className="flex items-center gap-2 w-full mt-1">
             <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="flex-1 text-slate-500"
-            >
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                className="flex-1 text-slate-500">
+                
               {tTutorial('ui.back', language)}
             </Button>
             <Button
-              size="sm"
-              onClick={onNext}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-            >
+                size="sm"
+                onClick={onNext}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+                
               {tTutorial('ui.finish', language)}
             </Button>
           </div>
@@ -437,7 +437,7 @@ export default function TutorialTooltip({
   return createPortal(
     <>
     {/* Confirm skip dialog — only rendered when not delegated to parent */}
-    {!hasExternalConfirm && showConfirm && (
+    {!hasExternalConfirm && showConfirm &&
       <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/40 p-4">
         <div className="bg-white rounded-2xl shadow-2xl max-w-xs w-full p-6 flex flex-col gap-4" dir={isRTL ? 'rtl' : 'ltr'}>
           <p className="text-slate-800 font-semibold text-center text-base">
@@ -450,28 +450,28 @@ export default function TutorialTooltip({
             <Button variant="outline" className="flex-1" onClick={() => setShowConfirm(false)}>
               {tTutorial('ui.continue', language)}
             </Button>
-            <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => { setShowConfirm(false); onSkip(); }}>
+            <Button className="flex-1 bg-red-500 hover:bg-red-600 text-white" onClick={() => {setShowConfirm(false);onSkip();}}>
               {tTutorial('ui.exit', language)}
             </Button>
           </div>
         </div>
       </div>
-    )}
+      }
 
     <div
-      ref={tooltipRef}
-      className="fixed shadow-2xl border-l-4 border-blue-500 tutorial-highlight-bubble flex flex-col"
-      style={isInterstitial
-        ? { width: 380, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', maxWidth: 'calc(100vw - 32px)', maxHeight: 'calc(100vh - 32px)', borderRadius: '16px', padding: '24px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)' }
-        : mobile
-        ? { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '20px 16px 24px', zIndex: 99999, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', borderLeft: '4px solid #3b82f6', maxHeight: 'calc(100vh - 16px)' }
-        : { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '18px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', maxHeight: 'calc(100vh - 16px)', ...pos }
-      }
-      dir={isRTL ? 'rtl' : 'ltr'}
-      role="dialog"
-      aria-modal={isInterstitial ? 'true' : 'false'}
-      aria-label={step.heading}
-    >
+        ref={tooltipRef}
+        className="fixed shadow-2xl border-l-4 border-blue-500 tutorial-highlight-bubble flex flex-col"
+        style={isInterstitial ?
+        { width: 380, left: '50%', top: '50%', transform: 'translate(-50%, -50%)', maxWidth: 'calc(100vw - 32px)', maxHeight: 'calc(100vh - 32px)', borderRadius: '16px', padding: '24px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)' } :
+        mobile ?
+        { left: 0, right: 0, bottom: 0, top: 'auto', width: '100%', borderRadius: '16px 16px 0 0', padding: '20px 16px 24px', zIndex: 99999, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', borderLeft: '4px solid #3b82f6', maxHeight: 'calc(100vh - 16px)' } :
+        { width: TOOLTIP_WIDTH, borderRadius: '12px', padding: '18px', zIndex: 10002, background: 'linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%)', maxHeight: 'calc(100vh - 16px)', ...pos }
+        }
+        dir={isRTL ? 'rtl' : 'ltr'}
+        role="dialog"
+        aria-modal={isInterstitial ? 'true' : 'false'}
+        aria-label={step.heading}>
+        
       {/* Tour identifier badge */}
       <div className="flex items-center gap-1 mb-2 text-blue-600 flex-shrink-0">
         <Compass className="w-3.5 h-3.5" />
@@ -480,144 +480,144 @@ export default function TutorialTooltip({
 
       {/* Close button */}
       <button
-        onClick={handleSkipRequest}
-        className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors z-10"
-        aria-label={isRTL ? 'סגור' : 'Close'}
-      >
+          onClick={handleSkipRequest}
+          className="absolute top-3 end-3 text-slate-400 hover:text-slate-600 transition-colors z-10"
+          aria-label={isRTL ? 'סגור' : 'Close'}>
+          
         <X className="w-4 h-4" />
       </button>
       {!mobile && !isInterstitial && <ArrowEl position={resolvedPosition} isRTL={isRTL} />}
 
       {/* Success state */}
-      {showSuccess && successMessage ? (
+      {showSuccess && successMessage ?
         <div className="flex flex-col items-center gap-2 py-3 text-center">
           <CheckCircle className="w-10 h-10 text-green-500" />
           <p className="font-semibold text-green-700">{successMessage}</p>
-        </div>
-      ) : showSignupPrompt ? (
+        </div> :
+        showSignupPrompt ?
         <div className="flex flex-col items-center gap-3 py-2 text-center">
           <UserPlus className="w-9 h-9 text-blue-500" />
           <h3 className="font-bold text-slate-900 text-base">{tTutorial('signup.prompt.heading', language)}</h3>
           <p className="text-sm text-slate-600 leading-relaxed">{tTutorial('signup.prompt.body', language)}</p>
           <Button
             className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => base44.auth.redirectToLogin(window.location.href)}
-          >
+            onClick={() => base44.auth.redirectToLogin(window.location.href)}>
+            
             {tTutorial('signup.prompt.cta', language)}
           </Button>
-        </div>
-      ) : (
+        </div> :
+
         <>
           {/* Scrollable content area — grows as needed, scrolls when the bubble
-              hits its max height, so the pinned footer stays visible. */}
+               hits its max height, so the pinned footer stays visible. */}
           <div className="flex-1 min-h-0 overflow-y-auto">
              {/* Interstitial icon */}
-             {isInterstitial && (
-               <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-3">
+             {isInterstitial &&
+            <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg mb-3">
                  <Layers className="w-7 h-7 text-white" />
                </div>
-             )}
+            }
              {/* Heading */}
              <h3 className="font-bold text-slate-900 text-lg mb-2">{heading}</h3>
 
             {/* Body */}
-            {body && (
-              <p className="text-sm text-slate-600 mb-3 leading-relaxed">
-                {step.highlightButton
-                  ? renderBodyWithButtonHighlight(body)
-                  : body}
+            {body &&
+            <p className="text-sm text-slate-600 mb-3 leading-relaxed text-justify">
+                {step.highlightButton ?
+              renderBodyWithButtonHighlight(body) :
+              body}
               </p>
-            )}
+            }
 
             {/* Extra hint for points step */}
-            {step.id === 'points-ranking-explain' && (
-              <p className="text-xs text-slate-500 italic mb-3">
+            {step.id === 'points-ranking-explain' &&
+            <p className="text-xs text-slate-500 italic mb-3">
                 {tTutorial('ui.clickPointsInfo', language)}
               </p>
-            )}
+            }
 
             {/* Points table */}
-            {step.table && step.table.length > 0 && (
-              <table className="w-full text-xs mb-3 border-collapse">
+            {step.table && step.table.length > 0 &&
+            <table className="w-full text-xs mb-3 border-collapse">
                 <tbody>
                   {step.table.map((row, i) => {
-                    const isCost = row.value.startsWith('−') || row.value.startsWith('-');
-                    return (
-                      <tr key={i} className="border-b border-slate-100 last:border-0">
+                  const isCost = row.value.startsWith('−') || row.value.startsWith('-');
+                  return (
+                    <tr key={i} className="border-b border-slate-100 last:border-0">
                         <td className="py-1 text-slate-600 text-start">{tTutorial(row.label, language)}</td>
                         <td className={`py-1 font-bold text-end ${isCost ? 'text-red-600' : 'text-green-600'}`}>
                           {row.value}
                         </td>
-                      </tr>
-                    );
-                  })}
+                      </tr>);
+
+                })}
                 </tbody>
               </table>
-            )}
+            }
           </div>
 
           {/* Pinned footer — progress dots + navigation, always visible */}
           <div className="flex-shrink-0 pt-3">
             {/* Progress dots */}
             <div className="flex items-center gap-1.5 justify-center mb-3">
-              {Array.from({ length: totalSteps }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`rounded-full transition-all duration-200 ${
-                    i === stepIndex
-                      ? 'w-4 h-2 bg-blue-600'
-                      : i < stepIndex
-                      ? 'w-2 h-2 bg-blue-300'
-                      : 'w-2 h-2 bg-slate-200'
-                  }`}
-                />
-              ))}
+              {Array.from({ length: totalSteps }).map((_, i) =>
+              <div
+                key={i}
+                className={`rounded-full transition-all duration-200 ${
+                i === stepIndex ?
+                'w-4 h-2 bg-blue-600' :
+                i < stepIndex ?
+                'w-2 h-2 bg-blue-300' :
+                'w-2 h-2 bg-slate-200'}`
+                } />
+
+              )}
             </div>
 
             {/* Footer */}
-            {ctaLabel && nextDisabled ? (
-              <div className="mt-1">
+            {ctaLabel && nextDisabled ?
+            <div className="mt-1">
                 <div className="w-full py-2 px-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 text-sm font-medium text-center leading-snug">
                   {ctaLabel}
                 </div>
-              </div>
-            ) : (
+              </div> :
+
             <div className="flex items-center gap-2">
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onBack}
-                  disabled={stepIndex === 0}
-                  className="flex-1 text-slate-500"
-                >
+                variant="ghost"
+                size="sm"
+                onClick={onBack}
+                disabled={stepIndex === 0}
+                className="flex-1 text-slate-500">
+                
                   {tTutorial('ui.back', language)}
                 </Button>
 
-                {isPractice && nextDisabled ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled
-                    className="flex-1 text-slate-400 cursor-not-allowed opacity-60"
-                  >
+                {isPractice && nextDisabled ?
+              <Button
+                variant="outline"
+                size="sm"
+                disabled
+                className="flex-1 text-slate-400 cursor-not-allowed opacity-60">
+                
                     {tTutorial('ui.next', language)}
+                  </Button> :
+
+              <Button
+                size="sm"
+                onClick={onNext}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                
+                    {stepIndex === totalSteps - 1 ?
+                tTutorial('ui.finish', language) :
+                tTutorial('ui.next', language)}
                   </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    onClick={onNext}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {stepIndex === totalSteps - 1
-                      ? tTutorial('ui.finish', language)
-                      : tTutorial('ui.next', language)}
-                  </Button>
-                )}
+              }
               </div>
-            )}
+            }
           </div>
         </>
-      )}
+        }
 
     </div>
     </>,
