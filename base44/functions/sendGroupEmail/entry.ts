@@ -5,31 +5,51 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 // headers that redirect the "Manage request" link to an attacker domain.
 const APP_BASE_URL = 'https://consenz-copy-4ca3772e.base44.app';
 
-const joinRequestEmail = (language, userName, userEmail, groupName, manageUrl) => ({
-  subject: language === 'he'
-    ? `בקשת הצטרפות לקבוצה: ${groupName}`
-    : language === 'ar'
-    ? `طلب انضمام إلى مجموعة: ${groupName}`
-    : `Request to join group: ${groupName}`,
-  body: language === 'he'
-    ? `שלום,\n\n${userName} מבקש/ת להצטרף לקבוצה "${groupName}".\n\nאימייל: ${userEmail}\n\nלניהול הבקשה:\n${manageUrl}`
-    : language === 'ar'
-    ? `مرحباً،\n\n${userName} يطلب الانضمام إلى مجموعة "${groupName}".\n\nالبريد الإلكتروني: ${userEmail}\n\nإدارة الطلب:\n${manageUrl}`
-    : `Hello,\n\n${userName} wants to join "${groupName}".\n\nEmail: ${userEmail}\n\nManage request:\n${manageUrl}`,
-});
+// HTML-escape user-controlled strings before interpolating into email bodies.
+// SendEmail treats `body` as HTML, so unescaped memberName / groupName / etc.
+// would be rendered as markup by the recipient's mail client — enabling
+// content spoofing / phishing from the app's verified sender.
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
 
-const memberAddedEmail = (language, memberName, adminName, groupName) => ({
-  subject: language === 'he'
-    ? `נוספת לקבוצה: ${groupName}`
-    : language === 'ar'
-    ? `تمت إضافتك إلى المجموعة: ${groupName}`
-    : `You were added to group: ${groupName}`,
-  body: language === 'he'
-    ? `שלום ${memberName},\n\n${adminName} הוסיף אותך לקבוצה "${groupName}".\n\nכעת תוכל לראות ולהשתתף במסמכים של הקבוצה.\n\nבברכה,\nצוות Consenz`
-    : language === 'ar'
-    ? `مرحباً ${memberName},\n\nقام ${adminName} بإضافتك إلى مجموعة "${groupName}".\n\nيمكنك الآن عرض مستندات المجموعة والمشاركة فيها.\n\nمع تحيات فريق Consenz`
-    : `Hello ${memberName},\n\n${adminName} added you to the group "${groupName}".\n\nYou can now view and participate in the group's documents.\n\nBest regards,\nConsenz Team`,
-});
+const joinRequestEmail = (language, userName, userEmail, groupName, manageUrl) => {
+  const n = escapeHtml(userName);
+  const e = escapeHtml(userEmail);
+  const g = escapeHtml(groupName);
+  return {
+    subject: language === 'he'
+      ? `בקשת הצטרפות לקבוצה: ${groupName}`
+      : language === 'ar'
+      ? `طلب انضمام إلى مجموعة: ${groupName}`
+      : `Request to join group: ${groupName}`,
+    body: language === 'he'
+      ? `שלום,\n\n${n} מבקש/ת להצטרף לקבוצה "${g}".\n\nאימייל: ${e}\n\nלניהול הבקשה:\n${manageUrl}`
+      : language === 'ar'
+      ? `مرحباً،\n\n${n} يطلب الانضمام إلى مجموعة "${g}".\n\nالبريد الإلكتروني: ${e}\n\nإدارة الطلب:\n${manageUrl}`
+      : `Hello,\n\n${n} wants to join "${g}".\n\nEmail: ${e}\n\nManage request:\n${manageUrl}`,
+  };
+};
+
+const memberAddedEmail = (language, memberName, adminName, groupName) => {
+  const m = escapeHtml(memberName);
+  const a = escapeHtml(adminName);
+  const g = escapeHtml(groupName);
+  return {
+    subject: language === 'he'
+      ? `נוספת לקבוצה: ${groupName}`
+      : language === 'ar'
+      ? `تمت إضافتك إلى المجموعة: ${groupName}`
+      : `You were added to group: ${groupName}`,
+    body: language === 'he'
+      ? `שלום ${m},\n\n${a} הוסיף אותך לקבוצה "${g}".\n\nכעת תוכל לראות ולהשתתף במסמכים של הקבוצה.\n\nבברכה,\nצוות Consenz`
+      : language === 'ar'
+      ? `مرحباً ${m},\n\nقام ${a} بإضافتك إلى مجموعة "${g}".\n\nيمكنك الآن عرض مستندات المجموعة والمشاركة فيها.\n\nمع تحيات فريق Consenz`
+      : `Hello ${m},\n\n${a} added you to the group "${g}".\n\nYou can now view and participate in the group's documents.\n\nBest regards,\nConsenz Team`,
+  };
+};
 
 export default async function(req) {
   try {

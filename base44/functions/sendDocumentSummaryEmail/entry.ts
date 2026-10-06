@@ -27,12 +27,24 @@ function sanitizeEmailHtml(html) {
     .replace(/&colon;/gi, ':');
   s = s.replace(/((?:href|src|action|xlink:href)\s*=\s*)("[^"]*"|'[^']*'|[^\s>]+)/gi, (m, attr, val) => {
     const q = val[0];
-    if (q === '"' || q === "'") return attr + q + decodeEntities(val.slice(1, -1)) + q;
+    if (q === '"' || q === "'") {
+      // Decode entities, then strip leading whitespace/control characters
+      // (including \t, \n, \r, null, and all C0 controls 0x00–0x20) that
+      // browsers ignore when parsing the URL scheme. Without this trim, a
+      // payload like href=" javascript:alert(1)" survives the scheme regex
+      // below (which expects the scheme immediately after the quote) but
+      // still executes in the mail client because the browser strips the
+      // leading space before scheme resolution.
+      const decoded = decodeEntities(val.slice(1, -1)).replace(/^[\s\x00-\x20]+/, '');
+      return attr + q + decoded + q;
+    }
     return attr + decodeEntities(val);
   });
 
-  // Neutralize javascript:/vbscript:/data: URLs in href/src/action
-  s = s.replace(/(href|src|action|xlink:href)\s*=\s*("(?:javascript|vbscript|data):[^"]*"|'(?:javascript|vbscript|data):[^']*'|(?:javascript|vbscript|data):[^\s>]*)/gi, '$1="#"');
+  // Neutralize javascript:/vbscript:/data: URLs in href/src/action.
+  // The leading-[\s\x00-\x20]* inside the quotes catches any residual
+  // whitespace/control chars that survived the trim above (defense in depth).
+  s = s.replace(/(href|src|action|xlink:href)\s*=\s*("[\s\x00-\x20]*(?:javascript|vbscript|data):[^"]*"|'[\s\x00-\x20]*(?:javascript|vbscript|data):[^']*'|[\s\x00-\x20]*(?:javascript|vbscript|data):[^\s>]*)/gi, '$1="#"');
   // Remove style attributes containing expression()/javascript:/vbscript:
   s = s.replace(/\s+style\s*=\s*("[^"]*(?:expression|javascript|vbscript)[^"]*"|'[^']*(?:expression|javascript|vbscript)[^']*')/gi, '');
   return s;
