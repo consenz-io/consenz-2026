@@ -667,6 +667,16 @@ export default function CommentsSection({ entityType, entityId, user, documentId
         </Alert>
       )}
 
+      {entityType === 'document' && (
+        <p className="text-xs text-slate-500 leading-relaxed">
+          {language === 'he'
+            ? 'כאן עולות הערות על המסמך כולו. לתגובות על סעיף מסוים, לכל סעיף בהמשך יש דיון משלו — שם הוא הופך להצעה שמתקבלת או נדחית בהצבעה.'
+            : language === 'ar'
+            ? 'تُطرح هنا الملاحظات حول المستند ككل. لكل قسم أدناه نقاشه الخاص — حيث يتحول إلى اقتراح يُقبل أو يُرفض بالتصويت.'
+            : 'Comments about the document as a whole go here. Each section below has its own discussion — where it becomes a proposal that\'s accepted or rejected by vote.'}
+        </p>
+      )}
+
       <div className="space-y-3">
         {isLoading ? (
           <div className="text-center py-8 text-slate-500">{t('loadingComments')}</div>
