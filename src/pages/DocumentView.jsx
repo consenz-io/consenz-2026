@@ -54,7 +54,7 @@ export default function DocumentView() {
   const [showCreateSuggestion, setShowCreateSuggestion] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
   const [showContributorsModal, setShowContributorsModal] = useState(false);
-  const [showDescriptionComments, setShowDescriptionComments] = useState(false);
+  const [showDescriptionComments, setShowDescriptionComments] = useState(() => !!commentIdFromUrl);
   const [openSuggestionId, setOpenSuggestionId] = useState(null);
   const [newlyCreatedSuggestion, setNewlyCreatedSuggestion] = useState(null);
   const [showAgreementModal, setShowAgreementModal] = useState(false);
