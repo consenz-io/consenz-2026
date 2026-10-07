@@ -67,6 +67,10 @@ export default function DocumentView() {
   const [showSummaryDialog, setShowSummaryDialog] = useState(false);
   const [pendingConVoteSectionId, setPendingConVoteSectionId] = useState(null);
 
+  // Scroll position captured before opening the document-level discussion thread,
+  // so we can restore it when the user closes the thread.
+  const descriptionCommentsScrollRef = React.useRef(0);
+
   // Fire tutorial event when document page mounts
   useEffect(() => {
     const timer = setTimeout(() => window.dispatchEvent(new Event('document:entered')), 100);
@@ -574,7 +578,18 @@ export default function DocumentView() {
                   isRTL={isRTL}
                   active={showDescriptionComments}
                   count={documentComments.length}
-                  onClick={() => setShowDescriptionComments(!showDescriptionComments)}
+                  onClick={() => {
+                    if (showDescriptionComments) {
+                      // Closing — restore the scroll position from before the thread was opened
+                      const savedY = descriptionCommentsScrollRef.current;
+                      setShowDescriptionComments(false);
+                      setTimeout(() => window.scrollTo({ top: savedY, behavior: 'smooth' }), 50);
+                    } else {
+                      // Opening — capture current scroll position first
+                      descriptionCommentsScrollRef.current = window.scrollY;
+                      setShowDescriptionComments(true);
+                    }
+                  }}
                 />
                 <div className="flex items-center gap-2 flex-wrap">
                   {needsTranslationHighlight(document, language) && (
