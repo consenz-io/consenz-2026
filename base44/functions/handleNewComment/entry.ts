@@ -152,6 +152,79 @@ Deno.serve(async (req) => {
           });
         }
       }
+    } else if (comment.rootEntityType === 'document') {
+      const documentId = comment.rootEntityId;
+      const documents = await base44.asServiceRole.entities.Document.filter({ id: documentId });
+      const document = documents[0];
+      if (!document) {
+        return Response.json({ message: 'Document not found' }, { status: 200 });
+      }
+
+      const actionUrl = `/documentview?id=${documentId}&commentId=${comment.id}`;
+      const nameReplacements = { name: commenterName };
+
+      // Reply notification — notify the parent comment author
+      if (comment.parentCommentId) {
+        const parentComment = await base44.asServiceRole.entities.Comment.filter({ id: comment.parentCommentId }).then(c => c[0]);
+        if (parentComment && parentComment.created_by_id !== comment.created_by_id) {
+          const parentUser = await base44.asServiceRole.entities.User.filter({ id: parentComment.created_by_id }).then(u => u[0]);
+          if (parentUser) {
+            const userLang = parentUser.preferredLanguage || 'he';
+            notifications.push({
+              userId: parentUser.id,
+              type: 'comment_reply',
+              title: t(userLang, 'replyTitle', nameReplacements),
+              message: t(userLang, 'replyMessage', nameReplacements),
+              translations: buildTranslations('replyTitle', 'replyMessage', nameReplacements),
+              relatedEntityId: comment.id,
+              relatedEntityType: 'comment',
+              actionUrl,
+              read: false
+            });
+          }
+        }
+      }
+
+      // Collect all document participants: UserInteraction records + group members
+      const interactionUserIds = new Set<string>();
+      const interactions = await base44.asServiceRole.entities.UserInteraction.filter({ documentId });
+      interactions.forEach(i => { if (i.userId) interactionUserIds.add(i.userId); });
+
+      if (document.groupId) {
+        const groupMembers = await base44.asServiceRole.entities.GroupMember.filter({ groupId: document.groupId });
+        groupMembers.forEach(m => { if (m.userId) interactionUserIds.add(m.userId); });
+
+        const groupDocs = await base44.asServiceRole.entities.Document.filter({ groupId: document.groupId });
+        const otherDocIds = groupDocs.map(d => d.id).filter(id => id !== documentId);
+        if (otherDocIds.length > 0) {
+          const otherInteractions = await base44.asServiceRole.entities.UserInteraction.filter({ documentId: { $in: otherDocIds } });
+          otherInteractions.forEach(i => { if (i.userId) interactionUserIds.add(i.userId); });
+        }
+      }
+
+      // Exclude the commenter; also exclude anyone already notified (parent reply target)
+      const alreadyNotifiedIds = new Set(notifications.map(n => n.userId));
+      const uniqueUserIds = [...interactionUserIds].filter(
+        uid => uid !== comment.created_by_id && !alreadyNotifiedIds.has(uid)
+      );
+
+      if (uniqueUserIds.length > 0) {
+        const allUsers = await base44.asServiceRole.entities.User.filter({ id: { $in: uniqueUserIds } });
+        for (const user of allUsers) {
+          const userLang = user.preferredLanguage || 'he';
+          notifications.push({
+            userId: user.id,
+            type: 'document_comment',
+            title: t(userLang, 'documentCommentTitle', nameReplacements),
+            message: t(userLang, 'documentCommentMessage', nameReplacements),
+            translations: buildTranslations('documentCommentTitle', 'documentCommentMessage', nameReplacements),
+            relatedEntityId: documentId,
+            relatedEntityType: 'document',
+            actionUrl,
+            read: false
+          });
+        }
+      }
     }
 
     if (notifications.length > 0) {
