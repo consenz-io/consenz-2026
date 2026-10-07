@@ -48,7 +48,7 @@ export default function CurrentVersionButton({ onClick, language, isRTL, lastVer
             onClick={onClick}
             variant="outline"
             size="sm"
-            className={`group gap-2 border-blue-200 bg-blue-50/60 hover:bg-blue-100 hover:border-blue-300 text-blue-700 ${
+            className={`group gap-2 border-blue-200 bg-blue-50/60 hover:bg-blue-100 hover:border-blue-300 text-blue-700 w-full md:w-auto ${
               isRTL ? "flex-row-reverse" : ""
             }`}
           >
