@@ -21,7 +21,7 @@ function useTimeRemaining(timerEndsAt) {
   });
 
   useEffect(() => {
-    if (!timerEndsAt) { setRemaining(null); return; }
+    if (!timerEndsAt) {setRemaining(null);return;}
 
     let timer;
     const scheduleNext = () => {
@@ -33,9 +33,9 @@ function useTimeRemaining(timerEndsAt) {
       const hours = Math.floor(totalMinutes / 60);
       const days = Math.floor(hours / 24);
       let granularity;
-      if (days >= 2) granularity = 24 * 60 * 60 * 1000;       // day boundary
-      else if (hours >= 1) granularity = 60 * 60 * 1000;       // hour boundary
-      else granularity = 60000;                                // minute boundary
+      if (days >= 2) granularity = 24 * 60 * 60 * 1000; // day boundary
+      else if (hours >= 1) granularity = 60 * 60 * 1000; // hour boundary
+      else granularity = 60000; // minute boundary
 
       let delay = ms % granularity || granularity;
       delay = Math.max(delay, 1000); // never tighter than 1s
@@ -173,11 +173,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   hoverVote === 'con' && userVote?.vote === 'con' ?
   language === 'he' ? 'הצבעת נגד • לחץ/י שוב לביטול' : language === 'ar' ? 'صوتك ضد • اضغط مجدداً للإلغاء' : 'You voted con • click again to remove' :
   hoverVote === 'pro' ?
-  (proWouldPass ?
-    (isDeleteSection ?
-      (language === 'he' ? 'הצבעתך תכריע ותוביל למחיקת הסעיף!' : language === 'ar' ? 'سيحسم صوتك ويحذف القسم!' : 'Your vote will decide and delete this section!') :
-      (language === 'he' ? 'הצבעתך תכריע ותוביל לאישור ההצעה!' : language === 'ar' ? 'سيحسم صوتك ويعتمد الاقتراح!' : 'Your vote will decide and approve this proposal!')) :
-    (language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal')) :
+  proWouldPass ?
+  isDeleteSection ?
+  language === 'he' ? 'הצבעתך תכריע ותוביל למחיקת הסעיף!' : language === 'ar' ? 'سيحسم صوتك ويحذف القسم!' : 'Your vote will decide and delete this section!' :
+  language === 'he' ? 'הצבעתך תכריע ותוביל לאישור ההצעה!' : language === 'ar' ? 'سيحسم صوتك ويعتمد الاقتراح!' : 'Your vote will decide and approve this proposal!' :
+  language === 'he' ? `הצבעתך תקרב את ההצעה לאישור` : language === 'ar' ? 'سيقرب صوتك الاقتراح من القبول' : 'Your vote will help pass this proposal' :
   hoverVote === 'con' ?
   language === 'he' ? `הצבעתך תרחיק את ההצעה מאישור` : language === 'ar' ? 'سيبعد صوتك الاقتراح عن القبول' : 'Your vote will push back the proposal' :
   votesNeeded === 1 ?
@@ -225,26 +225,26 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     <div className="space-y-3">
       {/* Progress bar section */}
       <CounterTooltip
-        text={language === 'he'
-          ? `${displayProVotes} הצבעות בעד ו-${displayConVotes} הצבעות נגד, ורף התמיכה הדרוש הוא ${threshold} • לחצו למידע נוסף על חישוב מד הקונסנזוס`
-          : language === 'ar'
-          ? `${displayProVotes} أصوات مع و-${displayConVotes} أصوات ضد، وعتبة الدعم المطلوبة هي ${threshold} • انقروا لمزيد من المعلومات حول حساب مقياس الإجماع`
-          : `${displayProVotes} pro votes and ${displayConVotes} con votes, support threshold is ${threshold} • Click for more info on consensus meter calculation`}>
+        text={language === 'he' ?
+        `${displayProVotes} הצבעות בעד ו-${displayConVotes} הצבעות נגד, ורף התמיכה הדרוש הוא ${threshold} • לחצו למידע נוסף על חישוב מד הקונסנזוס` :
+        language === 'ar' ?
+        `${displayProVotes} أصوات مع و-${displayConVotes} أصوات ضد، وعتبة الدعم المطلوبة هي ${threshold} • انقروا لمزيد من المعلومات حول حساب مقياس الإجماع` :
+        `${displayProVotes} pro votes and ${displayConVotes} con votes, support threshold is ${threshold} • Click for more info on consensus meter calculation`}>
         <Link
           to={`${createPageUrl("UnderstandingConsensus")}?id=${document?.id}`}
           className="block group">
 
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors" data-tutorial="support-threshold">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-slate-500">
+              <span className="text-xs font-medium text-slate-500 text-center">
                 {statusText}
               </span>
-              {timeLabel && !effectiveReadOnly && (
-                <span className={`text-xs font-medium flex items-center gap-1 ${isUrgent ? 'text-red-500' : 'text-slate-400'}`}>
+              {timeLabel && !effectiveReadOnly &&
+              <span className={`text-xs font-medium flex items-center gap-1 ${isUrgent ? 'text-red-500' : 'text-slate-400'}`}>
                   <Clock className="w-3 h-3" />
                   {timeLabel}
                 </span>
-              )}
+              }
             </div>
 
             {/* Progress bar */}
@@ -253,8 +253,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
                 className={`absolute inset-y-0 ${isRTL ? 'right-0' : 'left-0'} rounded-full ${barColor}`}
                 initial={{ width: 0 }}
                 animate={{ width: `${displayProgress}%` }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-              />
+                transition={{ duration: 0.4, ease: "easeOut" }} />
+              
             </div>
 
             {/* Vote counts and threshold */}
@@ -273,11 +273,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
             </div>
 
             {/* Below-bar info: accepted date or created-by-admin */}
-            {belowBarInfo && (
-              <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
+            {belowBarInfo &&
+            <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
                 <span>{belowBarInfo.label} {datePrefix}{parseUserDate(belowBarInfo.date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
               </div>
-            )}
+            }
           </div>
       </Link>
       </CounterTooltip>
@@ -363,16 +363,16 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           </Button>
           </div>
 
-          {(voteMutation?.isPending || voteMutation?.isAccepting) && (
-          <div className="flex items-center justify-center gap-2 py-2 px-3 bg-blue-50 border border-blue-200 rounded-lg">
+          {(voteMutation?.isPending || voteMutation?.isAccepting) &&
+        <div className="flex items-center justify-center gap-2 py-2 px-3 bg-blue-50 border border-blue-200 rounded-lg">
             <Loader2 className="w-4 h-4 text-blue-600 animate-spin shrink-0" />
             <span className="text-sm font-medium text-blue-700">
               {language === 'he' ? 'מעדכן את המסמך…' : language === 'ar' ? 'جارٍ تحديث المستند…' : 'Updating document…'}
             </span>
           </div>
-          )}
+        }
           </div>
-          }
+      }
           </div>);
 
 }
