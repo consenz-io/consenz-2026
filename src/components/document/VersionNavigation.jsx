@@ -30,6 +30,7 @@ export default function VersionNavigation({
     : (language === 'he' ? `גרסה ${versionNumber}` : language === 'ar' ? `إصدار ${versionNumber}` : `Version ${versionNumber}`);
 
   const changeLabel = !isCurrentVersion && currentSnapshot ? (() => {
+    if (currentSnapshot.isNewSection && currentSnapshot.isAdminApproved) return language === 'he' ? '➕ סעיף נוסף באישור מנהל' : language === 'ar' ? '➕ قسم جديد بموافقة المسؤول' : '➕ Section Added (admin)';
     if (currentSnapshot.isNewSection) return language === 'he' ? '➕ סעיף נוסף' : language === 'ar' ? '➕ قسم جديد' : '➕ Section Added';
     if (currentSnapshot.isDeleted) return language === 'he' ? '🗑 סעיף נמחק' : language === 'ar' ? '🗑 قسم حُذف' : '🗑 Section Deleted';
     if (currentSnapshot.isDirectEdit) return language === 'he' ? '✏️ עריכת מנהל' : language === 'ar' ? '✏️ تعديل المسؤول' : '✏️ Admin Edit';

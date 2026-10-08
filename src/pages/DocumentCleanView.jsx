@@ -679,7 +679,7 @@ export default function DocumentCleanView() {
         {currentVersionIndex > 0 && currentSnapshot &&
         <div
           className={`mb-4 p-3 border rounded-lg text-xs text-slate-700 ${
-          currentSnapshot.isDirectEdit ?
+          currentSnapshot.isDirectEdit || currentSnapshot.isAdminApproved ?
           'bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200' :
           'bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200'}`
           }>
@@ -697,6 +697,17 @@ export default function DocumentCleanView() {
             <span className="px-2 py-1 bg-amber-100 rounded border border-amber-300 font-semibold text-amber-800">
                   {language === 'he' ? '✏️ עריכה ישירה על ידי מנהל' : language === 'ar' ? '✏️ تعديل مباشر من المسؤول' : '✏️ Direct Admin Edit'}
                 </span> :
+            currentSnapshot.isAdminApproved ?
+            <>
+                  <span className="px-2 py-1 bg-white rounded border border-slate-300">
+                    <span className="font-semibold">{language === 'he' ? 'גרסה:' : language === 'ar' ? 'إصدار:' : 'Version:'}</span>
+                    {' '}<span className="text-slate-900 font-bold">{versionGroups.length - currentVersionIndex}</span>
+                  </span>
+                  <span className="text-slate-300">|</span>
+                  <span className="px-2 py-1 bg-amber-100 rounded border border-amber-300 font-semibold text-amber-800">
+                    {language === 'he' ? '🛡️ אושר על ידי מנהל — ללא השפעה על מד הקונצנזוס' : language === 'ar' ? '🛡️ تمت الموافقة من المسؤول — دون تأثير على مقياس الإجماع' : '🛡️ Approved by admin — no consensus impact'}
+                  </span>
+                </> :
             currentSnapshot.suggestionId &&
             <>
                   <span className="px-2 py-1 bg-white rounded border border-slate-300">
@@ -896,6 +907,11 @@ export default function DocumentCleanView() {
                                     <Badge className="mb-2 bg-green-100 text-green-800 text-xs">
                                       {language === 'he' ? 'סעיף חדש - לחץ לצפייה בדיון' : language === 'ar' ? 'قسم جديد - انقر لعرض النقاش' : 'New Section - Click to view discussion'}
                                     </Badge>
+                                    {currentSnapshot?.isAdminApproved &&
+                                    <Badge className={`mb-2 bg-amber-100 text-amber-800 text-xs ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                                        {language === 'he' ? '🛡️ אושר על ידי מנהל' : language === 'ar' ? '🛡️ تمت الموافقة من المسؤول' : '🛡️ Approved by admin'}
+                                      </Badge>
+                                    }
                                     <HistoryTranslatableContent
                                 content={currentSnapshot?.newSectionContent || displayedContent}
                                 documentId={documentId}
@@ -920,6 +936,11 @@ export default function DocumentCleanView() {
                                       {language === 'he' ? '✏️ שינוי בגרסה זו' : language === 'ar' ? '✏️ تغيير في هذا الإصدار' : '✏️ Changed in this version'}
                                       {currentSnapshot?.suggestionId && (language === 'he' ? ' - לחץ לצפייה בדיון' : language === 'ar' ? ' - انقر لعرض النقاش' : ' - Click to view discussion')}
                                     </Badge>
+                                    {currentSnapshot?.isAdminApproved &&
+                                    <Badge className={`bg-amber-100 text-amber-800 text-xs ${isRTL ? 'mr-2' : 'ml-2'}`}>
+                                        {language === 'he' ? '🛡️ אושר על ידי מנהל' : language === 'ar' ? '🛡️ تمت الموافقة من المسؤول' : '🛡️ Approved by admin'}
+                                      </Badge>
+                                    }
                                   </div>
                                   <HistoryTranslatableDiff
                                 originalContent={oldContent}

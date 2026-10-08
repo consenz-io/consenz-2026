@@ -212,6 +212,7 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           changeDescription: afterVersion.changeDescription,
           changeType: afterVersion.changeType,
           suggestionId: afterVersion.suggestionId,
+          isAdminApproved: !!relatedSuggestion?.approvedByAdmin,
           sectionContents: snapshotSectionContents,
           existingSections: new Set(currentExistingSections),
           changedSectionId: isTopicTitleChange ? null : afterVersion.sectionId,
