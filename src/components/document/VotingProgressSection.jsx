@@ -132,7 +132,9 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   afterConProgress :
   progressPercent;
 
-  const barColor = passed ?
+  const barColor = isAdminAccepted ?
+  (isDeleteSection ? 'bg-red-500' : 'bg-green-500') :
+  passed ?
   isDeleteSection ? 'bg-red-500' : 'bg-green-500' :
   effectiveReadOnly ?
   'bg-red-400' :
