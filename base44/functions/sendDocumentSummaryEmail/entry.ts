@@ -93,6 +93,18 @@ Deno.serve(async (req) => {
   if (notFound) return Response.json({ error: 'Document not found' }, { status: 404 });
   if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
+  // Rate limit: max 5 document-summary emails per user per hour — prevents
+  // any authenticated user from mass-emailing arbitrary content from the
+  // app's verified sender domain. Mirrors the cap in sendGroupEmail.
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const recentEmails = await base44.asServiceRole.entities.EmailLog.filter(
+    { senderUserId: user.id, purpose: 'document_summary' }, '-created_date', 10
+  );
+  const recentCount = recentEmails.filter(e => e.created_date && e.created_date >= oneHourAgo).length;
+  if (recentCount >= 5) {
+    return Response.json({ error: 'Rate limit exceeded: too many document summary emails' }, { status: 429 });
+  }
+
   // Determine recipients
   let recipientEmails = [];
 
@@ -128,7 +140,14 @@ Deno.serve(async (req) => {
       (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
       (c.rootEntityType === 'document' && c.rootEntityId === documentId)
     ).forEach(c => addEmail(c.created_by));
-    allAgreements.forEach(a => addEmail(a.userEmail));
+    // DocumentAgreement.userEmail is client-writable (create RLS only checks
+    // userId), so a caller could plant an agreement with any external address.
+    // Only include agreement recipients whose email matches a registered app
+    // user — prevents using the app's verified sender as an open mail relay.
+    allAgreements.forEach(a => {
+      const email = a.userEmail?.toLowerCase().trim();
+      if (email && registeredEmails.has(email)) emailSet.add(email);
+    });
 
     // Always add document admins
     const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId });
