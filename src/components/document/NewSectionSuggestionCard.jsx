@@ -318,7 +318,9 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       </div>
 
       {/* תוכן ההצעה */}
-      <div className="min-h-[100px]">
+      <div
+        className="min-h-[100px] cursor-pointer hover:opacity-90 transition-opacity"
+        onClick={() => onOpenSidebar && onOpenSidebar(currentVersion.id)}>
         {ghostChain && ghostChain.length > 1 && currentView.type === 'version' ?
         <div className="mb-3">
             <SectionDiff
