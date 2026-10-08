@@ -83,6 +83,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   // For accepted suggestions, freeze the threshold at what it was at acceptance time.
   // At the moment of acceptance, delta >= threshold exactly, so delta itself is the frozen threshold.
   const isAccepted = suggestion?.status === 'accepted';
+  const isAdminAccepted = suggestion?.approvedByAdmin && suggestion?.status === 'accepted';
+  const isAdminRejected = suggestion?.rejectedByAdmin && suggestion?.status === 'rejected';
   // delete_section type — the suggestion represents a community vote to remove a section
   const isDeleteSection = suggestion?.type === 'delete_section';
   // Existing section (passed as a plain section without a suggestion status) —
@@ -143,6 +145,8 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   const createdByText = language === 'he' ? 'נוצר על ידי מנהל/ת' : language === 'ar' ? 'أنشئ بواسطة المشرف' : 'Created by admin';
   const acceptedLabel = language === 'he' ? 'התקבלה' : language === 'ar' ? 'تم القبول' : 'Accepted';
   const deletedLabel = language === 'he' ? 'נמחק בהצבעת קהילה' : language === 'ar' ? 'حذف بتصويت المجتمع' : 'Deleted by community vote';
+  const adminAcceptedLabel = language === 'he' ? 'אושרה על ידי מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Approved by admin';
+  const adminRejectedLabel = language === 'he' ? 'נדחתה על ידי מנהל' : language === 'ar' ? 'تم رفضها من المشرف' : 'Rejected by admin';
   const datePrefix = language === 'he' ? 'ב-' : language === 'ar' ? 'في ' : 'on ';
   const acceptedVotesText = language === 'he' ?
   `✓ התקבלה — ${proVotes} בעד, ${conVotes} נגד` :
@@ -158,7 +162,17 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   // Does the hovered pro vote reach the threshold? If so, this is the deciding vote.
   const proWouldPass = hoverVote === 'pro' && afterProDelta >= threshold && !passed;
 
-  const statusText = effectiveReadOnly ?
+  // Date formatter for below-bar status text (accepted/rejected/admin labels + date)
+  const formatStatusDate = (date) => parseUserDate(date).toLocaleString(
+    language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB',
+    { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+  );
+
+  const statusText = isAdminAccepted ?
+  passedStatusText :
+  isAdminRejected ?
+  '✗' :
+  effectiveReadOnly ?
   isExistingSection ?
   passedStatusText :
   passed ?
@@ -186,6 +200,16 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
 
   // Below-bar date line: "Created by admin on <date>" or "Accepted on <date>"
   const belowBarInfo = (() => {
+    if (isAdminAccepted) {
+      const date = acceptedDate || suggestion?.updated_date;
+      if (!date) return null;
+      return { label: adminAcceptedLabel, date };
+    }
+    if (isAdminRejected) {
+      const date = rejectedDate || suggestion?.updated_date;
+      if (!date) return null;
+      return { label: adminRejectedLabel, date };
+    }
     if (isExistingSection && !sourceSuggestion) {
       const date = suggestion?.created_date;
       if (!date) return null;
@@ -203,23 +227,11 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
     return null;
   })();
 
-  // Admin-accepted: show a clean status badge instead of the progress bar
-  const isAdminAccepted = suggestion?.approvedByAdmin && suggestion?.status === 'accepted';
-  if (isAdminAccepted) {
-    return (
-      <div className="flex items-center gap-2 py-2 px-3 bg-indigo-50 border border-indigo-200 rounded-xl">
-        <ShieldCheck className="w-4 h-4 text-indigo-500 shrink-0" />
-        <span className="text-sm font-medium text-indigo-700 flex-1">
-          {language === 'he' ? 'אושרה על ידי מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Approved by admin'}
-        </span>
-        {acceptedDate &&
-        <span className="text-xs text-indigo-400">
-            {parseUserDate(acceptedDate).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-          </span>
-        }
-      </div>);
-
-  }
+  // Merged status text for below-bar display: full label + date for closed states,
+  // dynamic statusText for pending/active states. Always rendered below the bar, centered.
+  const belowBarStatusText = belowBarInfo ?
+    `${isAdminRejected ? '✗' : '✓'} ${belowBarInfo.label} ${datePrefix}${formatStatusDate(belowBarInfo.date)}` :
+    statusText;
 
   return (
     <div className="space-y-3">
@@ -235,17 +247,14 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
           className="block group">
 
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 group-hover:border-blue-200 transition-colors" data-tutorial="support-threshold">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-slate-500 text-center">
-                {statusText}
-              </span>
-              {timeLabel && !effectiveReadOnly &&
+            {timeLabel && !effectiveReadOnly &&
+            <div className="flex justify-center mb-2">
               <span className={`text-xs font-medium flex items-center gap-1 ${isUrgent ? 'text-red-500' : 'text-slate-400'}`}>
-                  <Clock className="w-3 h-3" />
-                  {timeLabel}
-                </span>
-              }
+                <Clock className="w-3 h-3" />
+                {timeLabel}
+              </span>
             </div>
+            }
 
             {/* Progress bar */}
             <div className="relative h-2 bg-slate-200 rounded-full overflow-hidden">
@@ -272,12 +281,10 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
               </span>
             </div>
 
-            {/* Below-bar info: accepted date or created-by-admin */}
-            {belowBarInfo &&
-            <div className="mt-2 pt-2 border-t border-slate-200 text-xs text-slate-500">
-                <span>{belowBarInfo.label} {datePrefix}{parseUserDate(belowBarInfo.date).toLocaleString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { timeZone: 'Asia/Jerusalem', day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-              </div>
-            }
+            {/* Status text — below bar, centered (all statuses: pending, accepted, rejected, admin) */}
+            <p className="text-xs mt-2 font-medium text-slate-500 text-center" dir={isRTL ? 'rtl' : 'ltr'}>
+              {belowBarStatusText}
+            </p>
           </div>
       </Link>
       </CounterTooltip>
