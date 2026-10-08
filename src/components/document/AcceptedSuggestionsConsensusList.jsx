@@ -45,15 +45,25 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
   const adminEdits = (directEditVersions || [])
     .filter(v => v.changeType === 'direct_edit' && !(v.changeDescription || '').startsWith('לפני:'))
     .map(v => {
-      const isTopicChange = (v.content || '').startsWith('topic_title_change:');
-      const isDelete = v.content === '' || (v.changeDescription || '').includes('מחיקת') || (v.changeDescription || '').toLowerCase().includes('delete');
-      const editType = isTopicChange ? 'edit_topic' : isDelete ? 'delete_section' : 'edit_section';
+      // If the version is linked to a Suggestion (new admin-edit flow), use the
+      // suggestion's type for accurate labeling. Fall back to content-based
+      // detection for legacy admin edits without a suggestionId.
+      const linkedSuggestion = v.suggestionId ? (suggestions || []).find(s => s.id === v.suggestionId) : null;
+      let editType;
+      if (linkedSuggestion) {
+        editType = linkedSuggestion.type;
+      } else {
+        const isTopicChange = (v.content || '').startsWith('topic_title_change:');
+        const isDelete = v.content === '' || (v.changeDescription || '').includes('מחיקת') || (v.changeDescription || '').toLowerCase().includes('delete');
+        editType = isTopicChange ? 'edit_topic' : isDelete ? 'delete_section' : 'edit_section';
+      }
       return {
         kind: 'admin_edit',
         id: v.id,
         date: new Date(v.created_date),
         editType,
         version: v,
+        suggestionId: v.suggestionId,
       };
     })
     .sort((a, b) => a.date - b.date);
@@ -149,15 +159,18 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
     if (language === 'he') {
       if (editType === 'edit_topic') return 'שינוי כותרת נושא ישיר';
       if (editType === 'delete_section') return 'מחיקת סעיף ישירה';
+      if (editType === 'new_section') return 'סעיף חדש ישיר';
       return 'עריכת סעיף ישירה';
     }
     if (language === 'ar') {
       if (editType === 'edit_topic') return 'تغيير عنوان الموضوع المباشر';
       if (editType === 'delete_section') return 'حذف قسم مباشر';
+      if (editType === 'new_section') return 'قسم جديد مباشر';
       return 'تعديل قسم مباشر';
     }
     if (editType === 'edit_topic') return 'Direct topic title change';
     if (editType === 'delete_section') return 'Direct section deletion';
+    if (editType === 'new_section') return 'Direct new section';
     return 'Direct section edit';
   };
 
@@ -220,10 +233,20 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
                     </td>
                     <td className={`py-2 px-2 ${isRTL ? 'text-right' : 'text-left'}`}>
                       <div className="flex flex-col gap-0.5">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium w-fit bg-amber-100 text-amber-800">
-                          <Shield className="w-3 h-3" />
-                          {adminEditLabel(row.editType)}
-                        </span>
+                        {row.suggestionId ?
+                          <Link
+                            to={`${createPageUrl("suggestiondetail")}?id=${row.suggestionId}`}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium hover:opacity-80 transition-opacity w-fit bg-amber-100 text-amber-800"
+                          >
+                            <Shield className="w-3 h-3" />
+                            {adminEditLabel(row.editType)}
+                            <ExternalLink className="w-3 h-3 flex-shrink-0 opacity-50" />
+                          </Link> :
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium w-fit bg-amber-100 text-amber-800">
+                            <Shield className="w-3 h-3" />
+                            {adminEditLabel(row.editType)}
+                          </span>
+                        }
                         <span className="text-[10px] text-slate-400 leading-tight">
                           {formatLocalDateTime(row.date, 'DD/MM/YY HH:mm')}
                         </span>

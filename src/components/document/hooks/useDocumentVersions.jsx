@@ -156,7 +156,7 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
         const relatedSuggestion = suggestions?.find(s => s.id === afterVersion.suggestionId);
 
         const acceptedSuggestionsUpToHere = suggestions
-          ?.filter(s => s.status === 'accepted' && new Date(s.created_date) <= new Date(afterVersion.created_date))
+          ?.filter(s => s.status === 'accepted' && !s.approvedByAdmin && new Date(s.created_date) <= new Date(afterVersion.created_date))
           .sort((a, b) => new Date(a.created_date) - new Date(b.created_date)) || [];
 
         const weightedConsensusAtTime = acceptedSuggestionsUpToHere.length === 0 ? 0.5 :

@@ -66,6 +66,8 @@ export default async function(req: Request): Promise<Response> {
     let notificationTitleKey = '';
     let notificationMessageKey = '';
     let notificationType = 'suggestion_accepted';
+    // When set, notifications link to the suggestion detail page instead of the document.
+    let adminSuggestionId: string | null = null;
 
     // ── edit_section ──
     if (editType === 'edit_section' && sectionId) {
@@ -76,7 +78,30 @@ export default async function(req: Request): Promise<Response> {
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
       const newContentLanguage = detectLanguage(newContent || '');
 
-      // Version with OLD content (before change)
+      // Create a Suggestion record so the edit has a suggestion detail page (for
+      // notification links and diff display in version history). approvedByAdmin
+      // ensures it does NOT affect the consensus meter.
+      const adminSuggestion = await base44.asServiceRole.entities.Suggestion.create({
+        documentId,
+        sectionId: section.id,
+        topicId: section.topicId,
+        type: 'edit_section',
+        title: changeDescription || 'עריכת אדמין',
+        newContent,
+        originalContent: section.content,
+        explanation: changeDescription || '',
+        status: 'accepted',
+        approvedByAdmin: true,
+        acceptedAt: new Date().toISOString(),
+        proVotes: 0,
+        conVotes: 0,
+        participantsAtAcceptance: 0,
+        originalLanguage: newContentLanguage,
+        createdByLanguage: newContentLanguage,
+      });
+      adminSuggestionId = adminSuggestion?.id || null;
+
+      // Version with OLD content (before change) — linked to the suggestion
       await base44.asServiceRole.entities.DocumentVersion.create({
         documentId,
         sectionId: section.id,
@@ -86,6 +111,7 @@ export default async function(req: Request): Promise<Response> {
         changeDescription: `לפני: ${changeDescription || 'עריכת אדמין'}`,
         version: nextVersion,
         changeType: 'direct_edit',
+        suggestionId: adminSuggestionId || undefined,
         originalLanguage: section.originalLanguage || 'he',
       });
 
@@ -96,7 +122,7 @@ export default async function(req: Request): Promise<Response> {
         originalLanguage: newContentLanguage,
       });
 
-      // Version with NEW content (after change)
+      // Version with NEW content (after change) — linked to the suggestion
       await base44.asServiceRole.entities.DocumentVersion.create({
         documentId,
         sectionId: section.id,
@@ -106,6 +132,7 @@ export default async function(req: Request): Promise<Response> {
         changeDescription: changeDescription || 'עריכת אדמין',
         version: nextVersion + 1,
         changeType: 'direct_edit',
+        suggestionId: adminSuggestionId || undefined,
         originalLanguage: newContentLanguage,
       });
 
@@ -159,7 +186,29 @@ export default async function(req: Request): Promise<Response> {
         originalLanguage: newContentLanguage,
       });
 
-      // Initial version for the new section
+      // Create a Suggestion record so the new section has a suggestion detail page.
+      const adminSuggestion = await base44.asServiceRole.entities.Suggestion.create({
+        documentId,
+        sectionId: newSection.id,
+        topicId: targetTopicId,
+        type: 'new_section',
+        title: changeDescription || 'סעיף חדש של אדמין',
+        newContent,
+        originalContent: '',
+        explanation: changeDescription || '',
+        status: 'accepted',
+        approvedByAdmin: true,
+        acceptedAt: new Date().toISOString(),
+        proVotes: 0,
+        conVotes: 0,
+        participantsAtAcceptance: 0,
+        insertPosition: newOrder,
+        originalLanguage: newContentLanguage,
+        createdByLanguage: newContentLanguage,
+      });
+      adminSuggestionId = adminSuggestion?.id || null;
+
+      // Initial version for the new section — linked to the suggestion
       await base44.asServiceRole.entities.DocumentVersion.create({
         documentId,
         sectionId: newSection.id,
@@ -169,6 +218,7 @@ export default async function(req: Request): Promise<Response> {
         changeDescription: changeDescription || 'סעיף חדש של אדמין',
         version: 1,
         changeType: 'direct_edit',
+        suggestionId: adminSuggestionId || undefined,
         originalLanguage: newContentLanguage,
       });
 
@@ -184,7 +234,27 @@ export default async function(req: Request): Promise<Response> {
       const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
 
-      // Version with OLD content (before deletion)
+      // Create a Suggestion record so the deletion has a suggestion detail page.
+      const adminSuggestion = await base44.asServiceRole.entities.Suggestion.create({
+        documentId,
+        sectionId: section.id,
+        topicId: section.topicId,
+        type: 'delete_section',
+        title: 'מחיקת סעיף על ידי אדמין',
+        newContent: '',
+        originalContent: section.content,
+        explanation: 'מחיקת סעיף על ידי אדמין',
+        status: 'accepted',
+        approvedByAdmin: true,
+        acceptedAt: new Date().toISOString(),
+        proVotes: 0,
+        conVotes: 0,
+        participantsAtAcceptance: 0,
+        originalLanguage: section.originalLanguage || 'he',
+      });
+      adminSuggestionId = adminSuggestion?.id || null;
+
+      // Version with OLD content (before deletion) — linked to the suggestion
       await base44.asServiceRole.entities.DocumentVersion.create({
         documentId,
         sectionId: section.id,
@@ -194,6 +264,7 @@ export default async function(req: Request): Promise<Response> {
         changeDescription: `לפני: מחיקת סעיף על ידי אדמין`,
         version: nextVersion,
         changeType: 'direct_edit',
+        suggestionId: adminSuggestionId || undefined,
         originalLanguage: section.originalLanguage || 'he',
       });
 
@@ -217,7 +288,7 @@ export default async function(req: Request): Promise<Response> {
         );
       }
 
-      // Version with empty content (after deletion)
+      // Version with empty content (after deletion) — linked to the suggestion
       await base44.asServiceRole.entities.DocumentVersion.create({
         documentId,
         sectionId: section.id,
@@ -227,6 +298,7 @@ export default async function(req: Request): Promise<Response> {
         changeDescription: 'מחיקת סעיף על ידי אדמין',
         version: nextVersion + 1,
         changeType: 'direct_edit',
+        suggestionId: adminSuggestionId || undefined,
       });
 
       editLabel = 'מחיקת סעיף';
@@ -296,9 +368,9 @@ export default async function(req: Request): Promise<Response> {
       title: t(u.preferredLanguage || 'he', notificationTitleKey, replacements),
       message: t(u.preferredLanguage || 'he', notificationMessageKey, replacements),
       translations,
-      relatedEntityId: documentId,
-      relatedEntityType: 'document',
-      actionUrl: `/documentview?id=${documentId}`,
+      relatedEntityId: adminSuggestionId || documentId,
+      relatedEntityType: adminSuggestionId ? 'suggestion' : 'document',
+      actionUrl: adminSuggestionId ? `/suggestiondetail?id=${adminSuggestionId}` : `/documentview?id=${documentId}`,
     }));
 
     if (notifications.length > 0) {
