@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { checkDocumentAccess } from '../../shared/documentAuth.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -91,6 +92,14 @@ Deno.serve(async (req) => {
     const docs = await base44.asServiceRole.entities.Document.filter({ id: documentId });
     if (docs.length === 0 || !docs[0].gamificationEnabled) {
       return Response.json({ success: true, message: 'Gamification not enabled' });
+    }
+
+    // Authorization: the caller must be able to access the document the comment
+    // belongs to. Without this, any authenticated user could like/unlike comments
+    // in private/hidden groups and shift the creator's points.
+    const access = await checkDocumentAccess(base44, docs[0], user);
+    if (!access.authorized) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const amount = isLiking ? 5 : -5;
