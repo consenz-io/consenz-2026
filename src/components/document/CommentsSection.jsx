@@ -588,10 +588,17 @@ export default function CommentsSection({ entityType, entityId, user, documentId
 
   const deleteCommentMutation = useMutation({
     mutationFn: async (commentId) => {
-      return await base44.entities.Comment.delete(commentId);
+      const res = await base44.functions.invoke('deleteComment', { commentId });
+      return res.data;
     },
     onSuccess: () => {
+      // Invalidate the local comment thread plus every other place comments
+      // surface: the group feed, the profile activity list, and notifications
+      // (the backend removes notifications pointing at the deleted comment).
       queryClient.invalidateQueries({ queryKey: ['comments'] });
+      queryClient.invalidateQueries({ queryKey: ['groupAllComments'] });
+      queryClient.invalidateQueries({ queryKey: ['userComments'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       setError(null);
     },
     onError: (err) => {
