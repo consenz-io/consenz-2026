@@ -43,6 +43,15 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     groupJoinApprovedMessage: "You have been accepted to the group \"{groupName}\"",
     // sendMessage
     directMessageTitle: "New message from {name}",
+    // applyAdminEdit — direct admin edits (no consensus impact)
+    adminEditSectionTitle: "Section edited by admin",
+    adminEditSectionMessage: "{name} edited a section in the document \"{doc}\"",
+    adminNewSectionTitle: "New section added by admin",
+    adminNewSectionMessage: "{name} added a new section in the document \"{doc}\"",
+    adminDeleteSectionTitle: "Section deleted by admin",
+    adminDeleteSectionMessage: "{name} deleted a section in the document \"{doc}\"",
+    adminEditTopicTitle: "Topic title changed by admin",
+    adminEditTopicMessage: "{name} changed a topic title in the document \"{doc}\"",
   },
   he: {
     replyTitle: "תשובה לתגובה שלך",
@@ -68,6 +77,15 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     groupJoinApprovedTitle: "בקשת ההצרפות אושרה!",
     groupJoinApprovedMessage: "התקבלת לקבוצה \"{groupName}\"",
     directMessageTitle: "הודעה חדשה מ{name}",
+    // עריכות אדמין ישירות — ללא השפעה על מד הקונצנזוס
+    adminEditSectionTitle: "סעיף נערך על ידי מנהל",
+    adminEditSectionMessage: "{name} ערך/ה סעיף במסמך \"{doc}\"",
+    adminNewSectionTitle: "סעיף חדש נוסף על ידי מנהל",
+    adminNewSectionMessage: "{name} הוסיפ/ה סעיף חדש במסמך \"{doc}\"",
+    adminDeleteSectionTitle: "סעיף נמחק על ידי מנהל",
+    adminDeleteSectionMessage: "{name} מחק/ה סעיף במסמך \"{doc}\"",
+    adminEditTopicTitle: "כותרת נושא שונתה על ידי מנהל",
+    adminEditTopicMessage: "{name} שינה/ה כותרת נושא במסמך \"{doc}\"",
   },
   ar: {
     replyTitle: "رد على تعليقك",
@@ -93,6 +111,15 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     groupJoinApprovedTitle: "تمت الموافقة على طلب الانضمام!",
     groupJoinApprovedMessage: "تم قبولك في المجموعة \"{groupName}\"",
     directMessageTitle: "رسالة جديدة من {name}",
+    // تعديلات المسؤول المباشرة — دون التأثير على مقياس الإجماع
+    adminEditSectionTitle: "تم تعديل قسم بواسطة المشرف",
+    adminEditSectionMessage: "{name} عدّل قسماً في المستند \"{doc}\"",
+    adminNewSectionTitle: "تمت إضافة قسم جديد بواسطة المشرف",
+    adminNewSectionMessage: "{name} أضاف قسماً جديداً في المستند \"{doc}\"",
+    adminDeleteSectionTitle: "تم حذف قسم بواسطة المشرف",
+    adminDeleteSectionMessage: "{name} حذف قسماً في المستند \"{doc}\"",
+    adminEditTopicTitle: "تم تغيير عنوان الموضوع بواسطة المشرف",
+    adminEditTopicMessage: "{name} غيّر عنوان موضوع في المستند \"{doc}\"",
   },
 };
 
