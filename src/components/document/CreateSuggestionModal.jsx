@@ -176,35 +176,15 @@ export default function CreateSuggestionModal({
 
   const createSuggestionMutation = useMutation({
     mutationFn: async (data) => {
-      // If direct edit, save immediately without creating suggestion
+      // If direct edit, delegate to backend function (creates version + notifications, no consensus impact)
       if (isDirectEdit && existingSection) {
-        const user = await base44.auth.me();
-        
-        // Get the max version number for this section
-        const existingVersions = await base44.entities.DocumentVersion.filter({
+        await base44.functions.invoke('applyAdminEdit', {
           documentId: existingSection.documentId,
-          sectionId: existingSection.id
-        });
-        const maxVersion = existingVersions.length > 0 
-          ? Math.max(...existingVersions.map(v => v.version)) 
-          : 0;
-
-        // Update the section
-        await base44.entities.Section.update(existingSection.id, {
-          content: data.newContent,
-          lastEditedBy: user.id
-        });
-
-        // Create version with NEW content
-        await base44.entities.DocumentVersion.create({
-          documentId: existingSection.documentId,
+          editType: 'edit_section',
           sectionId: existingSection.id,
-          content: data.newContent,
-          version: maxVersion + 1,
-          changeType: "direct_edit",
-          changeDescription: data.explanation || "Admin direct edit"
+          newContent: data.newContent,
+          changeDescription: data.explanation || '',
         });
-        
         return { isDirectEdit: true };
       }
       

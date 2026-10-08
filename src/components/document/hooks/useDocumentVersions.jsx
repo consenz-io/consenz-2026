@@ -279,19 +279,45 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
 
       } else if (event.eventType === 'direct_edit') {
         const directOldContent = beforeVersion?.content ?? currentSectionContents[afterVersion.sectionId] ?? '';
+
+        // Detect topic title change within direct_edit events (admin direct topic rename)
+        const isDirectTopicTitleChange = afterVersion.content?.startsWith('topic_title_change:');
+        let directTopicTitleMeta = null;
+        if (isDirectTopicTitleChange) {
+          const raw = afterVersion.content.slice('topic_title_change:'.length);
+          const firstColon = raw.indexOf(':');
+          if (firstColon !== -1) {
+            const tId = raw.slice(0, firstColon);
+            const rest = raw.slice(firstColon + 1);
+            const descMatch = afterVersion.changeDescription?.match(/^כותרת נושא עודכנה: (.+) → (.+)$/);
+            if (descMatch) {
+              directTopicTitleMeta = { topicId: tId, originalTitle: descMatch[1], newTitle: descMatch[2] };
+            } else {
+              const lastColon = rest.lastIndexOf(':');
+              directTopicTitleMeta = {
+                topicId: tId,
+                originalTitle: lastColon !== -1 ? rest.slice(0, lastColon) : rest,
+                newTitle: lastColon !== -1 ? rest.slice(lastColon + 1) : ''
+              };
+            }
+          }
+        }
+
         const snapshotAfterChange = {
           version: afterVersion.version,
-          label: `עריכה ישירה`,
+          label: isDirectTopicTitleChange ? 'שינוי כותרת נושא' : 'עריכה ישירה',
           timestamp: afterVersion.created_date,
           changeDescription: afterVersion.changeDescription,
           changeType: 'direct_edit',
-          isDirectEdit: true,
+          isDirectEdit: !isDirectTopicTitleChange,
+          isTopicTitleChange: isDirectTopicTitleChange || false,
+          topicTitleChangeMeta: directTopicTitleMeta,
           suggestionId: null,
           sectionContents: { ...currentSectionContents },
           existingSections: new Set(currentExistingSections),
-          changedSectionId: afterVersion.sectionId,
-          newContent: afterVersion.content,
-          oldContent: directOldContent,
+          changedSectionId: isDirectTopicTitleChange ? null : afterVersion.sectionId,
+          newContent: isDirectTopicTitleChange ? null : afterVersion.content,
+          oldContent: isDirectTopicTitleChange ? null : directOldContent,
           allSectionIds,
           proVotes: 0,
           conVotes: 0,
@@ -299,7 +325,7 @@ export function useDocumentVersions(document, sections, allVersions, suggestions
           documentThresholdAtTime: null
         };
 
-        if (afterVersion.changeType === 'section_created' || (!beforeVersion && afterVersion.content !== '')) {
+        if (!isDirectTopicTitleChange && (afterVersion.changeType === 'section_created' || (!beforeVersion && afterVersion.content !== ''))) {
           snapshotAfterChange.isNewSection = true;
           snapshotAfterChange.newSectionId = afterVersion.sectionId;
           snapshotAfterChange.newSectionContent = afterVersion.content;

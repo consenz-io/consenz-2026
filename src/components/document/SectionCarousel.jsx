@@ -264,38 +264,14 @@ const SectionCarousel = React.memo(function SectionCarousel({
     scrollCardToTop();
   };
 
-  // ── Delete section mutation ──────────────────────────────────────────────────
+  // ── Delete section mutation — delegates to backend (creates version + notifications, no consensus impact)
   const deleteSectionMutation = useMutation({
     mutationFn: async (saveToHistory) => {
-      const versions = await base44.entities.DocumentVersion.filter({ sectionId: section.id });
-      const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version)) + 1 : 1;
-      await Promise.all([
-        base44.entities.DocumentVersion.create({
-          documentId: section.documentId, sectionId: section.id, topicId: section.topicId,
-          sectionOrder: section.order, content: section.content,
-          changeDescription: `לפני: ${saveToHistory ? t('deleteSection') : 'Section deletion'}`,
-          version: nextVersion, changeType: 'direct_edit',
-        }),
-        base44.entities.DocumentVersion.create({
-          documentId: section.documentId, sectionId: section.id, topicId: section.topicId,
-          sectionOrder: section.order, content: '',
-          changeDescription: saveToHistory ? t('deleteSection') : 'Section deletion',
-          version: nextVersion + 1, changeType: 'direct_edit',
-        }),
-      ]);
-      await base44.entities.Section.delete(section.id);
-      const orphaned = await base44.entities.Suggestion.filter({
-        documentId: section.documentId, status: 'pending', sectionId: section.id,
+      await base44.functions.invoke('applyAdminEdit', {
+        documentId: section.documentId,
+        editType: 'delete_section',
+        sectionId: section.id,
       });
-      if (orphaned.length > 0) {
-        await base44.entities.Suggestion.bulkUpdate(
-          orphaned.map(s => ({
-            id: s.id,
-            topicId: s.topicId || section.topicId,
-            originalSectionOrder: section.order,
-          }))
-        );
-      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections', document.id] });

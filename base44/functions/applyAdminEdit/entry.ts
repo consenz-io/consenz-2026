@@ -1,18 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
-
-const detectLanguage = (text) => {
-  if (!text) return 'he';
-  const hebrewPattern = /[\u0590-\u05FF]/;
-  const arabicPattern = /[\u0600-\u06FF]/;
-  if (hebrewPattern.test(text)) return 'he';
-  if (arabicPattern.test(text)) return 'ar';
-  return 'en';
-};
-
-const isValidObjectId = (id) => typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
-const filterValidObjectIds = (ids) => ids.filter(isValidObjectId);
+import { detectLanguage, isValidObjectId, filterValidObjectIds } from '../../shared/documentUtils.ts';
 
 // Gather all document participant user IDs (suggestion creators, voters, commenters,
 // agreement signers, document creator). Used for sending admin-edit notifications.

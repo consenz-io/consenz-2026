@@ -35,15 +35,19 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
     }
   }, [topic]);
 
-  // Direct edit mutation for admin
+  // Direct edit mutation for admin — delegates to backend (creates version + notifications, no consensus impact)
   const directEditMutation = useMutation({
     mutationFn: async () => {
-      await base44.entities.Topic.update(topic.id, {
-        title: newTitle.trim()
+      await base44.functions.invoke('applyAdminEdit', {
+        documentId: document.id,
+        editType: 'edit_topic',
+        topicId: topic.id,
+        newTitle: newTitle.trim(),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
+      queryClient.invalidateQueries({ queryKey: ['versions'] });
       setNewTitle(topic?.title || "");
       setExplanation("");
       onClose();
