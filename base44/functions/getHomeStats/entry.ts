@@ -5,7 +5,22 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * Replaces 6 client-side queries (allSuggestions, allVotes, allComments,
  * allSections, allAgreements, acceptedSuggestions — up to 12,000 records)
  * with a single round-trip returning only the computed numbers + contributor list.
+ *
+ * Server-side TTL cache (60s): the home page is high-traffic and the stats
+ * don't need to be real-time. Caching amortizes 11 queries + heavy in-memory
+ * joins across all users hitting the home page within the window.
+ * Keyed by isAdmin because displayedUsers/contributorsList differ per role.
  */
+const CACHE_TTL_MS = 60 * 1000;
+const statsCache = new Map(); // key: 'admin' | 'user' → { data, expiresAt }
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of statsCache.entries()) {
+    if (now >= entry.expiresAt) statsCache.delete(key);
+  }
+}, 60 * 1000);
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -14,6 +29,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const isAdmin = user?.role === 'admin';
+
+    // Cache hit — return cached stats if still fresh
+    const cacheKey = isAdmin ? 'admin' : 'user';
+    const cached = statsCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return Response.json(cached.data);
+    }
 
     const [
       groups, groupMembers, documents, suggestions, votes,
@@ -250,13 +272,17 @@ Deno.serve(async (req) => {
 
     const documentContributorCounts = {};
     docContributorSets.forEach((set, docId) => {
-      for (const p of publicProfiles) {
-        if (p.userId && p.email && set.has(p.userId)) set.delete(p.email);
+      // O(set size) collapse — same optimization as groupParticipantCounts above
+      for (const key of set) {
+        if (key.includes('@')) {
+          const uid = emailToUserId.get(key);
+          if (uid && set.has(uid)) set.delete(key);
+        }
       }
       documentContributorCounts[docId] = set.size;
     });
 
-    return Response.json({
+    const responseData = {
       documentsCount: documents.length,
       totalUniqueContributors: Math.max(1, contributorsList.length),
       contributorsList,
@@ -264,7 +290,13 @@ Deno.serve(async (req) => {
       groupParticipantCounts,
       documentContributorCounts,
       displayedUsers,
-    });
+    };
+
+    // Cache the computed stats for 60s — amortizes 11 queries + heavy joins
+    // across all users hitting the home page within the window.
+    statsCache.set(cacheKey, { data: responseData, expiresAt: Date.now() + CACHE_TTL_MS });
+
+    return Response.json(responseData);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

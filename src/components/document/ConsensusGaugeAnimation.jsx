@@ -7,7 +7,7 @@ import { useLanguage } from "@/components/LanguageContext";
  * meter value. The needle position is computed directly from the animated
  * state (no CSS rotation on SVG) for reliable cross-browser rendering.
  */
-export default function ConsensusGaugeAnimation({ value, documentTitle }) {
+const ConsensusGaugeAnimationInner = function ConsensusGaugeAnimation({ value, documentTitle }) {
   const { language } = useLanguage();
   const pct = Math.min(100, Math.max(0, value * 100));
   const [displayPct, setDisplayPct] = useState(0);
@@ -121,3 +121,7 @@ export default function ConsensusGaugeAnimation({ value, documentTitle }) {
     </div>
   );
 }
+
+// React.memo prevents re-render (and animation restart) when the parent
+// re-renders on subscriptions/scroll but value + documentTitle are unchanged.
+export default React.memo(ConsensusGaugeAnimationInner);
