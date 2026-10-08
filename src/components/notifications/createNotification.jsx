@@ -30,6 +30,10 @@ const TRANSLATIONS = {
     notifRejectedTitle: "Your suggestion was rejected",
     notifRejectedMessage: "The suggestion \"{title}\" was rejected by the document admin",
     notifRejectedWithRefundMessage: "The suggestion \"{title}\" was rejected by the document admin. {points} points have been refunded to your account.",
+    notifAcceptedTitle: "🎉 Your suggestion was accepted!",
+    notifAcceptedMessage: "The suggestion \"{title}\" was accepted and added to the document",
+    notifAcceptedByAdminTitle: "🎉 Your suggestion was accepted by the admin!",
+    notifAcceptedByAdminMessage: "The suggestion \"{title}\" was accepted by the document admin and added to the document",
     notifExpiredTitle: "Suggestion voting period ended",
     notifExpiredMessage: "The voting period for suggestion \"{title}\" has ended",
   },
@@ -37,6 +41,10 @@ const TRANSLATIONS = {
     notifRejectedTitle: "ההצעה שלך נדחתה",
     notifRejectedMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך",
     notifRejectedWithRefundMessage: "ההצעה \"{title}\" נדחתה על ידי מנהל המסמך. {points} נקודות הוחזרו לחשבונך.",
+    notifAcceptedTitle: "🎉 ההצעה שלך התקבלה!",
+    notifAcceptedMessage: "ההצעה \"{title}\" התקבלה ונוספה למסמך",
+    notifAcceptedByAdminTitle: "🎉 ההצעה שלך התקבלה על ידי מנהל המסמך!",
+    notifAcceptedByAdminMessage: "ההצעה \"{title}\" התקבלה על ידי מנהל המסמך ונוספה למסמך",
     notifExpiredTitle: "תקופת ההצבעה הסתיימה",
     notifExpiredMessage: "תקופת ההצבעה על ההצעה \"{title}\" הסתיימה",
   },
@@ -44,6 +52,10 @@ const TRANSLATIONS = {
     notifRejectedTitle: "تم رفض اقتراحك",
     notifRejectedMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند",
     notifRejectedWithRefundMessage: "تم رفض الاقتراح \"{title}\" من قبل مدير المستند. تم إعادة {points} نقطة إلى حسابك.",
+    notifAcceptedTitle: "🎉 تم قبول اقتراحك!",
+    notifAcceptedMessage: "تم قبول الاقتراح \"{title}\" وإضافته إلى المستند",
+    notifAcceptedByAdminTitle: "🎉 تم قبول اقتراحك من قبل المشرف!",
+    notifAcceptedByAdminMessage: "تم قبول الاقتراح \"{title}\" من قبل مدير المستند وإضافته إلى المستند",
     notifExpiredTitle: "انتهت فترة التصويت",
     notifExpiredMessage: "انتهت فترة التصويت على الاقتراح \"{title}\"",
   }
@@ -95,11 +107,18 @@ export async function notifySuggestionStatusChange({
 
     // Determine message keys
     const isRejectedWithRefund = newStatus === 'rejected' && rejectedByAdmin && refundAmount > 0;
-    const titleKey = newStatus === 'rejected' ? 'notifRejectedTitle' : 'notifExpiredTitle';
+    const isAcceptedByAdmin = newStatus === 'accepted' && suggestion.approvedByAdmin;
+    const titleKey = newStatus === 'rejected'
+      ? 'notifRejectedTitle'
+      : newStatus === 'accepted'
+      ? (isAcceptedByAdmin ? 'notifAcceptedByAdminTitle' : 'notifAcceptedTitle')
+      : 'notifExpiredTitle';
     const messageKey = isRejectedWithRefund
       ? 'notifRejectedWithRefundMessage'
       : newStatus === 'rejected'
       ? 'notifRejectedMessage'
+      : newStatus === 'accepted'
+      ? (isAcceptedByAdmin ? 'notifAcceptedByAdminMessage' : 'notifAcceptedMessage')
       : 'notifExpiredMessage';
     const effectiveReplacements = isRejectedWithRefund
       ? { ...replacements, points: String(refundAmount) }
@@ -119,6 +138,8 @@ export async function notifySuggestionStatusChange({
 
     const notifType = newStatus === 'rejected' && rejectedByAdmin
       ? 'suggestion_rejected'
+      : newStatus === 'accepted'
+      ? 'suggestion_accepted'
       : 'suggestion_expiring';
 
     await base44.entities.Notification.create({
