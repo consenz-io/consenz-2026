@@ -48,6 +48,8 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['topics', document.id] });
       queryClient.invalidateQueries({ queryKey: ['versions'] });
+      queryClient.invalidateQueries({ queryKey: ['documentVersions', document.id] });
+      queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] });
       setNewTitle(topic?.title || "");
       setExplanation("");
       onClose();

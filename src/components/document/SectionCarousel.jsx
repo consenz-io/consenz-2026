@@ -276,6 +276,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sections', document.id] });
       queryClient.invalidateQueries({ queryKey: ['versions'] });
+      queryClient.invalidateQueries({ queryKey: ['documentVersions', document.id] });
+      queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] });
       setShowDeleteDialog(false);
     },
   });

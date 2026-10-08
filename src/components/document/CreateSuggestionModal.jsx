@@ -283,6 +283,8 @@ export default function CreateSuggestionModal({
       if (result?.isDirectEdit) {
         queryClient.invalidateQueries({ queryKey: ['sections'] });
         queryClient.invalidateQueries({ queryKey: ['versions'] });
+        queryClient.invalidateQueries({ queryKey: ['documentVersions', document.id] });
+        queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] });
         onClose();
         return;
       }

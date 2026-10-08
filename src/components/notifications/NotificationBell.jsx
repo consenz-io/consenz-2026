@@ -141,9 +141,12 @@ export default function NotificationBell({ user }) {
         markAsReadMutation.mutate(notification.id);
       }
       
-      // For suggestion_accepted and section_deleted notifications, navigate to suggestion detail
-      if ((notification.type === 'suggestion_accepted' ||
-           (notification.type === 'section_deleted' && notification.relatedEntityType === 'suggestion'))
+      // For suggestion_accepted and section_deleted notifications, navigate to suggestion detail.
+      // Only when relatedEntityType is 'suggestion' — admin edit notifications use
+      // type 'suggestion_accepted' but with relatedEntityType 'document', and should
+      // fall through to the actionUrl handler below.
+      if (notification.relatedEntityType === 'suggestion' &&
+          (notification.type === 'suggestion_accepted' || notification.type === 'section_deleted')
           && notification.relatedEntityId) {
         setTimeout(() => {
           navigate(`/suggestiondetail?id=${notification.relatedEntityId}`);
