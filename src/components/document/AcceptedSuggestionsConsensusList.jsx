@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ThumbsUp, ThumbsDown, TrendingUp, FilePlus, FileEdit, Trash2, ExternalLink, ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ThumbsUp, ThumbsDown, TrendingUp, FilePlus, FileEdit, Trash2, ExternalLink, ChevronDown, Shield } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { createPageUrl } from "@/utils";
 import { formatLocalDateTime } from "@/components/utils/dateFormatter";
+import { base44 } from "@/api/base44Client";
 
 const PAGE_SIZE = 10;
 
@@ -17,9 +19,18 @@ const PAGE_SIZE = 10;
  * paginates the display to keep the DOM light for documents with many
  * accepted suggestions.
  */
-export default function AcceptedSuggestionsConsensusList({ suggestions, consensuses, currentMeter }) {
+export default function AcceptedSuggestionsConsensusList({ suggestions, consensuses, currentMeter, documentId }) {
   const { language, isRTL } = useLanguage();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  // Fetch direct admin edits (DocumentVersion with changeType 'direct_edit').
+  // These appear in the timeline but do NOT affect the consensus meter.
+  const { data: directEditVersions } = useQuery({
+    queryKey: ['directEditVersions', documentId],
+    queryFn: () => base44.entities.DocumentVersion.filter({ documentId, changeType: 'direct_edit' }, '-created_date', 500),
+    enabled: !!documentId,
+    staleTime: 30 * 1000
+  });
 
   // Only community-accepted suggestions (not admin overrides) contribute to
   // the consensus meter — exclude approvedByAdmin per the schema.
@@ -27,7 +38,27 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
     .filter(s => s.status === 'accepted' && !s.approvedByAdmin)
     .sort((a, b) => new Date(a.acceptedAt || a.updated_date || a.created_date) - new Date(b.acceptedAt || b.updated_date || b.created_date));
 
-  if (accepted.length === 0) {
+  // Build deduplicated admin edit entries — one row per operation.
+  // delete_section creates two versions (before+after); filter out the
+  // "before" snapshot (changeDescription starts with "לפני:") to keep
+  // only one row per delete operation.
+  const adminEdits = (directEditVersions || [])
+    .filter(v => v.changeType === 'direct_edit' && !(v.changeDescription || '').startsWith('לפני:'))
+    .map(v => {
+      const isTopicChange = (v.content || '').startsWith('topic_title_change:');
+      const isDelete = v.content === '' || (v.changeDescription || '').includes('מחיקת') || (v.changeDescription || '').toLowerCase().includes('delete');
+      const editType = isTopicChange ? 'edit_topic' : isDelete ? 'delete_section' : 'edit_section';
+      return {
+        kind: 'admin_edit',
+        id: v.id,
+        date: new Date(v.created_date),
+        editType,
+        version: v,
+      };
+    })
+    .sort((a, b) => a.date - b.date);
+
+  if (accepted.length === 0 && adminEdits.length === 0) {
     return (
       <div className={`text-center py-8 text-slate-400 ${isRTL ? 'text-right' : 'text-left'}`}>
         {language === 'he' ? 'עדיין לא אושרו הצעות במסמך זה' : language === 'ar' ? 'لم يتم قبول أي اقتراحات بعد' : 'No suggestions have been accepted yet'}
@@ -45,21 +76,49 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
     console.warn('[AcceptedSuggestionsConsensusList] consensuses array length mismatch', { consensusesLen: consensuses.length, acceptedLen: accepted.length });
   }
 
+  // Build merged timeline: accepted suggestions + admin direct edits, sorted
+  // chronologically. Running average is computed ONLY from accepted suggestions;
+  // admin edits inherit the current running average without changing it.
+  const timeline = [
+    ...accepted.map(s => ({ kind: 'suggestion', id: s.id, date: new Date(s.acceptedAt || s.updated_date || s.created_date), data: s })),
+    ...adminEdits,
+  ].sort((a, b) => a.date - b.date);
+
   let runningSum = 0;
-  const rows = accepted.map((s, i) => {
+  let acceptedIdx = 0;
+  const rows = timeline.map((item) => {
+    if (item.kind === 'admin_edit') {
+      const runningAvg = acceptedIdx === 0 ? 0 : (useStoredConsensuses
+        ? consensuses.slice(0, acceptedIdx).reduce((sum, val) => sum + Math.min(1, val), 0) / acceptedIdx
+        : runningSum / acceptedIdx);
+      return {
+        id: item.id,
+        isAdminEdit: true,
+        editType: item.editType,
+        version: item.version,
+        date: item.date,
+        runningAvg,
+        index: null,
+      };
+    }
+    const s = item.data;
+    const i = acceptedIdx;
     const pro = s.proVotes || 0;
     const con = s.conVotes || 0;
     const consensus = Math.min(1, s.suggestionConsensus ?? 0);
-    const prevRunningAvg = i === 0 ? 0 : runningSum / i;
+    const prevRunningAvg = i === 0 ? 0 : (useStoredConsensuses
+      ? consensuses.slice(0, i).reduce((sum, val) => sum + Math.min(1, val), 0) / i
+      : runningSum / i);
     runningSum += consensus;
-    const localRunningAvg = runningSum / (i + 1);
+    acceptedIdx++;
+    const localRunningAvg = runningSum / acceptedIdx;
     const storedRunningAvg = useStoredConsensuses
-      ? consensuses.slice(0, i + 1).reduce((sum, val) => sum + Math.min(1, val), 0) / (i + 1)
+      ? consensuses.slice(0, acceptedIdx).reduce((sum, val) => sum + Math.min(1, val), 0) / acceptedIdx
       : localRunningAvg;
     const runningAvg = storedRunningAvg;
     const participants = s.participantsAtAcceptance || 0;
     const thresholdUsed = Math.max(2, Math.round(runningAvg * participants));
-    return { ...s, pro, con, consensus, runningAvg, prevRunningAvg, participants, thresholdUsed, index: i + 1 };
+    return { ...s, pro, con, consensus, runningAvg, prevRunningAvg, participants, thresholdUsed, index: acceptedIdx, isAdminEdit: false };
   });
 
   // Display newest-first
@@ -86,6 +145,28 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
     return 'Suggestion';
   };
 
+  const adminEditLabel = (editType) => {
+    if (language === 'he') {
+      if (editType === 'edit_topic') return 'שינוי כותרת נושא ישיר';
+      if (editType === 'delete_section') return 'מחיקת סעיף ישירה';
+      return 'עריכת סעיף ישירה';
+    }
+    if (language === 'ar') {
+      if (editType === 'edit_topic') return 'تغيير عنوان الموضوع المباشر';
+      if (editType === 'delete_section') return 'حذف قسم مباشر';
+      return 'تعديل قسم مباشر';
+    }
+    if (editType === 'edit_topic') return 'Direct topic title change';
+    if (editType === 'delete_section') return 'Direct section deletion';
+    return 'Direct section edit';
+  };
+
+  const adminNoteText = language === 'he'
+    ? 'עריכת אדמין — לא השפיעה על מד הקונצנזוס'
+    : language === 'ar'
+    ? 'تعديل المشرف — لم يؤثر على مقياس الإجماع'
+    : 'Admin edit — did not affect the consensus meter';
+
   const TypeIcon = (s) => {
     if (s.type === 'new_section') return FilePlus;
     if (s.type === 'delete_section') return Trash2;
@@ -110,10 +191,10 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
     <div className="space-y-3">
       <p className={`text-sm text-slate-500 ${isRTL ? 'text-right' : 'text-left'}`}>
         {language === 'he'
-          ? `כל הצעה שמתקבלת מוסיפה את ערך הקונצנזוס שלה לממוצע. כיום עומד מד הקונצנזוס על ${(currentMeter * 100).toFixed(0)}%.`
+          ? `כל הצעה שמתקבלת מוסיפה את ערך הקונצנזוס שלה לממוצע. כיום עומד מד הקונצנזוס על ${(currentMeter * 100).toFixed(0)}%. עריכות אדמין ישירות מופיעות בציר הזמן אך אינן משפיעות על חישוב מד הקונצנזוס.`
           : language === 'ar'
-          ? `كل اقتراح مقبول يضيف قيمة إجماعه إلى المتوسط. يبلغ مقياس الإجماع الحالي ${(currentMeter * 100).toFixed(0)}%.`
-          : `Each accepted suggestion adds its consensus value to the average. The current consensus meter is ${(currentMeter * 100).toFixed(0)}%.`}
+          ? `كل اقتراح مقبول يضيف قيمة إجماعه إلى المتوسط. يبلغ مقياس الإجماع الحالي ${(currentMeter * 100).toFixed(0)}%. تظهر تعديلات المشرف المباشرة في الجدول الزمني ولكنها لا تؤثر على حساب مقياس الإجماع.`
+          : `Each accepted suggestion adds its consensus value to the average. The current consensus meter is ${(currentMeter * 100).toFixed(0)}%. Direct admin edits appear in the timeline but do not affect the consensus meter calculation.`}
       </p>
 
       <div className="overflow-x-auto">
@@ -130,7 +211,38 @@ export default function AcceptedSuggestionsConsensusList({ suggestions, consensu
             </tr>
           </thead>
           <tbody>
-            {visibleRows.map((s) => {
+            {visibleRows.map((row) => {
+              if (row.isAdminEdit) {
+                return (
+                  <tr key={row.id} className="border-b border-slate-100 bg-amber-50/40 hover:bg-amber-50/70 transition-colors">
+                    <td className={`py-2 px-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <Shield className="w-4 h-4 text-amber-600" />
+                    </td>
+                    <td className={`py-2 px-2 ${isRTL ? 'text-right' : 'text-left'}`}>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium w-fit bg-amber-100 text-amber-800">
+                          <Shield className="w-3 h-3" />
+                          {adminEditLabel(row.editType)}
+                        </span>
+                        <span className="text-[10px] text-slate-400 leading-tight">
+                          {formatLocalDateTime(row.date, 'DD/MM/YY HH:mm')}
+                        </span>
+                        <span className="text-[10px] text-amber-600 font-medium leading-tight">
+                          {adminNoteText}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-1 text-center text-slate-300">—</td>
+                    <td className="py-2 px-1 text-center text-slate-300">—</td>
+                    <td className="py-2 px-2 text-center hidden sm:table-cell text-slate-300">—</td>
+                    <td className="py-2 px-2 text-center hidden md:table-cell text-slate-300">—</td>
+                    <td className="py-2 px-2 text-center">
+                      <span className="text-slate-400 italic text-xs">{(row.runningAvg * 100).toFixed(0)}%</span>
+                    </td>
+                  </tr>
+                );
+              }
+              const s = row;
               const fullContent = s.newContent
                 ? s.newContent.replace(/<[^>]*>/g, '').trim()
                 : '';
