@@ -50,8 +50,10 @@ export async function checkDocumentAuthorization(base44, documentId, user) {
  *   2. Backed by an accepted GroupInvitation that was created by the group's
  *      creator, or by a user whose own membership was created by the group
  *      creator (transitively trusted, no recursion)
- *   3. Backed by an approved GroupJoinRequest (self-approval is prevented
- *      by tightened update RLS)
+ *   3. Backed by an approved GroupJoinRequest. The update RLS is admin-only,
+ *      so a requester cannot self-approve via the entity API; approval is only
+ *      set by the manageGroupMembership backend function (asServiceRole) after
+ *      verifying the caller is a group admin/creator.
  *
  * Returns { isMember, isAdmin }.
  */

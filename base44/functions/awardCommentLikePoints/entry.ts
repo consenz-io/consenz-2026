@@ -40,16 +40,11 @@ Deno.serve(async (req) => {
     // Don't award points for self-likes
     if (creatorId === user.id) return Response.json({ success: true, message: 'Self-like' });
 
-    // ── Idempotency: skip if points were already adjusted for this comment ──
+    // Idempotency is derived from the server-owned comment.likes array (checked
+    // above), NOT from PointsTransaction records — those have open create RLS
+    // and could be pre-planted by an attacker to suppress point awards.
+
     const expectedAction = isLiking ? 'comment_like_received' : 'comment_like_removed';
-    const existingTx = await base44.asServiceRole.entities.PointsTransaction.filter({
-      relatedEntityId: commentId,
-      userId: creatorId,
-      action: expectedAction
-    });
-    if (existingTx.length > 0) {
-      return Response.json({ success: true, message: 'Points already adjusted for this comment' });
-    }
 
     // Resolve documentId + build a deep-link URL to the comment.
     // Mirror handleNewComment: for section comments prefer the latest accepted suggestion
