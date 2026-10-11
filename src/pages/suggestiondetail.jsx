@@ -650,12 +650,6 @@ function SuggestionDetail() {
                 {suggestion.timerEndsAt &&
                 <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
                 }
-                {suggestion.approvedByAdmin && suggestion.status === 'accepted' &&
-                <Badge variant="outline" className="flex items-center gap-1 text-xs whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-200 px-2 py-0.5">
-                    <ShieldCheck className="w-3 h-3 shrink-0" />
-                    {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'موافقة المشرف' : 'Admin Approved'}
-                  </Badge>
-                }
               </div>
               {/* Metadata strip — type + status + author • date */}
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
@@ -674,12 +668,17 @@ function SuggestionDetail() {
                 <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-200 text-xs">
                     {language === 'he' ? 'פג תוקפה' : language === 'ar' ? 'انتهت صلاحيتها' : 'Expired'}
                   </Badge> :
+                suggestion.status === 'accepted' && suggestion.approvedByAdmin ?
+                <Badge variant="outline" className="flex items-center gap-1 bg-emerald-100 text-emerald-800 border-emerald-200 text-xs whitespace-nowrap">
+                    <ShieldCheck className="w-3 h-3 shrink-0" />
+                    {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'موافقة المشرف' : 'Admin Approved'}
+                  </Badge> :
                 <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span>
                           <Badge variant="outline" className={`${getStatusColor(suggestion.status)} text-xs cursor-default`}>
-                            {t(suggestion.status)}
+                            {suggestion.status === 'pending' ? (language === 'he' ? 'בהצבעה' : language === 'ar' ? 'قيد التصويت' : 'Voting') : t(suggestion.status)}
                           </Badge>
                         </span>
                       </TooltipTrigger>
