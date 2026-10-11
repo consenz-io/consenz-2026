@@ -73,6 +73,7 @@ export default async function(req: Request): Promise<Response> {
     if (editType === 'edit_section' && sectionId) {
       const section = await base44.asServiceRole.entities.Section.filter({ id: sectionId }).then(r => r[0]);
       if (!section) return Response.json({ error: 'Section not found' }, { status: 404 });
+      if (section.documentId !== documentId) return Response.json({ error: 'Section does not belong to this document' }, { status: 403 });
 
       const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
@@ -161,6 +162,12 @@ export default async function(req: Request): Promise<Response> {
         return Response.json({ error: 'No topicId for new section' }, { status: 400 });
       }
 
+      // Validate client-supplied targetTopicId belongs to the authorized document
+      const targetTopic = await base44.asServiceRole.entities.Topic.filter({ id: targetTopicId }).then(r => r[0]);
+      if (!targetTopic || targetTopic.documentId !== documentId) {
+        return Response.json({ error: 'Topic does not belong to this document' }, { status: 403 });
+      }
+
       // Compute insertion order with shifting
       const allSections = await base44.asServiceRole.entities.Section.filter({ documentId, topicId: targetTopicId });
       let newOrder;
@@ -230,6 +237,7 @@ export default async function(req: Request): Promise<Response> {
     } else if (editType === 'delete_section' && sectionId) {
       const section = await base44.asServiceRole.entities.Section.filter({ id: sectionId }).then(r => r[0]);
       if (!section) return Response.json({ error: 'Section not found' }, { status: 404 });
+      if (section.documentId !== documentId) return Response.json({ error: 'Section does not belong to this document' }, { status: 403 });
 
       const versions = await base44.asServiceRole.entities.DocumentVersion.filter({ sectionId: section.id });
       const nextVersion = versions.length > 0 ? Math.max(...versions.map(v => v.version || 0)) + 1 : 1;
@@ -310,6 +318,7 @@ export default async function(req: Request): Promise<Response> {
     } else if (editType === 'edit_topic' && topicId) {
       const topic = await base44.asServiceRole.entities.Topic.filter({ id: topicId }).then(r => r[0]);
       if (!topic) return Response.json({ error: 'Topic not found' }, { status: 404 });
+      if (topic.documentId !== documentId) return Response.json({ error: 'Topic does not belong to this document' }, { status: 403 });
 
       const originalTitle = topic.title;
       const trimmedNewTitle = newTitle.trim();
