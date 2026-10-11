@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 const stripHtml = (html) => (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -29,11 +30,8 @@ export default async function(req) {
       if (groups.length > 0) {
         const group = groups[0];
         if (group.status === 'private' || group.status === 'hidden') {
-          const memberships = await base44.asServiceRole.entities.GroupMember.filter({
-            groupId: document.groupId,
-            userId: user.id
-          });
-          if (memberships.length === 0 && user.role !== 'admin') {
+          const { isMember } = await verifyGroupMembership(base44, group, user);
+          if (!isMember) {
             return Response.json({ error: 'Forbidden' }, { status: 403 });
           }
         }

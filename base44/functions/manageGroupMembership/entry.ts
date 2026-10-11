@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { buildTranslations } from '../../shared/notificationTranslations.ts';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 export default async function(req) {
   try {
@@ -14,10 +15,17 @@ export default async function(req) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Verify caller is a group admin or system admin (using service role to bypass RLS)
-    const members = await base44.asServiceRole.entities.GroupMember.filter({ groupId });
-    const callerMember = members.find(m => m.userId === user.id);
-    const isGroupAdmin = callerMember?.role === 'admin';
+    // Fetch the group and verify caller is a group admin or system admin
+    // with membership provenance (GroupMember.create is open, so we cannot
+    // trust a membership record by existence alone).
+    const [group, members] = await Promise.all([
+      base44.asServiceRole.entities.Group.filter({ id: groupId }).then(r => r[0]),
+      base44.asServiceRole.entities.GroupMember.filter({ groupId }),
+    ]);
+    if (!group) {
+      return Response.json({ error: 'Group not found' }, { status: 404 });
+    }
+    const { isAdmin: isGroupAdmin } = await verifyGroupMembership(base44, group, user);
     const isSystemAdmin = user.role === 'admin';
 
     if (!isGroupAdmin && !isSystemAdmin) {
@@ -64,7 +72,6 @@ export default async function(req) {
         }
 
         // Send approval notification
-        const group = await base44.asServiceRole.entities.Group.filter({ id: groupId }).then(g => g[0]);
         const groupName = group?.name || '';
         const translations = buildTranslations('groupJoinApprovedTitle', 'groupJoinApprovedMessage', { groupName });
         await base44.asServiceRole.entities.Notification.create({

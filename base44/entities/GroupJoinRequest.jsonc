@@ -49,9 +49,6 @@
     "update": {
       "$or": [
         {
-          "data.userId": "{{user.id}}"
-        },
-        {
           "created_by_id": "{{user.id}}"
         },
         {

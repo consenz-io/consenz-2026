@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, (ch) => ({
@@ -70,8 +71,8 @@ Deno.serve(async (req) => {
     const isGroupCreator = group.created_by_id === user.id;
     let isAuthorized = isSystemAdmin || isGroupCreator;
     if (!isAuthorized) {
-      const memberships = await base44.asServiceRole.entities.GroupMember.filter({ groupId, userId: user.id });
-      isAuthorized = memberships.some(m => m.role === 'admin');
+      const { isAdmin } = await verifyGroupMembership(base44, group, user);
+      isAuthorized = isAdmin;
     }
     if (!isAuthorized) {
       return Response.json({ error: 'Forbidden: only group admins can send invitations' }, { status: 403 });

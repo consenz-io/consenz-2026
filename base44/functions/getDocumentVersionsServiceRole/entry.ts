@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.27';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -29,11 +30,8 @@ Deno.serve(async (req) => {
       if (groups.length > 0) {
         const group = groups[0];
         if (group.status === 'private' || group.status === 'hidden') {
-          const memberships = await base44.asServiceRole.entities.GroupMember.filter({
-            groupId: document.groupId,
-            userId: user.id
-          });
-          if (memberships.length === 0) {
+          const { isMember } = await verifyGroupMembership(base44, group, user);
+          if (!isMember) {
             return Response.json({ error: 'Forbidden' }, { status: 403 });
           }
         }

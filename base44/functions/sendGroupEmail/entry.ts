@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 // Trusted base URL — hardcoded, not derived from client-controlled request
 // headers (Origin/Referer), to prevent phishing of group admins via forged
@@ -91,7 +92,7 @@ export default async function(req) {
         return Response.json({ sent: 0, pending: true });
       }
 
-      const adminMembers = members.filter(m => m.role === 'admin');
+      const adminMembers = members.filter(m => m.role === 'admin' && m.created_by_id === group.created_by_id);
       const adminProfiles = await base44.asServiceRole.entities.UserPublicProfile.filter({
         userId: { $in: adminMembers.map(m => m.userId) },
       });
@@ -108,8 +109,8 @@ export default async function(req) {
     }
 
     if (type === 'member_added') {
-      // Only a group admin can trigger "member added" notifications
-      const isAdmin = members.some(m => m.role === 'admin' && m.userId === user.id) || user.role === 'admin';
+      // Only a group admin with provenance can trigger "member added" notifications
+      const { isAdmin } = await verifyGroupMembership(base44, group, user);
       if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
       if (!memberEmail) return Response.json({ error: 'Missing memberEmail' }, { status: 400 });
 
@@ -128,8 +129,8 @@ export default async function(req) {
       if (!memberUser) {
         return Response.json({ error: 'Recipient is not a registered user' }, { status: 400 });
       }
-      const isMember = members.some(m => m.userId === memberUser.id);
-      if (!isMember) {
+      const { isMember: recipientIsMember } = await verifyGroupMembership(base44, group, memberUser);
+      if (!recipientIsMember) {
         return Response.json({ error: 'Recipient is not a member of this group' }, { status: 403 });
       }
 
