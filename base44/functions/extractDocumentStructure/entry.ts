@@ -50,7 +50,7 @@ export default async function(req) {
     } catch {
       return Response.json({ error: 'Invalid fileUrl' }, { status: 400 });
     }
-    if (!parsedUrl.hostname.endsWith('base44.com')) {
+    if (parsedUrl.hostname !== 'base44.com' && !parsedUrl.hostname.endsWith('.base44.com')) {
       return Response.json({ error: 'fileUrl must point to app storage' }, { status: 400 });
     }
 

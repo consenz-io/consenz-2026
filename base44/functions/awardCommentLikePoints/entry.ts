@@ -103,19 +103,35 @@ Deno.serve(async (req) => {
 
     const usersList = await base44.asServiceRole.entities.User.filter({ id: creatorId });
     if (usersList.length === 0) return Response.json({ error: 'Creator not found' }, { status: 404 });
-    const creator = usersList[0];
-    const newPoints = (creator.points || 1000) + amount;
 
-    // Update the likes array server-side (this function owns the transition)
-    const updatedLikes = isLiking
-      ? [...likes, user.email]
-      : likes.filter(e => e !== user.email);
+    // ── Atomic transition (race-safe) ───────────────────────────────────
+    // Use a conditional updateMany as the gate: the $push/$pull only applies
+    // if the likes array is in the expected pre-transition state. This prevents
+    // the TOCTOU race where two concurrent like requests both read the old
+    // array, both pass the check, and both award +5. Only the request that
+    // wins the atomic conditional update proceeds to adjust points.
+    const likeUpdate = isLiking
+      ? await base44.asServiceRole.entities.Comment.updateMany(
+          { id: commentId, likes: { $nin: [user.email] } },
+          { $push: { likes: user.email } }
+        )
+      : await base44.asServiceRole.entities.Comment.updateMany(
+          { id: commentId, likes: { $in: [user.email] } },
+          { $pull: { likes: user.email } }
+        );
 
+    if (!likeUpdate || likeUpdate.updated !== 1) {
+      return Response.json({ success: true, message: 'Like state changed concurrently' });
+    }
+
+    // Atomically increment points (no read-then-write) and log the transaction.
     await Promise.all([
-      base44.asServiceRole.entities.User.update(creator.id, { points: newPoints }),
-      base44.asServiceRole.entities.Comment.update(commentId, { likes: updatedLikes }),
+      base44.asServiceRole.entities.User.updateMany(
+        { id: creatorId },
+        { $inc: { points: amount } }
+      ),
       base44.asServiceRole.entities.PointsTransaction.create({
-        userId: creator.id,
+        userId: creatorId,
         amount,
         action,
         description,
@@ -125,7 +141,7 @@ Deno.serve(async (req) => {
       })
     ]);
 
-    console.log(`[AWARD COMMENT LIKE] ${isLiking ? '+' : '-'}5 points to creator ${creator.id} for comment ${commentId}`);
+    console.log(`[AWARD COMMENT LIKE] ${isLiking ? '+' : '-'}5 points to creator ${creatorId} for comment ${commentId}`);
     return Response.json({ success: true, awarded: amount });
   } catch (error) {
     console.error('[AWARD COMMENT LIKE ERROR]', error);
