@@ -651,9 +651,9 @@ function SuggestionDetail() {
                 <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
                 }
                 {suggestion.approvedByAdmin && suggestion.status === 'accepted' &&
-                <Badge variant="outline" className="flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
-                    <ShieldCheck className="w-3 h-3" />
-                    {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'تمت الموافقة من المشرف' : 'Admin Approved'}
+                <Badge variant="outline" className="flex items-center gap-1 text-xs whitespace-nowrap bg-emerald-50 text-emerald-700 border-emerald-200 px-2 py-0.5">
+                    <ShieldCheck className="w-3 h-3 shrink-0" />
+                    {language === 'he' ? 'אושר ע״י מנהל' : language === 'ar' ? 'موافقة المشرف' : 'Admin Approved'}
                   </Badge>
                 }
               </div>
