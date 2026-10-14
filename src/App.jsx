@@ -22,6 +22,13 @@ const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
+// Pages that require login (personal data or create/admin actions).
+// Everything else is publicly viewable without authentication.
+const PROTECTED_PAGES = new Set([
+  'MyDocuments', 'Profile', 'CreateDocument', 'CreateGroup',
+  'DocumentAdmin', 'AdminSyncProfiles', 'LoadTesting', 'NotificationQA'
+]);
+
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
@@ -46,13 +53,27 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      {/* Public pages — viewable without login */}
+      <Route path="/" element={
+        <LayoutWrapper currentPageName={mainPageKey}>
+          <MainPage />
+        </LayoutWrapper>
+      } />
+      {Object.entries(Pages).filter(([path]) => !PROTECTED_PAGES.has(path)).map(([path, Page]) => (
+        <Route
+          key={path}
+          path={`/${path}`}
+          element={
+            <LayoutWrapper currentPageName={path}>
+              <Page />
+            </LayoutWrapper>
+          }
+        />
+      ))}
+
+      {/* Protected pages — require login */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route path="/" element={
-          <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
-          </LayoutWrapper>
-        } />
-        {Object.entries(Pages).map(([path, Page]) => (
+        {Object.entries(Pages).filter(([path]) => PROTECTED_PAGES.has(path)).map(([path, Page]) => (
           <Route
             key={path}
             path={`/${path}`}
