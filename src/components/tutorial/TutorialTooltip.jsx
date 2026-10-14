@@ -315,10 +315,18 @@ export default function TutorialTooltip({
   // flush against the target instead of overlapping it. The fixed
   // TOOLTIP_HEIGHT estimate under-measures long translations, which previously
   // let a "top"/"bottom" side falsely "fit" and cover the target.
+  // Track whether we've already done the real-height reposition + scroll for
+  // the current step. Prevents a feedback loop when pos changes on every scroll.
+  const repositionedForStepRef = useRef(null);
+
   useEffect(() => {
     if (isInterstitial) return;
     if (!pos || !tooltipRef.current) return;
     if (step.tooltipPosition === 'sidebar') return;
+    // Only reposition once per step — the first time pos is set with real content
+    if (repositionedForStepRef.current === step.id) return;
+    repositionedForStepRef.current = step.id;
+
     const el = document.querySelector(step.targetSelector);
     if (!el) return;
     const rect = el.getBoundingClientRect();
@@ -328,11 +336,14 @@ export default function TutorialTooltip({
     setResolvedPosition((prevRp) => prevRp === rp ? prevRp : rp);
     setPos((prev) => {
       if (!prev) return next;
-      if (prev.top === next.top && prev.left === next.left && prev.transform === next.transform) return prev;
+      if (prev.top === next.top && prev.left === next.left && prev.transform === next.transform) return next;
       return next;
     });
+    // After repositioning with the real height, scroll the bubble into view
+    // in case the new position is off-screen.
+    requestAnimationFrame(() => scrollBubbleIntoView());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heading, body, language, step]);
+  }, [pos, heading, body, language, step]);
 
   const isPractice = step.type === 'practice';
   const isEncourage = step.type === 'encourage';

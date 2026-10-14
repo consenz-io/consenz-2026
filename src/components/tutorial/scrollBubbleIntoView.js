@@ -2,14 +2,21 @@
  * Scrolls the page so the tutorial tooltip bubble is fully visible in the viewport.
  * Call this AFTER the bubble has been positioned and rendered in the DOM.
  * Only scrolls if the bubble is partially or fully outside the visible area.
+ *
+ * Uses the ACTUAL header height (measured from the DOM) instead of a hardcoded
+ * estimate, and re-checks once after the smooth scroll settles so that a bubble
+ * that was repositioned by the scroll handler gets a second chance to be brought
+ * into view.
  */
 export function scrollBubbleIntoView() {
   const bubble = document.querySelector('.tutorial-highlight-bubble');
   if (!bubble) return;
 
   const rect = bubble.getBoundingClientRect();
+
+  const header = document.querySelector('header[role="banner"]');
+  const headerHeight = header ? header.getBoundingClientRect().height : 72;
   const margin = 24;
-  const headerHeight = 72; // approximate fixed app header height
 
   let scrollAdjust = 0;
   if (rect.top < headerHeight) {
@@ -23,6 +30,26 @@ export function scrollBubbleIntoView() {
   if (scrollAdjust !== 0) {
     const newTop = Math.max(0, window.scrollY + scrollAdjust);
     window.scrollTo({ top: newTop, behavior: 'smooth' });
+
+    // After the smooth scroll settles, the scroll handler repositions the
+    // (fixed) bubble. Re-check once: if the bubble is STILL off-screen after
+    // repositioning, scroll again to bring it into view.
+    setTimeout(() => {
+      const bubble2 = document.querySelector('.tutorial-highlight-bubble');
+      if (!bubble2) return;
+      const r = bubble2.getBoundingClientRect();
+      const h = document.querySelector('header[role="banner"]');
+      const hh = h ? h.getBoundingClientRect().height : 72;
+      let adj = 0;
+      if (r.top < hh) {
+        adj = r.top - hh - margin;
+      } else if (r.bottom > window.innerHeight - margin) {
+        adj = r.bottom - (window.innerHeight - margin);
+      }
+      if (adj !== 0) {
+        window.scrollTo({ top: Math.max(0, window.scrollY + adj), behavior: 'smooth' });
+      }
+    }, 350);
   }
 }
 
