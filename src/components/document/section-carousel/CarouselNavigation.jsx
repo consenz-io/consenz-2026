@@ -195,19 +195,19 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
         </div>
       }
 
-      {onReturnToCurrent && !isOnCurrentView &&
-      <div className="pt-3 flex justify-center hidden">
-          <Button
-          variant="ghost"
-          size="sm"
-          onClick={onReturnToCurrent}
-          className="text-xs h-8 px-3 text-slate-600 hover:text-slate-900 hover:bg-white/70">
+      
 
-            <Undo2 className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
-            <span className="truncate">{t('returnToCurrentVersion')}</span>
-          </Button>
-        </div>
-      }
+
+
+
+
+
+
+
+
+
+
+      
     </div>);
 
 });
