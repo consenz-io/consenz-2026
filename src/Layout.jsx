@@ -544,16 +544,20 @@ function LayoutContent({ children, currentPageName }) {
                 </div>
               }
 
-              {/* Login button for unauthenticated users */}
+              {/* Login button for unauthenticated users — centered to avoid
+                  overlapping the ghost points badge shown during the tutorial */}
               {!user &&
-              <Button
-                onClick={() => base44.auth.redirectToLogin()}
-                size="sm"
-                className="flex-shrink-0 h-10 px-4"
-                aria-label={isRTL ? 'כניסה למערכת' : 'Sign in'}>
-                <LogIn className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
-                {t('signIn')}
-              </Button>
+              <>
+                <Button
+                  onClick={() => base44.auth.redirectToLogin()}
+                  size="sm"
+                  className="flex-shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg"
+                  aria-label={isRTL ? 'כניסה למערכת' : 'Sign in'}>
+                  <LogIn className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
+                  {t('signIn')}
+                </Button>
+                <div className="flex-1" />
+              </>
               }
             </div>
           </header>
