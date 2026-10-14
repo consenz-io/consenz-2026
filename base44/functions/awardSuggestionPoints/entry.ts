@@ -13,7 +13,8 @@ Deno.serve(async (req) => {
     // and invoking this endpoint. The legitimate acceptance flow calls
     // awardSuggestionPointsLogic directly from processAcceptance with the
     // internal token, not through this HTTP endpoint.
-    const { ok, response } = await authorizeInternalOrUser(base44, body);
+    const authUser = await base44.auth.me().catch(() => null);
+    const { ok, response } = await authorizeInternalOrUser(base44, body, authUser);
     if (!ok) return response;
 
     const { suggestionId, action } = body;

@@ -8,7 +8,8 @@ Deno.serve(async (req) => {
     // Auth: only the scheduled workflow trigger (internal token) or an admin
     // may invoke this maintenance function. Previously any anonymous caller
     // could run it since the check only rejected authenticated non-admins.
-    const { ok, response } = await authorizeInternalOrUser(base44, body);
+    const authUser = await base44.auth.me().catch(() => null);
+    const { ok, response } = await authorizeInternalOrUser(base44, body, authUser);
     if (!ok) return response;
     const now = new Date().toISOString();
     console.log('[EXPIRE SUGGESTIONS] Running at:', now);

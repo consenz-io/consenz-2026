@@ -10,7 +10,8 @@ Deno.serve(async (req) => {
     // Auth: only the platform workflow (internal token) or an admin may call.
     // Previously any anonymous caller who referenced a real Comment ID could
     // pass the check and trigger notifications.
-    const { ok, response } = await authorizeInternalOrUser(base44, body);
+    const authUser = await base44.auth.me().catch(() => null);
+    const { ok, response } = await authorizeInternalOrUser(base44, body, authUser);
     if (!ok) return response;
 
     if (!comment || event.type !== 'create') {

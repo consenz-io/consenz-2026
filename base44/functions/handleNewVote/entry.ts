@@ -14,7 +14,8 @@ Deno.serve(async (req) => {
     // previously any caller who referenced a real Vote ID could pass, and all
     // logic fields (suggestionId, userId, vote direction) were taken from the
     // forgeable request body, enabling unlimited point farming.
-    const { ok, user, response } = await authorizeInternalOrUser(base44, body);
+    const authUser = await base44.auth.me().catch(() => null);
+    const { ok, user, response } = await authorizeInternalOrUser(base44, body, authUser);
     if (!ok) return response;
 
     if (!vote || event?.type !== 'create') {

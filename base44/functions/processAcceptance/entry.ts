@@ -86,7 +86,8 @@ Deno.serve(async (req) => {
     // This function runs with service role privileges
     let documentId, voterId, wasNewVote, forceAccept;
     const body = await req.json();
-    const { ok: _authOk, user: _gateUser, response: _authRes } = await authorizeInternalOrUser(base44, body);
+    const _authUser = await base44.auth.me().catch(() => null);
+    const { ok: _authOk, user: _gateUser, response: _authRes } = await authorizeInternalOrUser(base44, body, _authUser);
     if (!_authOk) return _authRes;
     ({ suggestionId, documentId, voterId, wasNewVote, forceAccept } = body);
 

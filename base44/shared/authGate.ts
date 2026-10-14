@@ -20,9 +20,11 @@ import { secrets } from "base44:runtime";
 
 const INTERNAL_AUTOMATION_TOKEN = secrets.get("INTERNAL_AUTOMATION_TOKEN") ?? "";
 
-export async function authorizeInternalOrUser(base44, body) {
-  let user = null;
-  try { user = await base44.auth.me(); } catch {}
+export async function authorizeInternalOrUser(base44, body, preUser = null) {
+  let user = preUser;
+  if (!user) {
+    try { user = await base44.auth.me(); } catch {}
+  }
   const tokenOk = !!body?.internalToken && body.internalToken === INTERNAL_AUTOMATION_TOKEN;
   const isAdmin = user?.role === 'admin';
   if (!isAdmin && !tokenOk) {
