@@ -22,7 +22,7 @@ const detectLanguage = (text) => {
   return 'en';
 };
 
-export default function DocumentTopicCard({ topic, topicIndex, topicProvided }) {
+const DocumentTopicCardInner = function DocumentTopicCard({ topic, topicIndex, topicProvided }) {
   const {
     isRTL, isAdmin, t, language, document, user, canParticipate,
     getSectionsForTopic, getGhostSlotsForTopic, getNewSectionSuggestionsForTopic,
@@ -201,4 +201,8 @@ export default function DocumentTopicCard({ topic, topicIndex, topicProvided }) 
       </CardContent>
     </Card>
   );
-}
+};
+
+// React.memo prevents re-rendering all topic cards when the parent re-renders
+// on scroll or subscription events — only the card whose `topic` prop changed re-renders.
+export default React.memo(DocumentTopicCardInner);

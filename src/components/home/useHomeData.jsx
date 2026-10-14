@@ -21,9 +21,14 @@ export function useHomeData() {
     staleTime: 5 * 60 * 1000,
   });
 
+  // Fetch only the current user's memberships (typically 5-20 records) instead of
+  // all 500 GroupMember records. Used for hidden-group visibility + admin detection
+  // in GroupsSection — the total member count comes from homeStats (server-side).
   const { data: groupMembers = [], isLoading: membersLoading } = useQuery({
-    queryKey: ['groupMembers'],
-    queryFn: () => base44.entities.GroupMember.list('-created_date', 500),
+    queryKey: ['myGroupMemberships', user?.id],
+    queryFn: () => base44.entities.GroupMember.filter({ userId: user.id }),
+    enabled: !!user?.id,
+    placeholderData: [],
     staleTime: 5 * 60 * 1000,
   });
 
