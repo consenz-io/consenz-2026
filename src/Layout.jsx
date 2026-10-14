@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users, MessageSquare } from "lucide-react";
+import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users, MessageSquare, LogIn } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
 import { Toaster } from "sonner";
 import { initBrowserNotifications } from "@/components/notifications/browserNotifications";
@@ -542,6 +542,18 @@ function LayoutContent({ children, currentPageName }) {
                   <FloatingNotificationBell />
                   <FloatingPointsBadge />
                 </div>
+              }
+
+              {/* Login button for unauthenticated users */}
+              {!user &&
+              <Button
+                onClick={() => base44.auth.redirectToLogin()}
+                size="sm"
+                className="flex-shrink-0 h-10 px-4"
+                aria-label={isRTL ? 'כניסה למערכת' : 'Sign in'}>
+                <LogIn className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
+                {t('signIn')}
+              </Button>
               }
             </div>
           </header>
