@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 /**
  * Accept group invitation after user signs up/logs in
@@ -49,25 +50,38 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Invitation has expired' }, { status: 400 });
     }
 
-    // Provenance check: verify the invitation was created by the group's
-    // creator, an existing group member/admin, or a system admin. The
-    // GroupInvitation entity's create rule is open, so any user could
-    // self-mint a record naming any group. created_by_id is platform-set
-    // and not client-writable, so we trust it as the inviter's identity.
-    const [groupRecords, groupMembers] = await Promise.all([
+    // Provenance check: verify the inviter was authorized to invite people to
+    // this group. GroupMember.create is open, so checking for ANY membership
+    // record is insufficient — an attacker can self-mint one and then self-mint
+    // a GroupInvitation. We only trust memberships established through verified
+    // flows (created by the group creator, backed by an accepted invitation
+    // with provenance, or backed by an approved join request), using
+    // verifyGroupMembership from documentAuth.
+    const [groupRecords, inviterUsers] = await Promise.all([
       base44.asServiceRole.entities.Group.filter({ id: invitation.groupId }),
-      base44.asServiceRole.entities.GroupMember.filter({ groupId: invitation.groupId })
+      base44.asServiceRole.entities.User.filter({ id: invitation.created_by_id })
     ]);
     const group = groupRecords[0];
     if (!group) {
       return Response.json({ error: 'Group not found' }, { status: 404 });
     }
 
+    const inviter = inviterUsers[0];
     const isSystemAdmin = user.role === 'admin';
     const isGroupCreator = group.created_by_id === invitation.created_by_id;
-    const isInviterAMember = groupMembers.some(m => m.userId === invitation.created_by_id);
+    const isInviterSystemAdmin = inviter?.role === 'admin';
 
-    if (!isSystemAdmin && !isGroupCreator && !isInviterAMember) {
+    let isInviterAuthorized = isGroupCreator || isInviterSystemAdmin;
+    if (!isInviterAuthorized) {
+      const { isMember } = await verifyGroupMembership(base44, group, {
+        id: invitation.created_by_id,
+        email: inviter?.email,
+        role: inviter?.role
+      });
+      isInviterAuthorized = isMember;
+    }
+
+    if (!isSystemAdmin && !isInviterAuthorized) {
       return Response.json({ error: 'Invalid invitation' }, { status: 403 });
     }
 
