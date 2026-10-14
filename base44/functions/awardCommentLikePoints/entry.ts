@@ -124,12 +124,14 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Like state changed concurrently' });
     }
 
-    // Atomically increment points (no read-then-write) and log the transaction.
+    // Increment points and log the transaction. User.updateMany is not allowed
+    // by the platform, so read-then-write via User.update.
+    const creatorUsersForPoints = await base44.asServiceRole.entities.User.filter({ id: creatorId });
+    const creatorCurrentPoints = creatorUsersForPoints[0]?.points ?? 1000;
     await Promise.all([
-      base44.asServiceRole.entities.User.updateMany(
-        { id: creatorId },
-        { $inc: { points: amount } }
-      ),
+      base44.asServiceRole.entities.User.update(creatorId, {
+        points: creatorCurrentPoints + amount,
+      }),
       base44.asServiceRole.entities.PointsTransaction.create({
         userId: creatorId,
         amount,

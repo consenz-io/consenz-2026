@@ -31,14 +31,19 @@ export async function spendPointsAtomic(
 ) {
   if (cost <= 0) return { success: true };
 
-  const result = await serviceBase44.entities.User.updateMany(
-    { id: userId, points: { $gte: cost } },
-    { $inc: { points: -cost } }
-  );
+  // User.updateMany is not allowed by the platform ("Bulk user update not
+  // allowed"), so we must read-then-write. This is a small TOCTOU window,
+  // but the only option given the platform restriction.
+  const users = await serviceBase44.entities.User.filter({ id: userId });
+  const user = users[0];
+  if (!user) return { error: "INSUFFICIENT_POINTS" };
 
-  if (!result || result.updated !== 1) {
-    return { error: "INSUFFICIENT_POINTS" };
-  }
+  const currentPoints = user.points ?? 1000;
+  if (currentPoints < cost) return { error: "INSUFFICIENT_POINTS" };
+
+  await serviceBase44.entities.User.update(userId, {
+    points: currentPoints - cost,
+  });
 
   await serviceBase44.entities.PointsTransaction.create({
     userId,
@@ -67,11 +72,16 @@ export async function addPointsAtomic(
 ) {
   if (amount <= 0) return { success: true };
 
+  // User.updateMany is not allowed by the platform, so read-then-write.
+  const users = await serviceBase44.entities.User.filter({ id: userId });
+  const user = users[0];
+  if (!user) return { success: true };
+
+  const currentPoints = user.points ?? 1000;
   await Promise.all([
-    serviceBase44.entities.User.updateMany(
-      { id: userId },
-      { $inc: { points: amount } }
-    ),
+    serviceBase44.entities.User.update(userId, {
+      points: currentPoints + amount,
+    }),
     serviceBase44.entities.PointsTransaction.create({
       userId,
       amount,

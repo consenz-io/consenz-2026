@@ -77,11 +77,13 @@ export default async function(req: Request): Promise<Response> {
       }
     }
 
-    // Increment suggestionsCreated counter atomically (was client-side updateMe).
-    await serviceBase44.entities.User.updateMany(
-      { id: user.id },
-      { $inc: { suggestionsCreated: 1 } }
-    );
+    // Increment suggestionsCreated counter. User.updateMany is not allowed by
+    // the platform, so read-then-write via User.update.
+    const usersForCounter = await serviceBase44.entities.User.filter({ id: user.id });
+    const currentSuggestionsCreated = usersForCounter[0]?.suggestionsCreated ?? 0;
+    await serviceBase44.entities.User.update(user.id, {
+      suggestionsCreated: currentSuggestionsCreated + 1,
+    });
 
     return Response.json({ success: true, suggestion });
   } catch (error) {
