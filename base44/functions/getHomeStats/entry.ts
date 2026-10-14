@@ -204,8 +204,21 @@ Deno.serve(async (req) => {
       if (gid && groupParticipantSets.has(gid)) groupParticipantSets.get(gid).add(a.userId);
     }
 
+    // Authorization: private/hidden group participant counts must not leak to
+    // non-members. Build the caller's membership set from the already-loaded
+    // groupMembers, then drop counts for groups they can't see.
+    const callerMemberGroupIds = new Set(
+      groupMembers.filter(m => m.userId === user.id).map(m => m.groupId)
+    );
+    const groupStatusById = new Map(groups.map(g => [g.id, g.status]));
+    const canSeeGroup = (gid) =>
+      isAdmin ||
+      callerMemberGroupIds.has(gid) ||
+      groupStatusById.get(gid) === 'public';
+
     const groupParticipantCounts = {};
     groupParticipantSets.forEach((idSet, gid) => {
+      if (!canSeeGroup(gid)) return;
       for (const p of publicProfiles) {
         if (p.userId && p.email && idSet.has(p.userId)) idSet.delete(p.email);
       }
@@ -272,6 +285,9 @@ Deno.serve(async (req) => {
 
     const documentContributorCounts = {};
     docContributorSets.forEach((set, docId) => {
+      // Skip documents in private/hidden groups the caller can't see
+      const gid = docIdToGroupId.get(docId);
+      if (gid && !canSeeGroup(gid)) return;
       // O(set size) collapse — same optimization as groupParticipantCounts above
       for (const key of set) {
         if (key.includes('@')) {

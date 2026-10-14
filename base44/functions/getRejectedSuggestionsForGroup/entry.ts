@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -9,15 +10,29 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const svc = base44.asServiceRole;
+
     // Find the group by name
-    const groups = await base44.entities.Group.filter({ name: 'בי״ס דמוקרטי לב השרון' });
+    const groups = await svc.entities.Group.filter({ name: 'בי״ס דמוקרטי לב השרון' });
     if (groups.length === 0) {
       return Response.json({ error: 'Group not found' }, { status: 404 });
     }
-    const groupId = groups[0].id;
+    const group = groups[0];
+    const groupId = group.id;
+
+    // Authorization: private/hidden groups require verified membership.
+    // Without this check, any authenticated user could read the full
+    // rejected-suggestion dump (documents, suggestions, user profiles) of
+    // a group they have no access to.
+    if (group.status === 'private' || group.status === 'hidden') {
+      const { isMember } = await verifyGroupMembership(base44, group, user);
+      if (!isMember) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
 
     // Find all documents in this group
-    const documents = await base44.entities.Document.filter({ groupId });
+    const documents = await svc.entities.Document.filter({ groupId });
     if (documents.length === 0) {
       return Response.json({ suggestions: [], documents: [] });
     }
@@ -25,20 +40,21 @@ Deno.serve(async (req) => {
     const documentIds = documents.map(d => d.id);
 
     // Find all rejected suggestions in these documents
-    const rejectedSuggestions = await base44.entities.Suggestion.filter({
+    const rejectedSuggestions = await svc.entities.Suggestion.filter({
       documentId: { $in: documentIds },
       status: 'rejected'
     });
 
-    // Optionally, fetch related user profiles for creator info
+    // Fetch related user profiles for creator info — only for users who
+    // actually created a rejected suggestion, not the entire profile table.
     const creatorEmails = [...new Set(rejectedSuggestions.map(s => s.created_by).filter(Boolean))];
     const userProfiles = creatorEmails.length > 0
-      ? await base44.entities.UserPublicProfile.filter({})
+      ? await svc.entities.UserPublicProfile.filter({ email: { $in: creatorEmails } })
       : [];
 
     return Response.json({
       groupId,
-      groupName: groups[0].name,
+      groupName: group.name,
       documentCount: documents.length,
       rejectedSuggestionsCount: rejectedSuggestions.length,
       documents,
