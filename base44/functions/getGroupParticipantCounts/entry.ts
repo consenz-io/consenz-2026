@@ -23,9 +23,32 @@ export default async function(req) {
 
     const svc = base44.asServiceRole;
 
+    // Authorization: private/hidden groups leak participant data, so only
+    // return counts for groups the caller is allowed to see — public groups
+    // (visible to all), or groups the caller is a member of, or any group if
+    // the caller is an admin.
+    const [groups, callerMemberships] = await Promise.all([
+      svc.entities.Group.filter({ id: { $in: groupIds } }, null, 1000),
+      svc.entities.GroupMember.filter(
+        { groupId: { $in: groupIds }, userId: user.id }, null, 1000
+      ),
+    ]);
+    const callerGroupIds = new Set(callerMemberships.map(m => m.groupId));
+    const isAdmin = user.role === 'admin';
+    const authorizedGroupIds = groupIds.filter(gid => {
+      if (isAdmin || callerGroupIds.has(gid)) return true;
+      const group = groups.find(g => g.id === gid);
+      return group?.status === 'public';
+    });
+    if (authorizedGroupIds.length === 0) {
+      return Response.json({ counts: {} });
+    }
+    // From here on, only authorized groups are touched.
+    const authorizedSet = new Set(authorizedGroupIds);
+
     // Step 1: Documents for these groups (just IDs + groupId)
     const documents = await svc.entities.Document.filter(
-      { groupId: { $in: groupIds } }, null, 1000
+      { groupId: { $in: authorizedGroupIds } }, null, 1000
     );
     const docIds = documents.map(d => d.id);
     const docIdToGroupId = new Map(documents.map(d => [d.id, d.groupId]));
@@ -33,10 +56,10 @@ export default async function(req) {
     // No documents → only formal members count
     if (docIds.length === 0) {
       const members = await svc.entities.GroupMember.filter(
-        { groupId: { $in: groupIds } }, null, 2000
+        { groupId: { $in: authorizedGroupIds } }, null, 2000
       );
       const counts = {};
-      const sets = new Map(groupIds.map(gid => [gid, new Set()]));
+      const sets = new Map(authorizedGroupIds.map(gid => [gid, new Set()]));
       for (const m of members) {
         if (m.groupId && m.userId && sets.has(m.groupId)) {
           sets.get(m.groupId).add(m.userId);
@@ -75,7 +98,7 @@ export default async function(req) {
 
     const [members, votes, sectionVotes, comments, agreements, profiles] = await Promise.all([
       svc.entities.GroupMember.filter(
-        { groupId: { $in: groupIds } }, null, 2000
+        { groupId: { $in: authorizedGroupIds } }, null, 2000
       ),
       suggestionIds.length > 0
         ? svc.entities.Vote.filter(
@@ -106,8 +129,8 @@ export default async function(req) {
       if (p.userId) validUserIds.add(p.userId);
     }
 
-    // Build groupId → Set of participant userIds
-    const groupSets = new Map(groupIds.map(gid => [gid, new Set()]));
+    // Build groupId → Set of participant userIds (authorized groups only)
+    const groupSets = new Map(authorizedGroupIds.map(gid => [gid, new Set()]));
 
     // 1. Formal group members
     for (const m of members) {
