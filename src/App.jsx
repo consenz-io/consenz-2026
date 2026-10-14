@@ -51,9 +51,9 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/login" element={<LanguageProvider><Login /></LanguageProvider>} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/register" element={<LanguageProvider><Register /></LanguageProvider>} />
+      <Route path="/forgot-password" element={<LanguageProvider><ForgotPassword /></LanguageProvider>} />
+      <Route path="/reset-password" element={<LanguageProvider><ResetPassword /></LanguageProvider>} />
       {/* Public pages — viewable without login */}
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>

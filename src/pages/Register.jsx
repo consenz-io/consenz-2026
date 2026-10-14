@@ -8,10 +8,12 @@ import { UserPlus, Mail, Lock, Loader2, User } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+import { useLanguage } from "@/components/LanguageContext";
 import { toast } from "@/components/ui/use-toast";
 import { safeReturnTo } from "@/lib/authReturnTo";
 
 export default function Register() {
+  const { t, isRTL } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -25,11 +27,11 @@ export default function Register() {
     e.preventDefault();
     setError("");
     if (!fullName.trim() || fullName.trim().length < 2) {
-      setError("Please enter your full name (at least 2 characters)");
+      setError(t('authFullNameError'));
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t('authPasswordsDoNotMatch'));
       return;
     }
     setLoading(true);
@@ -81,8 +83,8 @@ export default function Register() {
     try {
       await base44.auth.resendOtp(email);
       toast({
-        title: "Code sent",
-        description: "Check your email for the new code.",
+        title: t('authCodeSentToast'),
+        description: t('authCodeSentToastDesc'),
       });
     } catch (err) {
       setError(err.message || "Failed to resend code");
@@ -97,8 +99,8 @@ export default function Register() {
     return (
       <AuthLayout
         icon={Mail}
-        title="Verify your email"
-        subtitle={`We sent a code to ${email}`}
+        title={t('authVerifyEmail')}
+        subtitle={t('authWeSentCode', { email })}
       >
         {error && (
           <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
@@ -130,17 +132,17 @@ export default function Register() {
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Verifying...
+              <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+              {t('authVerifying')}
             </>
           ) : (
-            "Verify"
+            t('authVerifyButton')
           )}
         </Button>
         <p className="text-center text-sm text-muted-foreground mt-4">
-          Didn't receive the code?{" "}
+          {t('authDidntReceiveCode')}{" "}
           <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Resend
+            {t('authResend')}
           </button>
         </p>
       </AuthLayout>
@@ -150,16 +152,16 @@ export default function Register() {
   return (
     <AuthLayout
       icon={UserPlus}
-      title="Create your account"
-      subtitle="Sign up to get started"
+      title={t('authCreateAccountTitle')}
+      subtitle={t('authSignUpSubtitle')}
       footer={
         <>
-          Already have an account?{" "}
+          {t('authAlreadyHaveAccount')}{" "}
           <Link
             to={"/login" + (safeReturnTo() !== "/" ? "?returnTo=" + encodeURIComponent(safeReturnTo()) : "")}
             className="text-primary font-medium hover:underline"
           >
-            Log in
+            {t('authLogInLink')}
           </Link>
         </>
       }
@@ -169,8 +171,8 @@ export default function Register() {
         className="w-full h-12 text-sm font-medium mb-6"
         onClick={handleGoogle}
       >
-        <GoogleIcon className="w-5 h-5 mr-2" />
-        Continue with Google
+        <GoogleIcon className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+        {t('authContinueWithGoogle')}
       </Button>
 
       <div className="relative mb-6">
@@ -178,7 +180,7 @@ export default function Register() {
           <div className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
+          <span className="bg-card px-3 text-muted-foreground">{t('authOr')}</span>
         </div>
       </div>
 
@@ -190,42 +192,42 @@ export default function Register() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="fullName">Full name</Label>
+          <Label htmlFor="fullName">{t('authFullName')}</Label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <User className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground`} aria-hidden="true" />
             <Input
               id="fullName"
               type="text"
               autoComplete="name"
               autoFocus
-              placeholder="Your full name"
+              placeholder={t('authFullNamePlaceholder')}
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="pl-10 h-12"
+              className={`${isRTL ? 'pr-10' : 'pl-10'} h-12`}
               required
             />
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t('authEmail')}</Label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Mail className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground`} aria-hidden="true" />
             <Input
               id="email"
               type="email"
               autoComplete="email"
-              placeholder="you@example.com"
+              placeholder={t('authEmailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
+              className={`${isRTL ? 'pr-10' : 'pl-10'} h-12`}
               required
             />
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{t('authPassword')}</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground`} aria-hidden="true" />
             <Input
               id="password"
               type="password"
@@ -233,15 +235,15 @@ export default function Register() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
+              className={`${isRTL ? 'pr-10' : 'pl-10'} h-12`}
               required
             />
           </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="confirm">Confirm Password</Label>
+          <Label htmlFor="confirm">{t('authConfirmPassword')}</Label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Lock className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground`} aria-hidden="true" />
             <Input
               id="confirm"
               type="password"
@@ -249,7 +251,7 @@ export default function Register() {
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-12"
+              className={`${isRTL ? 'pr-10' : 'pl-10'} h-12`}
               required
             />
           </div>
@@ -257,11 +259,11 @@ export default function Register() {
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Creating account...
+              <Loader2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'} animate-spin`} />
+              {t('authCreatingAccount')}
             </>
           ) : (
-            "Create account"
+            t('authCreateAccountButton')
           )}
         </Button>
       </form>
