@@ -81,6 +81,14 @@ Deno.serve(async (req) => {
     return Response.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
+  // Cap summary content at 5,000 characters — blocks oversized payloads that
+  // could be used to deliver very long phishing/spam content from the verified
+  // sender domain.
+  const MAX_SUMMARY_LENGTH = 5000;
+  if (String(summaryContent).length > MAX_SUMMARY_LENGTH) {
+    return Response.json({ error: 'Summary content too long' }, { status: 400 });
+  }
+
   // Sanitize admin-supplied HTML before it reaches the email template — prevents
   // script/event-handler injection into emails sent from the verified domain.
   const sanitizedSummary = sanitizeEmailHtml(summaryContent);
@@ -103,6 +111,19 @@ Deno.serve(async (req) => {
   const recentCount = recentEmails.filter(e => e.created_date && e.created_date >= oneHourAgo).length;
   if (recentCount >= 5) {
     return Response.json({ error: 'Rate limit exceeded: too many document summary emails' }, { status: 429 });
+  }
+
+  // Per-document cooldown: max 1 summary email per document per hour — prevents
+  // re-sending to the same document's participants repeatedly within a short
+  // window. Test emails are exempt so the owner can preview safely.
+  if (!isTestEmail) {
+    const recentDocEmails = await base44.asServiceRole.entities.EmailLog.filter(
+      { relatedEntityId: documentId, purpose: 'document_summary', isTestEmail: false }, '-created_date', 5
+    );
+    const docRecent = recentDocEmails.filter(e => e.created_date && e.created_date >= oneHourAgo).length;
+    if (docRecent >= 1) {
+      return Response.json({ error: 'Rate limit exceeded: a summary email was already sent for this document recently' }, { status: 429 });
+    }
   }
 
   // Determine recipients
@@ -162,6 +183,12 @@ Deno.serve(async (req) => {
 
   if (recipientEmails.length === 0) {
     return Response.json({ error: 'No recipients found' }, { status: 400 });
+  }
+
+  // Cap recipients at 50 per send — blocks mass blasts to large participant lists.
+  const MAX_RECIPIENTS = 50;
+  if (recipientEmails.length > MAX_RECIPIENTS) {
+    return Response.json({ error: 'Too many recipients: maximum 50 per summary email' }, { status: 400 });
   }
 
   // Determine text direction
