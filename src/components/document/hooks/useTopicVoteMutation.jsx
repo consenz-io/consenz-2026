@@ -53,16 +53,8 @@ export function useTopicVoteMutation({ document, user, topicEditSuggestions, que
           ensureUserPublicProfile(user).catch(() => {});
 
           if (vote === 'pro' && document.gamificationEnabled && topicSuggestion) {
-            base44.entities.User.filter({ email: topicSuggestion.created_by }).then(list => {
-              const creator = list[0];
-              if (!creator) return;
-              return Promise.all([
-                base44.entities.User.update(creator.id, { points: (creator.points || 1000) + 10 }),
-                base44.entities.PointsTransaction.create({
-                  userId: creator.id, amount: 10, action: 'vote_received',
-                  description: 'קיבל הצבעה בעד על הצעת עריכת כותרת', relatedEntityType: 'topic',
-                }),
-              ]);
+            base44.functions.invoke('awardTopicEditPoints', {
+              suggestionId, awardType: 'vote_received',
             }).catch(() => {});
           }
         }
@@ -119,16 +111,8 @@ export function useTopicVoteMutation({ document, user, topicEditSuggestions, que
           }
 
           if (document.gamificationEnabled) {
-            base44.entities.User.filter({ email: topicSuggestion.created_by }).then(list => {
-              const creator = list[0];
-              if (!creator) return;
-              return Promise.all([
-                base44.entities.User.update(creator.id, { points: (creator.points || 1000) + 100 }),
-                base44.entities.PointsTransaction.create({
-                  userId: creator.id, amount: 100, action: 'suggestion_accepted',
-                  description: 'ההצעה שלך לעריכת כותרת נושא התקבלה', relatedEntityType: 'topic',
-                }),
-              ]);
+            base44.functions.invoke('awardTopicEditPoints', {
+              suggestionId, awardType: 'suggestion_accepted',
             }).catch(() => {});
           }
 

@@ -269,35 +269,14 @@ export default function SuggestionSidebar({
         });
       }
 
-      // אם גיימיפיקציה מופעלת ואדמין דחה — החזר נקודות ליוצר
+      // אם גיימיפיקציה מופעלת ואדמין דחה — החזר נקודות ליוצר (server-side, atomic)
       let refundAmount = 0;
       if (status === 'rejected' && document?.gamificationEnabled) {
         try {
-          const transactions = await base44.entities.PointsTransaction.filter({
-            relatedEntityId: suggestionId,
-            action: 'suggestion_created'
+          const refundResponse = await base44.functions.invoke('refundSuggestionPoints', {
+            suggestionId,
           });
-          const originalTransaction = transactions[0];
-          refundAmount = originalTransaction ? Math.abs(originalTransaction.amount) : 0;
-
-          if (refundAmount > 0) {
-            const creatorUsers = await base44.entities.User.filter({ email: suggestion.created_by });
-            const creator = creatorUsers[0];
-            if (creator) {
-              const newPoints = (creator.points || 1000) + refundAmount;
-              await Promise.all([
-                base44.entities.User.update(creator.id, { points: newPoints }),
-                base44.entities.PointsTransaction.create({
-                  userId: creator.id,
-                  amount: refundAmount,
-                  action: 'vote_canceled',
-                  description: `החזר נקודות על הצעה שנדחתה ע"י מנהל: ${suggestion.title || ''}`,
-                  relatedEntityId: suggestionId,
-                  relatedEntityType: 'suggestion'
-                })
-              ]);
-            }
-          }
+          refundAmount = refundResponse.data?.refundAmount || 0;
         } catch (pointsErr) {
           console.error('[UPDATE STATUS] Failed to refund points:', pointsErr);
         }

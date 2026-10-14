@@ -231,51 +231,45 @@ export default function CreateSuggestionModal({
 
       const detectedLanguage = detectLanguage(data.newContent);
       
-      const suggestion = await base44.entities.Suggestion.create({
-        documentId: document.id,
-        sectionId: isEditingSuggestion ? editingSuggestion.sectionId : (isNewSection ? null : (existingSection?.id || editingSection?.id || null)),
-        topicId: isEditingSuggestion ? editingSuggestion.topicId : targetTopicId,
-        newTopicTitle: isEditingSuggestion ? editingSuggestion.newTopicTitle : newTopicTitle, // Preserve new topic title when editing suggestion
-        newTopicOrder: isEditingSuggestion ? editingSuggestion.newTopicOrder : newTopicOrder, // Preserve new topic order when editing suggestion
-        type: isNewSection ? 'new_section' : (isEditingSuggestion ? 'edit_suggestion' : 'edit_section'),
-        title: autoTitle,
-        newContent: data.newContent,
-        originalContent: isEditingSuggestion ? editingSuggestion.newContent : (isNewSection ? null : existingSection?.content),
-        explanation: data.explanation,
-        status: 'pending',
-        timerEndsAt: timerEndsAt.toISOString(),
-        proVotes: 0,
-        conVotes: 0,
-        insertPosition: isEditingSuggestion ? editingSuggestion.insertPosition : editingSection?.insertPosition,
-        parentSuggestionId: isEditingSuggestion ? editingSuggestion.id : null,
-        originalLanguage: detectedLanguage,
-        createdByLanguage: language, // Track language user was viewing when creating suggestion
+      const response = await base44.functions.invoke('createSuggestionWithPoints', {
+        suggestionData: {
+          documentId: document.id,
+          sectionId: isEditingSuggestion ? editingSuggestion.sectionId : (isNewSection ? null : (existingSection?.id || editingSection?.id || null)),
+          topicId: isEditingSuggestion ? editingSuggestion.topicId : targetTopicId,
+          newTopicTitle: isEditingSuggestion ? editingSuggestion.newTopicTitle : newTopicTitle,
+          newTopicOrder: isEditingSuggestion ? editingSuggestion.newTopicOrder : newTopicOrder,
+          type: isNewSection ? 'new_section' : (isEditingSuggestion ? 'edit_suggestion' : 'edit_section'),
+          title: autoTitle,
+          newContent: data.newContent,
+          originalContent: isEditingSuggestion ? editingSuggestion.newContent : (isNewSection ? null : existingSection?.content),
+          explanation: data.explanation,
+          status: 'pending',
+          timerEndsAt: timerEndsAt.toISOString(),
+          proVotes: 0,
+          conVotes: 0,
+          insertPosition: isEditingSuggestion ? editingSuggestion.insertPosition : editingSection?.insertPosition,
+          parentSuggestionId: isEditingSuggestion ? editingSuggestion.id : null,
+          originalLanguage: detectedLanguage,
+          createdByLanguage: language,
+        },
+        spendType: isNewSection ? 'new_section' : 'edit_section',
+        pointsDescription: `${t('pointsTransactionCreated')} ${autoTitle}`,
       });
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || 'Failed to create suggestion');
+      }
+      const suggestion = response.data.suggestion;
 
       console.log('[CREATE SUGGESTION] ===== Suggestion created:', suggestion.id, 'type:', suggestion.type, '=====');
       
       // ===== Background tasks - fire-and-forget =====
       ensureUserPublicProfile(currentUser).catch(() => {});
       
-      base44.auth.updateMe({
-        suggestionsCreated: (currentUser.suggestionsCreated || 0) + 1,
-        ...(gamificationEnabled ? { points: currentPoints - pointsCost } : {})
-      }).catch(err => console.error('[UPDATE USER]', err));
-      
-      if (gamificationEnabled) {
-        base44.entities.PointsTransaction.create({
-          userId: currentUser.id,
-          amount: -pointsCost,
-          action: 'suggestion_created',
-          description: `${t('pointsTransactionCreated')} ${autoTitle}`,
-          relatedEntityId: suggestion.id,
-          relatedEntityType: 'suggestion'
-        }).catch(err => console.error('[POINTS]', err));
-      }
-      
       updateContributorsInBackground(document.id);
       
-      // Notifications are sent by handleNewSuggestion backend automation (entity trigger on create).
+      // Notifications: handleNewSuggestion backend automation (entity trigger on create).
+      // Points deduction + suggestionsCreated increment: createSuggestionWithPoints (server-side).
 
       return suggestion;
     },
@@ -346,6 +340,10 @@ export default function CreateSuggestionModal({
           queryClient.invalidateQueries({ queryKey: ['userVotes', document.id, user.id] });
         }
       }
+
+      // Sync currentUser with server-authoritative points balance (the backend
+      // function performed the atomic deduction; the optimistic update above is UI-only).
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
 
       // Close modal immediately - user sees instant feedback
       onClose();

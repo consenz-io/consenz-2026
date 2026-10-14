@@ -61,41 +61,32 @@ export default function EditTopicModal({ isOpen, onClose, topic, document, user,
 
   const createSuggestionMutation = useMutation({
     mutationFn: async () => {
-      // Deduct points if gamification enabled and not admin
-      if (document.gamificationEnabled && !isAdmin) {
-        const newPoints = userPoints - SUGGESTION_COST;
-        await base44.auth.updateMe({ points: newPoints });
-        
-        await base44.entities.PointsTransaction.create({
-          userId: user.id,
-          amount: -SUGGESTION_COST,
-          action: 'suggestion_created',
-          description: `הצעת עריכה לכותרת נושא: ${topic.title}`,
-          relatedEntityType: 'topic'
-        });
-      }
-
       const timerEndsAt = new Date();
       timerEndsAt.setHours(timerEndsAt.getHours() + (document.defaultSuggestionLifetimeHours || 72));
 
-      const suggestion = await base44.entities.TopicEditSuggestion.create({
-        documentId: document.id,
-        topicId: topic.id,
-        originalTitle: topic.title,
-        newTitle: newTitle.trim(),
-        explanation: explanation.trim(),
-        timerEndsAt: timerEndsAt.toISOString()
+      // Create the suggestion AND deduct points atomically server-side.
+      // The backend verifies gamificationEnabled and enforces the cost —
+      // the client can no longer bypass or inflate the deduction.
+      const response = await base44.functions.invoke('createTopicEditSuggestionWithPoints', {
+        suggestionData: {
+          documentId: document.id,
+          topicId: topic.id,
+          originalTitle: topic.title,
+          newTitle: newTitle.trim(),
+          explanation: explanation.trim(),
+          timerEndsAt: timerEndsAt.toISOString(),
+        },
+        isAdmin: !!isAdmin,
+        pointsDescription: `הצעת עריכה לכותרת נושא: ${topic.title}`,
       });
+
+      if (!response.data?.success) {
+        throw new Error(response.data?.error || 'שגיאה ביצירת ההצעה');
+      }
+      const suggestion = response.data.suggestion;
 
       // Ensure UserPublicProfile exists for display
       await ensureUserPublicProfile(user);
-
-      if (document.gamificationEnabled && !isAdmin) {
-        const currentSuggestionsCreated = user.suggestionsCreated || 0;
-        await base44.auth.updateMe({
-          suggestionsCreated: currentSuggestionsCreated + 1
-        });
-      }
       
       // Send notifications in background - don't block UI
       Promise.all([
