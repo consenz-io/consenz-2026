@@ -196,7 +196,7 @@ export const CarouselNavigationArrows = React.memo(function CarouselNavigationAr
       }
 
       {onReturnToCurrent && !isOnCurrentView &&
-      <div className="pt-3 flex justify-center">
+      <div className="pt-3 flex justify-center hidden">
           <Button
           variant="ghost"
           size="sm"
