@@ -93,19 +93,28 @@ export default async function(req) {
       }
 
       const adminMembers = members.filter(m => m.role === 'admin' && m.created_by_id === group.created_by_id);
-      const adminProfiles = await base44.asServiceRole.entities.UserPublicProfile.filter({
-        userId: { $in: adminMembers.map(m => m.userId) },
-      });
+      // Resolve admin recipients from the User entity's server-owned email —
+      // NOT the client-writable UserPublicProfile.email, which any user can set
+      // to an arbitrary external address and use this endpoint as an open mail
+      // relay. The User entity's email is set at registration and cannot be
+      // changed via the API, so only real registered addresses receive mail.
+      const adminUserIds = adminMembers.map(m => m.userId);
+      const adminUsers = adminUserIds.length > 0
+        ? await base44.asServiceRole.entities.User.filter({ id: { $in: adminUserIds } })
+        : [];
       const manageUrl = `${baseUrl}/GroupView?id=${groupId}`;
-      const { subject, body } = joinRequestEmail(lang, userName, user.email, group.name, manageUrl);
+      // Strip HTML tags from group name for the subject line — prevents
+      // attacker-controlled markup from appearing in the email subject.
+      const safeGroupName = String(group.name || '').replace(/<[^>]*>/g, '').trim() || 'Group';
+      const { subject, body } = joinRequestEmail(lang, userName, user.email, safeGroupName, manageUrl);
 
       await base44.asServiceRole.entities.GroupJoinRequest.create({
         groupId, userId: user.id, userEmail: user.email, userName, status: 'pending',
       });
-      await Promise.all(adminProfiles.map(admin =>
+      await Promise.all(adminUsers.map(admin =>
         base44.asServiceRole.integrations.Core.SendEmail({ to: admin.email, subject, body })
       ));
-      return Response.json({ sent: adminProfiles.length });
+      return Response.json({ sent: adminUsers.length });
     }
 
     if (type === 'member_added') {
