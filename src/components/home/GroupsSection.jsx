@@ -11,14 +11,45 @@ import GroupCard from "./GroupCard";
 export default function GroupsSection({ groups, groupsLoading, groupMembers, documents, user, groupParticipantCounts }) {
   const { language } = useLanguage();
 
-  const visibleGroups = groups.filter(group => {
-    if (group.status !== 'hidden') return true;
-    if (!user) return false;
-    const isMember    = groupMembers.some(m => m.groupId === group.id && m.userId === user.id);
-    const isCreator   = group.created_by === user.email;
+  // Pre-build O(1) lookup maps — replaces O(groups × members) filter/some per render.
+  const membersByGroupId = React.useMemo(() => {
+    const map = new Map();
+    for (const m of groupMembers) {
+      if (!map.has(m.groupId)) map.set(m.groupId, []);
+      map.get(m.groupId).push(m);
+    }
+    return map;
+  }, [groupMembers]);
+
+  const docsByGroupId = React.useMemo(() => {
+    const map = new Map();
+    for (const d of documents) {
+      if (!map.has(d.groupId)) map.set(d.groupId, []);
+      map.get(d.groupId).push(d);
+    }
+    return map;
+  }, [documents]);
+
+  const userMembershipGroupIds = React.useMemo(() => {
+    if (!user?.id) return new Set();
+    return new Set(groupMembers.filter(m => m.userId === user.id).map(m => m.groupId));
+  }, [groupMembers, user?.id]);
+
+  const userAdminGroupIds = React.useMemo(() => {
+    if (!user?.id) return new Set();
+    return new Set(groupMembers.filter(m => m.userId === user.id && m.role === 'admin').map(m => m.groupId));
+  }, [groupMembers, user?.id]);
+
+  const visibleGroups = React.useMemo(() => {
+    if (!user) return groups.filter(g => g.status !== 'hidden');
     const isSystemAdmin = user.role === 'admin';
-    return isMember || isCreator || isSystemAdmin;
-  });
+    return groups.filter(group => {
+      if (group.status !== 'hidden') return true;
+      const isMember  = userMembershipGroupIds.has(group.id);
+      const isCreator = group.created_by === user.email;
+      return isMember || isCreator || isSystemAdmin;
+    });
+  }, [groups, user, userMembershipGroupIds]);
 
   const headingText   = { he: 'קבוצות פעילות', ar: 'مجموعات نشطة', en: 'Active Groups' };
   const subText       = { he: 'הצטרפו לקבוצות ושתפו פעולה על מסמכים משותפים', ar: 'انضموا إلى المجموعات وتعاونوا على وثائق مشتركة', en: 'Join groups and collaborate on shared documents' };
@@ -69,9 +100,7 @@ export default function GroupsSection({ groups, groupsLoading, groupMembers, doc
       ) : (
         <div className="groups-list grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {visibleGroups.map(group => {
-            const groupDocs   = documents.filter(d => d.groupId === group.id);
-            const members     = groupMembers.filter(m => m.groupId === group.id);
-            const isAdmin     = members.some(m => m.userId === user?.id && m.role === 'admin');
+            const groupDocs   = docsByGroupId.get(group.id) || [];
             const participants = groupParticipantCounts[group.id] ?? 1;
 
             return (
@@ -80,7 +109,7 @@ export default function GroupsSection({ groups, groupsLoading, groupMembers, doc
                 group={group}
                 docCount={groupDocs.length}
                 participantsCount={participants}
-                isAdmin={isAdmin}
+                isAdmin={userAdminGroupIds.has(group.id)}
               />
             );
           })}

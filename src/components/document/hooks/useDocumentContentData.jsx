@@ -34,10 +34,69 @@ export function useDocumentContentData({
   const language = rawLanguage || 'he';
   const { reorderMutation } = useSuggestionReorder(document?.id);
 
-  const acceptedSuggestions = useMemo(
-    () => suggestions.filter((s) => s.status === 'accepted'),
-    [suggestions]
-  );
+  // ── Combined single-pass memoization ─────────────────────────────────────
+  // Builds 5 maps/arrays from `suggestions` in ONE iteration instead of 5
+  // separate O(n) useMemo passes. Reduces CPU on every render.
+  const suggestionMaps = useMemo(() => {
+    const accepted = [];
+    const bySectionPending = new Map();   // suggestionsBySectionId
+    const bySectionAll = new Map();       // allSuggestionsBySectionId
+    const suggestionById = new Map();
+    const newSectionByTopic = new Map();  // newSectionSuggestionsByTopicId
+    const newTopicArr = [];               // newTopicSuggestions
+
+    for (const s of suggestions) {
+      suggestionById.set(s.id, s);
+
+      if (s.status === 'accepted') accepted.push(s);
+
+      if (s.sectionId) {
+        if (!bySectionAll.has(s.sectionId)) bySectionAll.set(s.sectionId, []);
+        bySectionAll.get(s.sectionId).push(s);
+      }
+
+      if (s.sectionId && (s.type === 'edit_section' || s.type === 'delete_section') && s.status === 'pending') {
+        if (!bySectionPending.has(s.sectionId)) bySectionPending.set(s.sectionId, []);
+        bySectionPending.get(s.sectionId).push(s);
+      }
+
+      if (s.type === 'new_section' && !s.parentSuggestionId && s.status === 'pending' && !s.sectionId) {
+        if (s.topicId) {
+          if (!newSectionByTopic.has(s.topicId)) newSectionByTopic.set(s.topicId, []);
+          newSectionByTopic.get(s.topicId).push(s);
+        } else if (s.newTopicTitle) {
+          newTopicArr.push(s);
+        }
+      }
+    }
+
+    // Attach edit_suggestion children whose parent has a sectionId
+    for (const s of suggestions) {
+      if (s.type === 'edit_suggestion' && !s.sectionId && s.parentSuggestionId) {
+        const parent = suggestionById.get(s.parentSuggestionId);
+        if (parent?.sectionId && bySectionAll.has(parent.sectionId)) {
+          bySectionAll.get(parent.sectionId).push(s);
+        }
+      }
+    }
+
+    // Sort newSectionByTopic arrays
+    newSectionByTopic.forEach((arr) => {
+      arr.reverse();
+      arr.sort((a, b) => {
+        const posDiff = (a.insertPosition ?? 999) - (b.insertPosition ?? 999);
+        if (posDiff !== 0) return posDiff;
+        return new Date(a.created_date) - new Date(b.created_date);
+      });
+    });
+
+    // Sort newTopicArr
+    newTopicArr.sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
+
+    return { accepted, bySectionPending, bySectionAll, newSectionByTopic, newTopicArr };
+  }, [suggestions]);
+
+  const acceptedSuggestions = suggestionMaps.accepted;
 
   // All suggestion votes for this document — used to build per-suggestion voter lists
   // so SectionDeletionVoteBar can deduplicate users who voted on BOTH the suggestion
@@ -317,45 +376,9 @@ export function useDocumentContentData({
     return sectionsByTopicId.get(topicId) || [];
   }, [sectionsByTopicId]);
 
-  // Pre-group pending edit/delete suggestions by sectionId for O(1) lookup
-  const suggestionsBySectionId = useMemo(() => {
-    const map = new Map();
-    for (const s of suggestions) {
-      if (s.sectionId && (s.type === 'edit_section' || s.type === 'delete_section') && s.status === 'pending') {
-        if (!map.has(s.sectionId)) map.set(s.sectionId, []);
-        map.get(s.sectionId).push(s);
-      }
-    }
-    return map;
-  }, [suggestions]);
-
-  // Pre-group ALL suggestions by sectionId (including edit_suggestion children)
-  // — passed to SectionCarousel so it doesn't re-filter the full document array per section.
-  // Was O(sections × suggestions) per render; now O(suggestions) once + O(1) per section.
-  // Single pass: build bySection + suggestionById incrementally, then attach
-  // edit_suggestion children in a second lightweight loop (only over children).
-  // Avoids building a full suggestionById Map when most suggestions have a sectionId.
-  const allSuggestionsBySectionId = useMemo(() => {
-    const bySection = new Map();
-    const suggestionById = new Map();
-    for (const s of suggestions) {
-      suggestionById.set(s.id, s);
-      if (s.sectionId) {
-        if (!bySection.has(s.sectionId)) bySection.set(s.sectionId, []);
-        bySection.get(s.sectionId).push(s);
-      }
-    }
-    // Attach edit_suggestion children whose parent has a sectionId
-    for (const s of suggestions) {
-      if (s.type === 'edit_suggestion' && !s.sectionId && s.parentSuggestionId) {
-        const parent = suggestionById.get(s.parentSuggestionId);
-        if (parent?.sectionId && bySection.has(parent.sectionId)) {
-          bySection.get(parent.sectionId).push(s);
-        }
-      }
-    }
-    return bySection;
-  }, [suggestions]);
+  // Derived from the combined single-pass memo above — same Map references, stable
+  const suggestionsBySectionId = suggestionMaps.bySectionPending;
+  const allSuggestionsBySectionId = suggestionMaps.bySectionAll;
 
   const getSuggestionsForSection = useCallback(
     (sectionId) => suggestionsBySectionId.get(sectionId) || [],
@@ -409,54 +432,16 @@ export function useDocumentContentData({
   }, [suggestions, existingSectionIds]);
   const getGhostSlotsForTopic = useCallback((topicId) => ghostSlotsByTopicId.get(topicId) || [], [ghostSlotsByTopicId]);
 
-  // Pre-group new-section suggestions by topicId — single pass, O(1) lookup per topic
-  const newSectionSuggestionsByTopicId = useMemo(() => {
-    const map = new Map();
-    for (const s of suggestions) {
-      if (s.type !== 'new_section') continue;
-      if (s.parentSuggestionId) continue;
-      if (s.status !== 'pending') continue;
-      if (s.sectionId) continue;
-      if (!s.topicId) continue; // new-topic suggestions handled separately
-      if (!map.has(s.topicId)) map.set(s.topicId, []);
-      map.get(s.topicId).push(s);
-    }
-    map.forEach((arr) => {
-      // Server returns suggestions sorted by -created_date (newest first).
-      // Reverse to oldest-first so Array.sort (stable) preserves oldest-first
-      // for suggestions with identical created_date at the same insertPosition,
-      // ensuring newer suggestions appear below older ones.
-      arr.reverse();
-      arr.sort((a, b) => {
-        const posDiff = (a.insertPosition ?? 999) - (b.insertPosition ?? 999);
-        if (posDiff !== 0) return posDiff;
-        // Same insertPosition: maintain creation order so newer suggestions appear after older ones
-        return new Date(a.created_date) - new Date(b.created_date);
-      });
-    });
-    return map;
-  }, [suggestions]);
+  // Derived from the combined single-pass memo
+  const newSectionSuggestionsByTopicId = suggestionMaps.newSectionByTopic;
 
   const getNewSectionSuggestionsForTopic = useCallback(
     (topicId) => newSectionSuggestionsByTopicId.get(topicId) || [],
     [newSectionSuggestionsByTopicId]
   );
 
-  // Pre-compute new-topic suggestions (no topicId yet) in a single pass
-  const newTopicSuggestions = useMemo(() => {
-    const arr = [];
-    for (const s of suggestions) {
-      if (s.type !== 'new_section') continue;
-      if (s.status !== 'pending') continue;
-      if (s.topicId) continue;
-      if (!s.newTopicTitle) continue;
-      if (s.parentSuggestionId) continue;
-      if (s.sectionId) continue;
-      arr.push(s);
-    }
-    arr.sort((a, b) => (a.newTopicOrder || 999) - (b.newTopicOrder || 999));
-    return arr;
-  }, [suggestions]);
+  // Derived from the combined single-pass memo
+  const newTopicSuggestions = suggestionMaps.newTopicArr;
 
   const getNewTopicSuggestions = useCallback(() => newTopicSuggestions, [newTopicSuggestions]);
 

@@ -47,9 +47,14 @@ export default function NotificationBell({ user }) {
     refetchOnMount: false,
   });
 
-  // Ref to access latest notifications inside the subscription without re-subscribing
+  // Refs for subscription callbacks — avoid stale closures without re-subscribing.
+  // notificationIdsRef is a Set for O(1) lookup instead of O(n) .some() scan.
   const notificationsRef = React.useRef(notifications);
-  React.useEffect(() => { notificationsRef.current = notifications; }, [notifications]);
+  const notificationIdsRef = React.useRef(new Set());
+  React.useEffect(() => {
+    notificationsRef.current = notifications;
+    notificationIdsRef.current = new Set(notifications.map(n => n.id));
+  }, [notifications]);
 
   // Real-time subscription for notifications — stable deps prevent subscribe→invalidate→resubscribe loop
   React.useEffect(() => {
@@ -58,7 +63,7 @@ export default function NotificationBell({ user }) {
     // Debounced to prevent rate limits
     let notifTimer;
     const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (event.data?.userId === user.id || (event.type === 'update' && notificationsRef.current?.some(n => n.id === event.id))) {
+      if (event.data?.userId === user.id || (event.type === 'update' && notificationIdsRef.current.has(event.id))) {
         clearTimeout(notifTimer);
         notifTimer = setTimeout(() => {
           queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
