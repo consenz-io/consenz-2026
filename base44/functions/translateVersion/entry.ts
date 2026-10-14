@@ -14,11 +14,54 @@ const VALID_ENTITY_TYPES = new Set([
 
 const MAX_CONTENT_LENGTH = 20000;
 
+// Per-user rate limiter — prevents unmetered LLM credit consumption.
+// 20 translations per minute per user.
+const translateRateLimiter = new Map();
+const TRANSLATE_RATE_LIMIT = 20;
+const TRANSLATE_WINDOW_MS = 60000;
+
+function checkTranslateRateLimit(userId: string) {
+  const now = Date.now();
+  const userKey = `translateVersion-${userId}`;
+  if (!translateRateLimiter.has(userKey)) {
+    translateRateLimiter.set(userKey, { count: 1, resetAt: now + TRANSLATE_WINDOW_MS });
+    return { allowed: true };
+  }
+  const record = translateRateLimiter.get(userKey);
+  if (now >= record.resetAt) {
+    record.count = 1;
+    record.resetAt = now + TRANSLATE_WINDOW_MS;
+    translateRateLimiter.set(userKey, record);
+    return { allowed: true };
+  }
+  record.count++;
+  translateRateLimiter.set(userKey, record);
+  if (record.count > TRANSLATE_RATE_LIMIT) {
+    return { allowed: false, remainingSeconds: Math.ceil((record.resetAt - now) / 1000) };
+  }
+  return { allowed: true };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of translateRateLimiter.entries()) {
+    if (now >= record.resetAt) translateRateLimiter.delete(key);
+  }
+}, 5 * 60 * 1000);
+
 export default async function (req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+    const rateLimitCheck = checkTranslateRateLimit(user.id);
+    if (!rateLimitCheck.allowed) {
+      return Response.json(
+        { error: "Rate limit exceeded", remainingSeconds: rateLimitCheck.remainingSeconds },
+        { status: 429 }
+      );
+    }
 
     const body = await req.json();
     const {

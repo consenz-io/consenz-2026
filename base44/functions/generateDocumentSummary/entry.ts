@@ -1,11 +1,45 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 
+// Per-user rate limiter — document summaries use an expensive LLM model
+// (claude_sonnet). Cap at 3 summaries per 10 minutes per user.
+const RATE_LIMIT = 3;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const rateLimiter = new Map();
+
+function checkRateLimit(userId) {
+  const now = Date.now();
+  const key = `docSummary-${userId}`;
+  const record = rateLimiter.get(key);
+  if (!record || now >= record.resetAt) {
+    rateLimiter.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return { allowed: true };
+  }
+  record.count++;
+  if (record.count > RATE_LIMIT) {
+    return { allowed: false, remainingMs: record.resetAt - now };
+  }
+  return { allowed: true };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of rateLimiter.entries()) {
+    if (now >= record.resetAt) rateLimiter.delete(key);
+  }
+}, 5 * 60 * 1000);
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
 
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const rl = checkRateLimit(user.id);
+  if (!rl.allowed) {
+    const mins = Math.ceil(rl.remainingMs / 60000);
+    return Response.json({ error: `Rate limit exceeded. Try again in ${mins} minute(s).` }, { status: 429 });
+  }
 
   const { documentId, additionalInstructions, language } = await req.json();
   if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });

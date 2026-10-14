@@ -15,6 +15,41 @@ const VALID_ENTITY_TYPES = new Set([
 const MAX_CONTENT_LENGTH = 20000;
 const MAX_UNITS = 100;
 
+// Per-user rate limiter — prevents unmetered LLM credit consumption via batch.
+// 5 batch calls per minute per user (each batch can translate up to 100 units).
+const batchRateLimiter = new Map();
+const BATCH_RATE_LIMIT = 5;
+const BATCH_WINDOW_MS = 60000;
+
+function checkBatchRateLimit(userId: string) {
+  const now = Date.now();
+  const userKey = `batchTranslate-${userId}`;
+  if (!batchRateLimiter.has(userKey)) {
+    batchRateLimiter.set(userKey, { count: 1, resetAt: now + BATCH_WINDOW_MS });
+    return { allowed: true };
+  }
+  const record = batchRateLimiter.get(userKey);
+  if (now >= record.resetAt) {
+    record.count = 1;
+    record.resetAt = now + BATCH_WINDOW_MS;
+    batchRateLimiter.set(userKey, record);
+    return { allowed: true };
+  }
+  record.count++;
+  batchRateLimiter.set(userKey, record);
+  if (record.count > BATCH_RATE_LIMIT) {
+    return { allowed: false, remainingSeconds: Math.ceil((record.resetAt - now) / 1000) };
+  }
+  return { allowed: true };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of batchRateLimiter.entries()) {
+    if (now >= record.resetAt) batchRateLimiter.delete(key);
+  }
+}, 5 * 60 * 1000);
+
 /**
  * Batch translation: accepts an array of content units and translates them
  * all in a single request. Uses translateUnitsBatch which:
@@ -29,6 +64,14 @@ export default async function (req: Request): Promise<Response> {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
+
+    const rateLimitCheck = checkBatchRateLimit(user.id);
+    if (!rateLimitCheck.allowed) {
+      return Response.json(
+        { error: "Rate limit exceeded", remainingSeconds: rateLimitCheck.remainingSeconds },
+        { status: 429 }
+      );
+    }
 
     const body = await req.json();
     const { documentId, targetLanguage, units } = body;

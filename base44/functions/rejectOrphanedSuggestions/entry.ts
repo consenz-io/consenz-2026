@@ -110,9 +110,11 @@ Deno.serve(async (req) => {
           });
           if (existingTx.length > 0) continue;
 
-          const newPoints = (voter.points || 1000) + 50;
           await Promise.all([
-            base44.asServiceRole.entities.User.update(voter.id, { points: newPoints }),
+            base44.asServiceRole.entities.User.updateMany(
+              { id: voter.id },
+              { $inc: { points: 50 } }
+            ),
             base44.asServiceRole.entities.PointsTransaction.create({
               userId: voter.id,
               amount: 50,

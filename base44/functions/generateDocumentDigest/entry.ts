@@ -9,11 +9,45 @@ const LANG_INSTRUCTIONS = {
   en: `Answer in English only. Be direct, vivid, and narrative. IMPORTANT: Keep all user names exactly as they appear in the data — do NOT translate or transliterate names. Avoid generic phrases.`,
 };
 
+// Per-user rate limiter — document digests use an LLM call. Cap at 5 per 10
+// minutes per user to prevent credit abuse.
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 10 * 60 * 1000;
+const digestRateLimiter = new Map();
+
+function checkDigestRateLimit(userId) {
+  const now = Date.now();
+  const key = `digest-${userId}`;
+  const record = digestRateLimiter.get(key);
+  if (!record || now >= record.resetAt) {
+    digestRateLimiter.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return { allowed: true };
+  }
+  record.count++;
+  if (record.count > RATE_LIMIT) {
+    return { allowed: false, remainingMs: record.resetAt - now };
+  }
+  return { allowed: true };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of digestRateLimiter.entries()) {
+    if (now >= record.resetAt) digestRateLimiter.delete(key);
+  }
+}, 5 * 60 * 1000);
+
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const rl = checkDigestRateLimit(user.id);
+    if (!rl.allowed) {
+      const mins = Math.ceil(rl.remainingMs / 60000);
+      return Response.json({ error: `Rate limit exceeded. Try again in ${mins} minute(s).` }, { status: 429 });
+    }
 
     const { documentId, language } = await req.json();
     if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });

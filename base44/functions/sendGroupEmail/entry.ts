@@ -123,6 +123,17 @@ export default async function(req) {
       if (!isAdmin) return Response.json({ error: 'Forbidden' }, { status: 403 });
       if (!memberEmail) return Response.json({ error: 'Missing memberEmail' }, { status: 400 });
 
+      // Rate limit: max 5 "member added" emails per user per hour — prevents a
+      // group admin from spamming members with repeated notifications.
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const recentMemberEmails = await base44.asServiceRole.entities.EmailLog.filter(
+        { senderUserId: user.id, purpose: 'group_invitation' }, '-created_date', 10
+      );
+      const recentMemberCount = recentMemberEmails.filter(e => e.created_date && e.created_date >= oneHourAgo).length;
+      if (recentMemberCount >= 5) {
+        return Response.json({ error: 'Rate limit exceeded: too many member-added emails' }, { status: 429 });
+      }
+
       // Validate email format — prevents malformed recipients being used as a relay
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(memberEmail).trim())) {
         return Response.json({ error: 'Invalid email address' }, { status: 400 });

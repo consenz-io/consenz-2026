@@ -57,6 +57,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Rate limit exceeded: max 10 invitations per day' }, { status: 429 });
     }
 
+    // Per-group daily cap: max 5 invitations per group per day — prevents
+    // targeting one group's members with a flood of invitation emails.
+    const recentGroupInvites = await base44.asServiceRole.entities.GroupInvitation.filter(
+      { groupId }, '-created_date', 10
+    );
+    const groupDailyCount = recentGroupInvites.filter(i => i.created_date && i.created_date >= oneDayAgo).length;
+    if (groupDailyCount >= 5) {
+      return Response.json({ error: 'Rate limit exceeded: max 5 invitations per group per day' }, { status: 429 });
+    }
+
     // Fetch the group from the server — do not trust client-supplied group
     // identity or name. This both validates the groupId and gives a trusted
     // group name for the email body (preventing HTML injection via groupName).

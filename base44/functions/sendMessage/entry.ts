@@ -1,11 +1,54 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { buildTranslationsWithMessage } from '../../shared/notificationTranslations.ts';
 
+// Per-user rate limiter — prevents spam via the messaging system.
+// 20 messages per minute per user.
+const messageRateLimiter = new Map();
+const MESSAGE_RATE_LIMIT = 20;
+const MESSAGE_WINDOW_MS = 60000;
+
+function checkMessageRateLimit(userId) {
+  const now = Date.now();
+  const userKey = `msg-${userId}`;
+  if (!messageRateLimiter.has(userKey)) {
+    messageRateLimiter.set(userKey, { count: 1, resetAt: now + MESSAGE_WINDOW_MS });
+    return { allowed: true };
+  }
+  const record = messageRateLimiter.get(userKey);
+  if (now >= record.resetAt) {
+    record.count = 1;
+    record.resetAt = now + MESSAGE_WINDOW_MS;
+    messageRateLimiter.set(userKey, record);
+    return { allowed: true };
+  }
+  record.count++;
+  messageRateLimiter.set(userKey, record);
+  if (record.count > MESSAGE_RATE_LIMIT) {
+    return { allowed: false, remainingSeconds: Math.ceil((record.resetAt - now) / 1000) };
+  }
+  return { allowed: true };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of messageRateLimiter.entries()) {
+    if (now >= record.resetAt) messageRateLimiter.delete(key);
+  }
+}, 5 * 60 * 1000);
+
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const rateLimitCheck = checkMessageRateLimit(user.id);
+    if (!rateLimitCheck.allowed) {
+      return Response.json(
+        { error: 'Rate limit exceeded', remainingSeconds: rateLimitCheck.remainingSeconds },
+        { status: 429 }
+      );
+    }
 
     const body = await req.json();
     const { recipientId, content } = body;
