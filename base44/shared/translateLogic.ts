@@ -15,6 +15,11 @@ import {
   needsTranslation,
   LANGUAGE_NAMES,
 } from "./translationVersioning.ts";
+import {
+  PROMPT_INJECTION_GUARD,
+  wrapUntrusted,
+  validateTranslationIntegrity,
+} from "./translatePromptSafety.ts";
 
 /**
  * Domain terminology that MUST be translated consistently across the whole
@@ -175,11 +180,11 @@ export async function translateUnit(
     const sourceLangName = LANGUAGE_NAMES[sourceLanguage as keyof typeof LANGUAGE_NAMES];
     const prompt = hasAnchor
       ? (isHtml
-        ? `You are updating a document section. The original section in ${langName}:\n\n${anchorOriginalContent}\n\nIt was translated to ${sourceLangName} for an editor:\n\n${anchorTranslatedContent}\n\nThe editor proposed this edit in ${sourceLangName}:\n\n${content}\n\nProduce the ${langName} version that incorporates the edit.\n\nCRITICAL RULES:\n1. Start by copying the original ${langName} section VERBATIM, word for word.\n2. Then apply ONLY the specific changes the editor made to the ${sourceLangName} text.\n3. Every word in the original ${langName} section that was NOT directly changed by the editor MUST remain in the output, unchanged and in its original position.\n4. Do NOT merge, delete, rephrase, or reorder any word from the original ${langName} section that the editor did not explicitly change.\n5. When the editor ADDED a phrase, insert the translation of that phrase into the ${langName} text WITHOUT removing or altering any existing ${langName} words.\n6. When the editor DELETED a phrase, remove only the corresponding ${langName} words.\n7. When the editor REPLACED a phrase with another, replace only the corresponding ${langName} words with the translation of the new phrase — leave all surrounding ${langName} words untouched.\n8. Preserve the original's terminology and HTML structure.${TERMINOLOGY_DIRECTIVE}\nReturn only the HTML with no commentary.`
-        : `You are updating a document section. The original section in ${langName}:\n\n${anchorOriginalContent}\n\nIt was translated to ${sourceLangName} for an editor:\n\n${anchorTranslatedContent}\n\nThe editor proposed this edit in ${sourceLangName}:\n\n${content}\n\nProduce the ${langName} version that incorporates the edit.\n\nCRITICAL RULES:\n1. Start by copying the original ${langName} section VERBATIM, word for word.\n2. Then apply ONLY the specific changes the editor made to the ${sourceLangName} text.\n3. Every word in the original ${langName} section that was NOT directly changed by the editor MUST remain in the output, unchanged and in its original position.\n4. Do NOT merge, delete, rephrase, or reorder any word from the original ${langName} section that the editor did not explicitly change.\n5. When the editor ADDED a phrase, insert the translation of that phrase into the ${langName} text WITHOUT removing or altering any existing ${langName} words.\n6. When the editor DELETED a phrase, remove only the corresponding ${langName} words.\n7. When the editor REPLACED a phrase with another, replace only the corresponding ${langName} words with the translation of the new phrase — leave all surrounding ${langName} words untouched.\n8. Preserve the original's terminology.${TERMINOLOGY_DIRECTIVE}\nReturn only the text with no commentary.`)
+        ? `You are updating a document section. The original section in ${langName}:\n\n${wrapUntrusted(anchorOriginalContent)}\n\nIt was translated to ${sourceLangName} for an editor:\n\n${wrapUntrusted(anchorTranslatedContent)}\n\nThe editor proposed this edit in ${sourceLangName}:\n\n${wrapUntrusted(content)}\n\nProduce the ${langName} version that incorporates the edit.\n\nCRITICAL RULES:\n1. Start by copying the original ${langName} section VERBATIM, word for word.\n2. Then apply ONLY the specific changes the editor made to the ${sourceLangName} text.\n3. Every word in the original ${langName} section that was NOT directly changed by the editor MUST remain in the output, unchanged and in its original position.\n4. Do NOT merge, delete, rephrase, or reorder any word from the original ${langName} section that the editor did not explicitly change.\n5. When the editor ADDED a phrase, insert the translation of that phrase into the ${langName} text WITHOUT removing or altering any existing ${langName} words.\n6. When the editor DELETED a phrase, remove only the corresponding ${langName} words.\n7. When the editor REPLACED a phrase with another, replace only the corresponding ${langName} words with the translation of the new phrase — leave all surrounding ${langName} words untouched.\n8. Preserve the original's terminology and HTML structure.${TERMINOLOGY_DIRECTIVE}${PROMPT_INJECTION_GUARD}\nReturn only the HTML with no commentary.`
+        : `You are updating a document section. The original section in ${langName}:\n\n${wrapUntrusted(anchorOriginalContent)}\n\nIt was translated to ${sourceLangName} for an editor:\n\n${wrapUntrusted(anchorTranslatedContent)}\n\nThe editor proposed this edit in ${sourceLangName}:\n\n${wrapUntrusted(content)}\n\nProduce the ${langName} version that incorporates the edit.\n\nCRITICAL RULES:\n1. Start by copying the original ${langName} section VERBATIM, word for word.\n2. Then apply ONLY the specific changes the editor made to the ${sourceLangName} text.\n3. Every word in the original ${langName} section that was NOT directly changed by the editor MUST remain in the output, unchanged and in its original position.\n4. Do NOT merge, delete, rephrase, or reorder any word from the original ${langName} section that the editor did not explicitly change.\n5. When the editor ADDED a phrase, insert the translation of that phrase into the ${langName} text WITHOUT removing or altering any existing ${langName} words.\n6. When the editor DELETED a phrase, remove only the corresponding ${langName} words.\n7. When the editor REPLACED a phrase with another, replace only the corresponding ${langName} words with the translation of the new phrase — leave all surrounding ${langName} words untouched.\n8. Preserve the original's terminology.${TERMINOLOGY_DIRECTIVE}${PROMPT_INJECTION_GUARD}\nReturn only the text with no commentary.`)
       : isHtml
-      ? `Translate the following HTML content to ${langName}. Preserve all HTML tags exactly as-is. Only translate the text content between tags. Return only the translated HTML with no additional commentary or markdown.${TERMINOLOGY_DIRECTIVE}\n\nContent to translate:\n${content}`
-      : `Translate the following text to ${langName}. Return only the translated text with no commentary or markdown.${TERMINOLOGY_DIRECTIVE}\n\nText:\n${content}`;
+      ? `Translate the following HTML content to ${langName}. Preserve all HTML tags exactly as-is. Only translate the text content between tags. Return only the translated HTML with no additional commentary or markdown.${TERMINOLOGY_DIRECTIVE}${PROMPT_INJECTION_GUARD}\n\nContent to translate:\n${wrapUntrusted(content)}`
+      : `Translate the following text to ${langName}. Return only the translated text with no commentary or markdown.${TERMINOLOGY_DIRECTIVE}${PROMPT_INJECTION_GUARD}\n\nText:\n${wrapUntrusted(content)}`;
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
@@ -200,9 +205,10 @@ export async function translateUnit(
       .replace(/```\n?/g, "")
       .trim();
 
-    // Validate: translation must not be empty or identical to source
-    if (!translated || translated.length === 0) {
-      throw new Error("Translation returned empty content");
+    // Validate output integrity — reject prompt-injected or empty output
+    const integrityError = validateTranslationIntegrity(content, translated);
+    if (integrityError) {
+      throw new Error(integrityError);
     }
 
     // Save canonical translation
@@ -424,8 +430,8 @@ export async function translateUnitsBatch(
         const langName =
           LANGUAGE_NAMES[targetLanguage as keyof typeof LANGUAGE_NAMES];
         const prompt = u.isHtml
-          ? `Translate the following HTML content to ${langName}. Preserve all HTML tags exactly as-is. Only translate the text content between tags. Return only the translated HTML with no additional commentary or markdown.${TERMINOLOGY_DIRECTIVE}\n\nContent to translate:\n${u.content}`
-          : `Translate the following text to ${langName}. Return only the translated text with no commentary or markdown.${TERMINOLOGY_DIRECTIVE}\n\nText:\n${u.content}`;
+          ? `Translate the following HTML content to ${langName}. Preserve all HTML tags exactly as-is. Only translate the text content between tags. Return only the translated HTML with no additional commentary or markdown.${TERMINOLOGY_DIRECTIVE}${PROMPT_INJECTION_GUARD}\n\nContent to translate:\n${wrapUntrusted(u.content)}`
+          : `Translate the following text to ${langName}. Return only the translated text with no commentary or markdown.${TERMINOLOGY_DIRECTIVE}${PROMPT_INJECTION_GUARD}\n\nText:\n${wrapUntrusted(u.content)}`;
 
         const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt,
@@ -446,8 +452,10 @@ export async function translateUnitsBatch(
           .replace(/```\n?/g, "")
           .trim();
 
-        if (!translated || translated.length === 0) {
-          throw new Error("Translation returned empty content");
+        // Validate output integrity — reject prompt-injected or empty output
+        const integrityError = validateTranslationIntegrity(u.content, translated);
+        if (integrityError) {
+          throw new Error(integrityError);
         }
 
         // Save canonical translation
