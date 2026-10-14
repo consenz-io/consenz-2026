@@ -18,7 +18,7 @@ export default async function(req: Request): Promise<Response> {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { suggestionData, spendType, pointsDescription } = body;
+    const { suggestionData, pointsDescription } = body;
 
     if (!suggestionData || !suggestionData.documentId || !suggestionData.type || !suggestionData.title) {
       return Response.json({ error: 'Missing suggestion data' }, { status: 400 });
@@ -26,10 +26,23 @@ export default async function(req: Request): Promise<Response> {
 
     const serviceBase44 = base44.asServiceRole;
 
+    // Derive the cost entirely server-side from suggestionData.type — never
+    // trust a client-supplied spendType. Unknown types are rejected rather
+    // than defaulting to 0 (which would let a caller bypass the points cost).
+    const TYPE_COSTS = {
+      new_section: POINTS_COSTS.new_section,       // 350
+      edit_section: POINTS_COSTS.edit_section,     // 200
+      edit_suggestion: POINTS_COSTS.edit_section,  // 200 — editing a suggestion is priced as an edit
+      delete_section: 0,                           // free — proposing deletion does not cost points
+    };
+    if (!(suggestionData.type in TYPE_COSTS)) {
+      return Response.json({ error: 'Invalid suggestion type' }, { status: 400 });
+    }
+
     // Verify gamification setting server-side — never trust the client.
     const docs = await serviceBase44.entities.Document.filter({ id: suggestionData.documentId });
     const gamificationEnabled = docs.length > 0 && docs[0].gamificationEnabled;
-    const cost = gamificationEnabled && spendType ? (POINTS_COSTS[spendType] || 0) : 0;
+    const cost = gamificationEnabled ? TYPE_COSTS[suggestionData.type] : 0;
 
     // Pre-check balance for an early, user-friendly error.
     if (cost > 0) {

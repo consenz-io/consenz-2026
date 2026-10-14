@@ -12,7 +12,7 @@ export default async function(req: Request): Promise<Response> {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { suggestionData, isAdmin, pointsDescription } = body;
+    const { suggestionData, pointsDescription } = body;
 
     if (!suggestionData || !suggestionData.documentId || !suggestionData.topicId || !suggestionData.newTitle) {
       return Response.json({ error: 'Missing suggestion data' }, { status: 400 });
@@ -20,7 +20,10 @@ export default async function(req: Request): Promise<Response> {
 
     const serviceBase44 = base44.asServiceRole;
 
-    // Verify gamification setting server-side. Admins skip the cost.
+    // Verify gamification setting server-side. Admins skip the cost — but
+    // admin status is determined from the authenticated user's role, never
+    // from a client-supplied isAdmin flag (which any user could set to true).
+    const isAdmin = user.role === 'admin';
     let cost = 0;
     if (!isAdmin) {
       const docs = await serviceBase44.entities.Document.filter({ id: suggestionData.documentId });
