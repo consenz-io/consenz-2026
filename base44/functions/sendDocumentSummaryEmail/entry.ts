@@ -219,13 +219,16 @@ Deno.serve(async (req) => {
       return url.startsWith('/') ? url : '/' + url;
     }
   };
-  const trackClick = (logId, sig, targetUrl) =>
-    `${trackBase}?logId=${logId}&type=click&redirectUrl=${encodeURIComponent(toRelativePath(targetUrl))}&sig=${sig}`;
+  const trackClick = (logId, clickSig, targetUrl) =>
+    `${trackBase}?logId=${logId}&type=click&redirectUrl=${encodeURIComponent(toRelativePath(targetUrl))}&sig=${clickSig}`;
 
-  // Helper: build full HTML for one recipient (with unique logId for pixel + links)
-  const buildEmailHtml = (logId, sig) => {
-    const pixelUrl = `${trackBase}?logId=${logId}&type=open&sig=${sig}`;
-    const trackedDocUrl = trackClick(logId, sig, docUrl);
+  // Helper: build full HTML for one recipient (with unique logId for pixel + links).
+  // Separate signatures are generated for the open pixel and for click links so
+  // that the event type is bound into each signature — a recipient cannot edit
+  // `type=open` to `type=click` on the pixel URL and still pass verification.
+  const buildEmailHtml = (logId, openSig, clickSig) => {
+    const pixelUrl = `${trackBase}?logId=${logId}&type=open&sig=${openSig}`;
+    const trackedDocUrl = trackClick(logId, clickSig, docUrl);
 
     // Wrap all <a href="..."> links inside summaryContent with click tracking
     const trackedSummary = sanitizedSummary.replace(
@@ -233,7 +236,7 @@ Deno.serve(async (req) => {
       (match, before, url, after) => {
         // Don't double-wrap already tracked links
         if (url.includes('trackEmailEvent')) return match;
-        return `<a ${before}href="${trackClick(logId, sig, url)}"${after}>`;
+        return `<a ${before}href="${trackClick(logId, clickSig, url)}"${after}>`;
       }
     );
 
@@ -330,8 +333,10 @@ Deno.serve(async (req) => {
     }
 
     try {
-      const sig = logId ? await signLogId(logId) : '';
-      const emailHtml = buildEmailHtml(logId || 'unknown', sig);
+      const [openSig, clickSig] = logId
+        ? await Promise.all([signLogId(logId, 'open'), signLogId(logId, 'click')])
+        : ['', ''];
+      const emailHtml = buildEmailHtml(logId || 'unknown', openSig, clickSig);
       // Route ALL sends through Core.SendEmail — the platform's content
       // screening and recipient-hygiene provide server-side sanitization
       // and anti-abuse controls that the bypassable regex sanitizer and
