@@ -24,14 +24,14 @@ setInterval(() => {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    // Public app: anonymous visitors get public-only stats (no 401).
+    // isAdmin is false and callerMemberGroupIds is empty, so only public
+    // group counts are returned.
     const user = await base44.auth.me().catch(() => null);
-    if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
     const isAdmin = user?.role === 'admin';
 
     // Cache hit — return cached stats if still fresh
-    const cacheKey = isAdmin ? 'admin' : 'user';
+    const cacheKey = user ? (isAdmin ? 'admin' : 'user') : 'anonymous';
     const cached = statsCache.get(cacheKey);
     if (cached && Date.now() < cached.expiresAt) {
       return Response.json(cached.data);
@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
     // non-members. Build the caller's membership set from the already-loaded
     // groupMembers, then drop counts for groups they can't see.
     const callerMemberGroupIds = new Set(
-      groupMembers.filter(m => m.userId === user.id).map(m => m.groupId)
+      user ? groupMembers.filter(m => m.userId === user.id).map(m => m.groupId) : []
     );
     const groupStatusById = new Map(groups.map(g => [g.id, g.status]));
     const canSeeGroup = (gid) =>

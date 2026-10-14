@@ -151,7 +151,7 @@ export function useGroupViewData(groupId) {
   // Auto-add suggestion creators as formal group members if not already members
   const autoAddedRef = React.useRef(new Set());
   React.useEffect(() => {
-    if (!groupId || groupMembers.length === 0 || publicProfiles.length === 0 || allDocSuggestions.length === 0) return;
+    if (!groupId || !currentUser || groupMembers.length === 0 || publicProfiles.length === 0 || allDocSuggestions.length === 0) return;
 
     const memberUserIds = new Set(groupMembers.map(m => m.userId));
     const emailToUserId = new Map();
