@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { spendPointsAtomic, POINTS_COSTS } from '../../shared/pointsOperations.ts';
+import { checkDocumentAccess } from '../../shared/documentAuth.ts';
 
 // Creates a Suggestion AND atomically deducts the points cost server-side.
 // Replaces the insecure client-side pattern where the app created the
@@ -41,7 +42,19 @@ export default async function(req: Request): Promise<Response> {
 
     // Verify gamification setting server-side — never trust the client.
     const docs = await serviceBase44.entities.Document.filter({ id: suggestionData.documentId });
-    const gamificationEnabled = docs.length > 0 && docs[0].gamificationEnabled;
+    if (docs.length === 0) {
+      return Response.json({ error: 'Document not found' }, { status: 404 });
+    }
+    const document = docs[0];
+
+    // Verify the caller can access this document — prevents users outside
+    // a private/hidden group from posting suggestions into its documents.
+    const { authorized: accessAuthorized } = await checkDocumentAccess(base44, document, user);
+    if (!accessAuthorized) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const gamificationEnabled = document.gamificationEnabled;
     const cost = gamificationEnabled ? TYPE_COSTS[suggestionData.type] : 0;
 
     // Pre-check balance for an early, user-friendly error.
