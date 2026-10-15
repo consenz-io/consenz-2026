@@ -103,15 +103,15 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-slate-900 text-sm md:text-base leading-tight">{feature.title}</h3>
-                    <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-0.5">{feature.desc}</p>
+                    <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-0.5 inline">{feature.desc}</p>
+                    <button
+                      onClick={() => setExpandedCard(expandedCard === idx ? null : idx)}
+                      className="inline text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors mr-1"
+                      aria-expanded={expandedCard === idx}>
+                      {expandedCard === idx ? (lessLabel[language] || lessLabel.en) : (moreLabel[language] || moreLabel.en)}
+                    </button>
                   </div>
                 </div>
-                <button
-                  onClick={() => setExpandedCard(expandedCard === idx ? null : idx)}
-                  className="self-start mt-2 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
-                  aria-expanded={expandedCard === idx}>
-                  {expandedCard === idx ? (lessLabel[language] || lessLabel.en) : (moreLabel[language] || moreLabel.en)}
-                </button>
                 {expandedCard === idx &&
                 <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-2 pt-2 border-t border-slate-200">
                   {feature.longDesc}
