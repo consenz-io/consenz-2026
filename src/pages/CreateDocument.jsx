@@ -15,6 +15,8 @@ import { FileText, Plus, Trash2, AlertCircle, Upload, Loader2, CheckCircle, Merg
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
+import DocumentDescriptionEditor from '@/components/document/DocumentDescriptionEditor';
+import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
 
 const detectLanguage = (text) => {
@@ -69,6 +71,7 @@ export default function CreateDocument() {
   const [formData, setFormData] = useState({
     title: "",
     urlName: "",
+    description: "",
     votingButtonsEnabled: true,
     gamificationEnabled: false,
     defaultSuggestionLifetimeHours: 72,
@@ -176,7 +179,7 @@ export default function CreateDocument() {
         return isValid;
       });
 
-      if (validTopics.length === 0) {
+      if (validTopics.length === 0 && !result.description?.trim()) {
         console.error("[PDF Upload] No valid topics after filtering");
         throw new Error("לא נמצאו נושאים תקינים במסמך. נסה יצירה ידנית.");
       }
@@ -202,13 +205,14 @@ export default function CreateDocument() {
         .replace(/[^a-z0-9-]/g, '')
         .substring(0, 50);
 
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         title: suggestedTitle,
         urlName: suggestedUrlName,
-      });
+        description: sanitizeHtml(result.description || ''),
+      }));
 
-      setTopics(cleanTopics);
+      setTopics(cleanTopics.length ? cleanTopics : [{ title: '', sections: [{ content: '' }] }]);
       setProcessingStage("הושלם!");
 
     } catch (err) {
@@ -251,6 +255,7 @@ export default function CreateDocument() {
       const doc = await base44.entities.Document.create({
         title: data.title.trim(),
         urlName: data.urlName.trim(),
+        description: sanitizeHtml(data.description || ''),
         votingButtonsEnabled: data.votingButtonsEnabled,
         gamificationEnabled: data.gamificationEnabled,
         defaultSuggestionLifetimeHours: data.defaultSuggestionLifetimeHours,
@@ -441,6 +446,7 @@ export default function CreateDocument() {
       ...formData,
       title: "",
       urlName: "",
+      description: "",
     });
   };
 
@@ -581,6 +587,14 @@ export default function CreateDocument() {
                     placeholder={language === 'he' ? 'למשל: חוקת הקהילה' : language === 'ar' ? 'مثال: دستور المجتمع' : 'e.g., Community Constitution'}
                     required
                     dir={isRTL ? 'rtl' : 'ltr'}
+                  />
+                </div>
+
+                <div>
+                  <DocumentDescriptionEditor
+                    value={formData.description}
+                    onChange={(description) => setFormData(prev => ({ ...prev, description }))}
+                    language={language}
                   />
                 </div>
 
