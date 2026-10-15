@@ -15,28 +15,32 @@ const scrollToGroups = () => {
 
 export default function HeroSection({ documentsCount, displayedUsers, publicProfilesLoading, averageConsensus, onContributorsClick, contributorsCount }) {
   const { t, isRTL, language } = useLanguage();
+  const [expandedCard, setExpandedCard] = React.useState(null);
 
   const agreementsLabel = { he: 'הסכמות והסכמים', ar: 'اتفاقيات وعقود', en: 'Agreements' };
   const tourLabel = { he: 'לסיור בפלטפורמה', ar: 'جولة في المنصة', en: 'Tour the Platform' };
 
+  const moreLabel = { he: 'עוד..', ar: 'المزيد..', en: 'More..' };
+  const lessLabel = { he: 'פחות', ar: 'أقل', en: 'Less' };
+
   const features = {
     he: [
-    { icon: Users, title: 'שיתוף בקבלת החלטות', desc: 'קהילות וארגונים משתפים את חבריהם בתהליך' },
-    { icon: Trophy, title: 'ניקוד וגיימיפיקציה', desc: 'השתתפות מתגמלת וחוויה משחקית' },
-    { icon: CheckCircle, title: 'מנגנון הצבעות חכם', desc: 'קונצנזוס דינמי שמקרב דעות' },
-    { icon: MessageSquare, title: 'דיון ועריכה', desc: 'תהליך פורה גם עם אלפי משתתפים' }],
+    { icon: Users, title: 'שיתוף בקבלת החלטות', desc: 'קהילות וארגונים משתפים את חבריהם בתהליך', longDesc: 'כל חבר בקהילה יכול להציע נוסח, לערוך סעיף קיים או לבקש מחיקה. ההצעות פתוחות להצבעה של כל המשתתפים, כך שההחלטה הסופית מתגבשת מלמטה באופן שקוף ולא מוטלת מלמעלה על ידי גורם יחיד.' },
+    { icon: Trophy, title: 'ניקוד וגיימיפיקציה', desc: 'השתתפות מתגמלת וחוויה משחקית', longDesc: 'משתמשים צוברים נקודות על יצירת הצעות, הצבעה שמשפיעה על קבלת הצעה, וקבלת לייקים על הערות. הניקוד מעודד השתתפות פעילה ומעניק משקל לתורמים המרכזיים בקהילה.' },
+    { icon: CheckCircle, title: 'מנגנון הצבעות חכם', desc: 'קונצנזוס דינמי שמקרב דעות', longDesc: 'רף הקבלה מתעדכן באופן דינמי בהתאם למספר המשתתפים. הצעה מתקבלת כשהפער בין תומכים למתנגדים עובר את הרף, ומדד ההסכמה משקף את עוצמת הקונצנזוס שהושג.' },
+    { icon: MessageSquare, title: 'דיון ועריכה', desc: 'תהליך פורה גם עם אלפי משתתפים', longDesc: 'כל סעיף והצעה מלווים בשרשור תגובות, נימוקים בעד ונגד, והצעות עריכה נגזרות. ניתן לעקוב אחר היסטוריית הגרסאות של כל סעיף ולראות כיצד הטקסט התגבש לאורך זמן.' }],
 
     ar: [
-    { icon: Sparkles, title: 'صياغة بالذكاء الاصطناعي', desc: 'يساعد في الصياغة وتكييف المحتوى' },
-    { icon: Languages, title: 'ترجمة تلقائية', desc: 'بين اللغات تلقائياً وبدقة' },
-    { icon: CheckCircle, title: 'إجماع ديناميكي', desc: 'يقرب الآراء ويسمع كل صوت' },
-    { icon: Users, title: 'مجموعات كبيرة', desc: 'منتج حتى مع آلاف المشاركين' }],
+    { icon: Sparkles, title: 'صياغة بالذكاء الاصطناعي', desc: 'يساعد في الصياغة وتكييف المحتوى', longDesc: 'يساعد الذكاء الاصطناعي في اقتراح صياغة محسّنة، تلخيص النقاشات الطويلة، وتكييف المحتوى حسب سياق الوثيقة، مما يوفر الوقت ويرفع جودة النص النهائي.' },
+    { icon: Languages, title: 'ترجمة تلقائية', desc: 'بين اللغات تلقائياً وبدقة', longDesc: 'تتم ترجمة المحتوى بين العبرية والعربية والإنجليزية تلقائياً مع الحفاظ على المصطلحات المتفق عليها، بحيث يمكن للمشاركين من لغات مختلفة المناقشة في وثيقة واحدة دون حواجز.' },
+    { icon: CheckCircle, title: 'إجماع ديناميكي', desc: 'يقرب الآراء ويسمع كل صوت', longDesc: 'يتكيف عتبة القبول مع عدد المشاركين، وتُقبل الاقتراحات عندما يتجاوز الفارق بين المؤيدين والمعارضين الحد المطلوب، مع مؤشر توافق يعكس قوة الإجماع المحقق.' },
+    { icon: Users, title: 'مجموعات كبيرة', desc: 'منتج حتى مع آلاف المشاركين', longDesc: 'البنية مصممة لاستيعاب آلاف المشاركين في وثيقة واحدة، مع تصفح سلس للنسخ، تصويت منظّم، وتنبيهات مخصصة لكل مشارك حسب اهتمامه.' }],
 
     en: [
-    { icon: Sparkles, title: 'AI-Assisted Drafting', desc: 'AI helps draft and adapt content' },
-    { icon: Languages, title: 'Auto-Translation', desc: 'Across languages automatically' },
-    { icon: CheckCircle, title: 'Dynamic Consensus', desc: 'Bridges opinions, every voice heard' },
-    { icon: Users, title: 'Large Groups', desc: 'Productive even with thousands' }]
+    { icon: Sparkles, title: 'AI-Assisted Drafting', desc: 'AI helps draft and adapt content', longDesc: 'AI suggests improved wording, summarizes long discussions, and adapts content to the document context, saving time and raising the quality of the final text.' },
+    { icon: Languages, title: 'Auto-Translation', desc: 'Across languages automatically', longDesc: 'Content is translated between Hebrew, Arabic, and English automatically while preserving agreed terminology, so participants from different languages can collaborate in one document without barriers.' },
+    { icon: CheckCircle, title: 'Dynamic Consensus', desc: 'Bridges opinions, every voice heard', longDesc: 'The acceptance threshold adapts to the number of participants. A suggestion is accepted when the gap between supporters and opponents crosses the threshold, with a consensus meter reflecting the strength of agreement reached.' },
+    { icon: Users, title: 'Large Groups', desc: 'Productive even with thousands', longDesc: 'The architecture handles thousands of participants in a single document, with smooth version browsing, organized voting, and per-participant notifications tailored to their interests.' }]
 
   };
 
@@ -92,15 +96,28 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
           <div className="max-w-3xl mx-auto py-1 md:py-3 px-2 md:px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 md:gap-3">
               {(features[language] || features.en).map((feature, idx) =>
-              <div key={idx} className="flex items-start gap-3 bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl p-3 md:p-3.5 shadow-sm hover:shadow-md transition-shadow text-start">
+              <div key={idx} className="flex flex-col bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl p-3 md:p-3.5 shadow-sm hover:shadow-md transition-shadow text-start">
+                <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white">
                     <feature.icon className="w-5 h-5" aria-hidden="true" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-semibold text-slate-900 text-sm md:text-base leading-tight">{feature.title}</h3>
                     <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-0.5">{feature.desc}</p>
                   </div>
                 </div>
+                <button
+                  onClick={() => setExpandedCard(expandedCard === idx ? null : idx)}
+                  className="self-start mt-2 text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  aria-expanded={expandedCard === idx}>
+                  {expandedCard === idx ? (lessLabel[language] || lessLabel.en) : (moreLabel[language] || moreLabel.en)}
+                </button>
+                {expandedCard === idx &&
+                <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-2 pt-2 border-t border-slate-200">
+                  {feature.longDesc}
+                </p>
+                }
+              </div>
               )}
             </div>
           </div>
