@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, Users, Trophy, CheckCircle, MessageSquare, Sparkles, Languages } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import StatsCards from "./StatsCards";
 
@@ -16,14 +16,29 @@ const scrollToGroups = () => {
 export default function HeroSection({ documentsCount, displayedUsers, publicProfilesLoading, averageConsensus, onContributorsClick, contributorsCount }) {
   const { t, isRTL, language } = useLanguage();
 
-  const description = {
-    he: 'consenz היא פלטפורמה המאפשרת לקהילות וארגונים לשתף את חבריהם בקבלת ההחלטות. היא כוללת מערכת ניקוד המעודדת השתתפות והופכת את התהליך לחוויה משחקית ומתגמלת, מנגנון ההצבעות חכם ורכיבי דיון ועריכה המאפשרים תהליך פורה גם עם אלפי משתתפים ויותר',
-    ar: 'منصة قائمة على الذكاء الاصطناعي لإنشاء مستندات مشتركة في مجموعات كبيرة - بسرعة وشفافية وديمقراطية. يساعد الذكاء الاصطناعي في الصياغة وتكييف المحتوى لكل مشارك، مع ترجمة تلقائية بين اللغات وآلية إجماع ديناميكية تقرب الآراء وتضمن سماع كل صوت.',
-    en: 'AI-powered platform for creating shared documents in large groups — quickly, transparently, and democratically. AI assists in drafting and adapting content for each participant, with automatic translation across languages and a dynamic consensus mechanism that bridges opinions and ensures every voice is heard.'
-  };
-
   const agreementsLabel = { he: 'הסכמות והסכמים', ar: 'اتفاقيات وعقود', en: 'Agreements' };
   const tourLabel = { he: 'לסיור בפלטפורמה', ar: 'جولة في المنصة', en: 'Tour the Platform' };
+
+  const features = {
+    he: [
+      { icon: Users, title: 'שיתוף בקבלת החלטות', desc: 'קהילות וארגונים משתפים את חבריהם בתהליך' },
+      { icon: Trophy, title: 'ניקוד וגיימיפיקציה', desc: 'השתתפות מתגמלת וחוויה משחקית' },
+      { icon: CheckCircle, title: 'מנגנון הצבעות חכם', desc: 'קונצנזוס דינמי שמקרב דעות' },
+      { icon: MessageSquare, title: 'דיון ועריכה', desc: 'תהליך פורה גם עם אלפי משתתפים' }
+    ],
+    ar: [
+      { icon: Sparkles, title: 'صياغة بالذكاء الاصطناعي', desc: 'يساعد في الصياغة وتكييف المحتوى' },
+      { icon: Languages, title: 'ترجمة تلقائية', desc: 'بين اللغات تلقائياً وبدقة' },
+      { icon: CheckCircle, title: 'إجماع ديناميكي', desc: 'يقرب الآراء ويسمع كل صوت' },
+      { icon: Users, title: 'مجموعات كبيرة', desc: 'منتج حتى مع آلاف المشاركين' }
+    ],
+    en: [
+      { icon: Sparkles, title: 'AI-Assisted Drafting', desc: 'AI helps draft and adapt content' },
+      { icon: Languages, title: 'Auto-Translation', desc: 'Across languages automatically' },
+      { icon: CheckCircle, title: 'Dynamic Consensus', desc: 'Bridges opinions, every voice heard' },
+      { icon: Users, title: 'Large Groups', desc: 'Productive even with thousands' }
+    ]
+  };
 
   const startTutorial = () => {
     const STORAGE_KEY = 'consenz_tutorial';
@@ -74,9 +89,21 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
               {t('draftTogetherTitle')} {agreementsLabel[language] || agreementsLabel.en}
             </span>
           </h1>
-          <p className="text-slate-600 max-w-2xl mx-auto leading-relaxed text-sm md:text-base py-1 md:py-3 px-2 md:px-6">
-            {description[language] || description.en}
-          </p>
+          <div className="max-w-3xl mx-auto py-1 md:py-3 px-2 md:px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 md:gap-3">
+              {(features[language] || features.en).map((feature, idx) => (
+                <div key={idx} className="flex items-start gap-3 bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl p-3 md:p-3.5 shadow-sm hover:shadow-md transition-shadow text-start">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white">
+                    <feature.icon className="w-5 h-5" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-slate-900 text-sm md:text-base leading-tight">{feature.title}</h3>
+                    <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-0.5">{feature.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
           <div className="flex gap-4 justify-center flex-wrap">
             <div ref={buttonRef} className="w-full md:w-auto">
               {!showFloating &&
