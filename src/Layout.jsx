@@ -220,9 +220,9 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
 
         <Button
           onClick={() => base44.auth.redirectToLogin()}
-          className="w-full"
+          className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg"
           aria-label={isRTL ? 'כניסה למערכת' : 'Sign in to system'}>
-          
+            <LogIn className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
             {t('signIn')}
           </Button>
         }
@@ -550,7 +550,6 @@ function LayoutContent({ children, currentPageName }) {
               <>
                 <Button
                   onClick={() => base44.auth.redirectToLogin()}
-                  size="sm"
                   className="flex-shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg"
                   aria-label={isRTL ? 'כניסה למערכת' : 'Sign in'}>
                   <LogIn className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} aria-hidden="true" />
