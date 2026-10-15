@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { addPointsAtomic } from '../../shared/pointsOperations.ts';
+import { checkDocumentAccess } from '../../shared/documentAuth.ts';
 
 // Awards points to the creator of a TopicEditSuggestion when a pro vote is
 // cast (+10) or when the suggestion is accepted (+100). Replaces the
@@ -51,12 +52,27 @@ export default async function(req: Request): Promise<Response> {
       return Response.json({ success: true, message: 'Gamification not enabled' });
     }
 
+    // Authorization: the caller must be able to access the document the
+    // suggestion belongs to. Without this, any authenticated user could
+    // trigger point awards for suggestions in private/hidden groups.
+    const access = await checkDocumentAccess(base44, docs[0], user);
+    if (!access.authorized) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Find the creator user by email.
     const creatorUsers = await serviceBase44.entities.User.filter({ email: suggestion.created_by });
     const creator = creatorUsers[0];
     if (!creator) return Response.json({ success: true, message: 'Creator not found' });
 
     if (awardType === 'vote_received') {
+      // Block self-vote farming: the creator voting on their own suggestion
+      // must not earn themselves points. TopicEditVote has open create RLS,
+      // so without this check the creator can mint a pro vote and collect +10.
+      if (creator.id === user.id) {
+        return Response.json({ success: true, message: 'Self-vote — no points awarded', skipped: true });
+      }
+
       // Verify the calling user has a real pro vote on this suggestion.
       const voterVotes = await serviceBase44.entities.TopicEditVote.filter({
         suggestionId, userId: user.id, vote: 'pro',
