@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { spendPointsAtomic, POINTS_COSTS } from '../../shared/pointsOperations.ts';
+import { checkDocumentAccess } from '../../shared/documentAuth.ts';
 
 // Creates a TopicEditSuggestion AND atomically deducts the points cost
 // server-side. Same security rationale as createSuggestionWithPoints —
@@ -23,11 +24,22 @@ export default async function(req: Request): Promise<Response> {
     // Verify gamification setting server-side. Admins skip the cost — but
     // admin status is determined from the authenticated user's role, never
     // from a client-supplied isAdmin flag (which any user could set to true).
+    // Verify the caller can access this document — prevents users outside
+    // a private/hidden group from posting suggestions into its documents.
+    const docs = await serviceBase44.entities.Document.filter({ id: suggestionData.documentId });
+    if (docs.length === 0) {
+      return Response.json({ error: 'Document not found' }, { status: 404 });
+    }
+    const document = docs[0];
+    const { authorized: accessAuthorized } = await checkDocumentAccess(base44, document, user);
+    if (!accessAuthorized) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const isAdmin = user.role === 'admin';
     let cost = 0;
     if (!isAdmin) {
-      const docs = await serviceBase44.entities.Document.filter({ id: suggestionData.documentId });
-      const gamificationEnabled = docs.length > 0 && docs[0].gamificationEnabled;
+      const gamificationEnabled = document.gamificationEnabled;
       cost = gamificationEnabled ? POINTS_COSTS.edit_topic : 0;
     }
 
