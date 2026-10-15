@@ -84,7 +84,14 @@ PRIORITIES, IN ORDER:
 1. Complete coverage and faithful wording.
 2. Correct reading order and original hierarchy.
 3. Meaningful, independently discussable sections.
-Completeness always takes priority over short sections or a small response.
+Completeness always takes priority over short sections or a small response. This is a lossless transcription-and-placement task, NOT editorial selection: a well-organized but incomplete document is an incorrect result.
+
+MANDATORY EXTRACTION PROCEDURE:
+1. Before organizing anything, inspect the full PDF page by page and identify every readable text block on each page. Include text in columns, sidebars, callouts, tables, diagrams, captions, notes, annexes, signatures and cover pages. Do not rely only on the PDF's embedded text layer when visible page content contains additional readable text.
+2. Transcribe each block faithfully before deciding where it belongs. Keep an internal page-to-block coverage inventory; do not emit this inventory in the JSON. Never replace a long block with its opening sentences or a paraphrase.
+3. Assign every transcribed block to exactly one output location: title, description, topic heading or section content. Every substantive occurrence must have a destination. Similar wording at different source locations is not grounds for deletion.
+4. If a block's subject or hierarchy is unclear, preserve its full text in a section under the nearest appropriate topic, or a neutral source-language topic label. Uncertain placement must NEVER cause omission. Do not return an empty-titled topic or content outside the schema: the importer cannot retain it.
+5. After organizing, revisit each page and reconcile every source block with its destination. Restore any missing sentence, list item, table cell or note before returning. Spend output space on original content, not commentary or unnecessary JSON whitespace.
 
 READ THE ENTIRE DOCUMENT:
 - Inspect every page from beginning to end, including the final page, appendices, notes, lists, tables, captions and readable text in scans or images. Do not stop after the introduction or a representative sample.
@@ -116,14 +123,18 @@ SECTIONS:
 - Output section content as plain text with meaningful paragraph breaks. Do not add Markdown heading markers, HTML, commentary, explanations or newly written connecting sentences.
 
 OMISSIONS AND UNCERTAINTY:
-- Remove only non-substantive layout artifacts: isolated page counters, identical repeating running headers/footers and duplicate table-of-contents entries when the corresponding headings and content are present in the body. Keep unique or substantive text even if it appears in a header or footer. Do not deduplicate repeated clauses merely because their wording is similar.
+- Default to retaining text. Remove only isolated page counters and demonstrably identical running headers/footers that carry no unique information. Preserve table-of-contents text, credits, citations, bibliographies, source URLs, dates, version labels and signatures in an appropriate section or description; do not silently discard them as metadata. Keep any header/footer with unique or substantive wording. Do not deduplicate source clauses or repeated list items, even when identical, unless they are proven non-substantive running layout artifacts.
 - Never guess unreadable text. Retain all readable surrounding text and mark only the specific unreadable span with [illegible]. If the file has no readable substantive content, return an empty topics array rather than fabricate a document.
 
 FINAL COVERAGE CHECK BEFORE RETURNING:
 - Compare your output against every page, including the end of the document. Check that every substantive passage appears once across description and topics, no paragraph or table row is missing, and no heading has swallowed its body text. Confirm that description contains only source background, not operative clauses or an invented summary.
 - Verify all numbers, names, dates, negations, conditions, exceptions and list items are retained. Verify content split across pages is joined correctly.
 - Ensure each topic has a nonempty title and at least one section with nonempty content. A title alone does not substitute for the topic's body.
-- Do not return a partial extraction as though it were the full document. Do not use ellipses, 'etc.', summaries or 'remaining sections omitted' in place of source content.
+- Verify page coverage from the first page THROUGH THE LAST PAGE, especially the final paragraphs, trailing list items, appendices and notes. A document ending mid-sentence or before the source's last substantive block must be completed before returning.
+- Check explicit numbering for skipped clauses and nested items against the source; gaps present in the source must stay unchanged, but gaps caused by extraction must be restored. Check the first and last sentence of every long paragraph and each table's first and last row.
+- Check description-to-section boundaries: moving background into description must not lose adjoining operative sentences, and a topic heading must never replace the paragraphs beneath it.
+- Keep all readable fragments even if a surrounding block is partially illegible. Mark only the unreadable span; never omit its entire paragraph, page or topic. Do not invent missing text to satisfy this check.
+- Do not return a partial extraction as though it were the full document. Do not use ellipses, 'etc.', summaries, references such as 'as above', or 'remaining sections omitted' in place of source content. Never shorten the original text to fit a preferred response length or a desired number of topics or sections.
 
 Return only JSON matching the provided schema: {title, description, topics: [{title, sections: [{content}]}]}. Preserve the source language throughout.`;
 
