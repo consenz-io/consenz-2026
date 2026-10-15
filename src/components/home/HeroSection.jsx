@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, Users, Trophy, CheckCircle, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import StatsCards from "./StatsCards";
+import SingleLineHeroTitle from "@/components/home/SingleLineHeroTitle";
 
 const scrollToGroups = () => {
   const el = window.document?.getElementById('recent-documents-section');
@@ -87,7 +88,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
             {t('democraticCollaboration')}
           </Badge>
           <h1 id="hero-heading" className="font-bold leading-tight">
-            <span className="text-slate-900 text-xl md:text-5xl">{t('buildConsensusTitle')}</span>
+            <SingleLineHeroTitle>{t('buildConsensusTitle')}</SingleLineHeroTitle>
             <br />
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-base md:text-4xl">
               {t('draftTogetherTitle')} {agreementsLabel[language] || agreementsLabel.en}
