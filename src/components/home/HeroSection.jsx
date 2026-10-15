@@ -83,7 +83,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
             {t('democraticCollaboration')}
           </Badge>
           <h1 id="hero-heading" className="font-bold leading-tight">
-            <span className="text-slate-900 text-xl md:text-xl">{t('buildConsensusTitle')}</span>
+            <span className="text-slate-900 text-xl md:text-5xl">{t('buildConsensusTitle')}</span>
             <br />
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-base md:text-base">
               {t('draftTogetherTitle')} {agreementsLabel[language] || agreementsLabel.en}
