@@ -9,10 +9,14 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
  * Server-side TTL cache (60s): the home page is high-traffic and the stats
  * don't need to be real-time. Caching amortizes 11 queries + heavy in-memory
  * joins across all users hitting the home page within the window.
- * Keyed by isAdmin because displayedUsers/contributorsList differ per role.
+ * Keyed by role: shared stats (counts, contributors, displayedUsers) are
+ * the same per role. Per-caller fields (groupParticipantCounts,
+ * documentContributorCounts) are NOT cached as response data — they are
+ * filtered per-request from cached raw size maps + the caller's own group
+ * memberships, so private-group participant counts never leak across users.
  */
 const CACHE_TTL_MS = 60 * 1000;
-const statsCache = new Map(); // key: 'admin' | 'user' → { data, expiresAt }
+const statsCache = new Map(); // key: 'admin' | 'user' → { sharedStats, groupParticipantSizes, docContributorSizes, docIdToGroupId, groupStatusById, expiresAt }
 
 setInterval(() => {
   const now = Date.now();
@@ -30,11 +34,39 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me().catch(() => null);
     const isAdmin = user?.role === 'admin';
 
-    // Cache hit — return cached stats if still fresh
     const cacheKey = user ? (isAdmin ? 'admin' : 'user') : 'anonymous';
     const cached = statsCache.get(cacheKey);
     if (cached && Date.now() < cached.expiresAt) {
-      return Response.json(cached.data);
+      // Cache hit — shared stats are reused, but per-caller visibility
+      // (groupParticipantCounts, documentContributorCounts) is recomputed
+      // from the caller's own memberships so private-group counts never
+      // leak from another user's cached response.
+      const callerMemberGroupIds = new Set(
+        user
+          ? (await base44.asServiceRole.entities.GroupMember.filter({ userId: user.id })).map((m: any) => m.groupId)
+          : []
+      );
+      const canSeeGroup = (gid: string) =>
+        isAdmin ||
+        callerMemberGroupIds.has(gid) ||
+        cached.groupStatusById.get(gid) === 'public';
+
+      const groupParticipantCounts: Record<string, number> = {};
+      for (const [gid, size] of cached.groupParticipantSizes.entries()) {
+        if (canSeeGroup(gid as string)) groupParticipantCounts[gid as string] = size as number;
+      }
+      const documentContributorCounts: Record<string, number> = {};
+      for (const [docId, size] of cached.docContributorSizes.entries()) {
+        const gid = cached.docIdToGroupId.get(docId as string);
+        if (gid && !canSeeGroup(gid)) continue;
+        documentContributorCounts[docId as string] = size as number;
+      }
+
+      return Response.json({
+        ...cached.sharedStats,
+        groupParticipantCounts,
+        documentContributorCounts,
+      });
     }
 
     const [
@@ -204,25 +236,15 @@ Deno.serve(async (req) => {
       if (gid && groupParticipantSets.has(gid)) groupParticipantSets.get(gid).add(a.userId);
     }
 
-    // Authorization: private/hidden group participant counts must not leak to
-    // non-members. Build the caller's membership set from the already-loaded
-    // groupMembers, then drop counts for groups they can't see.
-    const callerMemberGroupIds = new Set(
-      user ? groupMembers.filter(m => m.userId === user.id).map(m => m.groupId) : []
-    );
-    const groupStatusById = new Map(groups.map(g => [g.id, g.status]));
-    const canSeeGroup = (gid) =>
-      isAdmin ||
-      callerMemberGroupIds.has(gid) ||
-      groupStatusById.get(gid) === 'public';
-
-    const groupParticipantCounts = {};
+    // Collapse email/userId duplicates for ALL groups (not per-caller), then
+    // store raw sizes. Per-caller visibility filtering is applied after the
+    // cache so private-group counts never leak across users.
+    const groupParticipantSizes = new Map();
     groupParticipantSets.forEach((idSet, gid) => {
-      if (!canSeeGroup(gid)) return;
       for (const p of publicProfiles) {
         if (p.userId && p.email && idSet.has(p.userId)) idSet.delete(p.email);
       }
-      groupParticipantCounts[gid] = idSet.size;
+      groupParticipantSizes.set(gid, idSet.size);
     });
 
     // ── Displayed users (for non-admins: just public profiles; for admins: all users) ──
@@ -283,36 +305,65 @@ Deno.serve(async (req) => {
       addDocParticipant(a.documentId, a.userId, a.userEmail);
     }
 
-    const documentContributorCounts = {};
+    // Collapse email/userId duplicates for ALL documents, store raw sizes.
+    // Per-caller visibility filtering is applied after the cache.
+    const docContributorSizes = new Map();
     docContributorSets.forEach((set, docId) => {
-      // Skip documents in private/hidden groups the caller can't see
-      const gid = docIdToGroupId.get(docId);
-      if (gid && !canSeeGroup(gid)) return;
-      // O(set size) collapse — same optimization as groupParticipantCounts above
       for (const key of set) {
         if (key.includes('@')) {
           const uid = emailToUserId.get(key);
           if (uid && set.has(uid)) set.delete(key);
         }
       }
-      documentContributorCounts[docId] = set.size;
+      docContributorSizes.set(docId, set.size);
     });
 
-    const responseData = {
+    // ── Per-caller visibility filter (runs on every request, never cached) ──
+    const callerMemberGroupIds = new Set(
+      user ? groupMembers.filter(m => m.userId === user.id).map(m => m.groupId) : []
+    );
+    const groupStatusById = new Map(groups.map(g => [g.id, g.status]));
+    const canSeeGroup = (gid) =>
+      isAdmin ||
+      callerMemberGroupIds.has(gid) ||
+      groupStatusById.get(gid) === 'public';
+
+    const groupParticipantCounts = {};
+    groupParticipantSizes.forEach((size, gid) => {
+      if (canSeeGroup(gid)) groupParticipantCounts[gid] = size;
+    });
+
+    const documentContributorCounts = {};
+    docContributorSizes.forEach((size, docId) => {
+      const gid = docIdToGroupId.get(docId);
+      if (gid && !canSeeGroup(gid)) return;
+      documentContributorCounts[docId] = size;
+    });
+
+    const sharedStats = {
       documentsCount: documents.length,
       totalUniqueContributors: Math.max(1, contributorsList.length),
       contributorsList,
       averageConsensus,
-      groupParticipantCounts,
-      documentContributorCounts,
       displayedUsers,
     };
 
-    // Cache the computed stats for 60s — amortizes 11 queries + heavy joins
-    // across all users hitting the home page within the window.
-    statsCache.set(cacheKey, { data: responseData, expiresAt: Date.now() + CACHE_TTL_MS });
+    // Cache shared stats + raw size maps (server-side only, never sent
+    // unfiltered to any client). Per-caller filtering runs on every request.
+    statsCache.set(cacheKey, {
+      sharedStats,
+      groupParticipantSizes,
+      docContributorSizes,
+      docIdToGroupId,
+      groupStatusById,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    });
 
-    return Response.json(responseData);
+    return Response.json({
+      ...sharedStats,
+      groupParticipantCounts,
+      documentContributorCounts,
+    });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
