@@ -142,14 +142,14 @@ export default function CreateDocument() {
       console.log("[PDF Upload] Starting file upload...", file.name, file.size);
       const startTime = Date.now();
       
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      console.log("[PDF Upload] File uploaded in", Date.now() - startTime, "ms:", file_url);
+      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+      console.log("[PDF Upload] File uploaded in", Date.now() - startTime, "ms");
       
       setProcessingStage("מנתח את מבנה המסמך (עד 2 דקות)...");
       console.log("[PDF Upload] Starting LLM analysis...");
       const llmStartTime = Date.now();
 
-      const response = await base44.functions.invoke('extractDocumentStructure', { fileUrl: file_url });
+      const response = await base44.functions.invoke('extractDocumentStructure', { fileUri: file_uri });
       const result = response.data;
       
       console.log("[PDF Upload] LLM completed in", Date.now() - llmStartTime, "ms");
@@ -214,7 +214,7 @@ export default function CreateDocument() {
     } catch (err) {
       console.error("[PDF Upload] ERROR:", err);
       console.error("[PDF Upload] Error stack:", err.stack);
-      setError(err.message || "שגיאה בעיבוד המסמך. נסה יצירה ידנית או קובץ אחר.");
+      setError(err.response?.data?.error || err.message || "שגיאה בעיבוד המסמך. נסה יצירה ידנית או קובץ אחר.");
       setUploadedFile(null);
       setExtractedStructure(null);
     } finally {

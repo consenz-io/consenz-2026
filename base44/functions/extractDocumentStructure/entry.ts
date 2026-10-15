@@ -1,4 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { secrets } from 'base44:runtime';
 
 // Per-user rate limit: document-structure extraction is an expensive LLM call.
 // Cap at 5 extractions per 10 minutes per user to prevent credit abuse.
@@ -35,23 +36,34 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { fileUrl } = await req.json();
-    if (!fileUrl || typeof fileUrl !== 'string') {
-      return Response.json({ error: 'Missing fileUrl' }, { status: 400 });
-    }
-
-    // Only allow files uploaded to this app's own storage. The client uploads
-    // via UploadPublicFile first, so the URL is always on a Base44 storage host.
-    // Rejecting arbitrary external URLs prevents feeding untrusted content to
-    // the LLM and consuming credits on someone else's behalf.
-    let parsedUrl;
-    try {
-      parsedUrl = new URL(fileUrl);
-    } catch {
-      return Response.json({ error: 'Invalid fileUrl' }, { status: 400 });
-    }
-    if (parsedUrl.hostname !== 'base44.com' && !parsedUrl.hostname.endsWith('.base44.com')) {
-      return Response.json({ error: 'fileUrl must point to app storage' }, { status: 400 });
+    const { fileUri, fileUrl } = await req.json();
+    const appId = secrets.get('BASE44_APP_ID');
+    let analysisUrl;
+    if (fileUri !== undefined) {
+      const prefix = `mp/private/${appId}/`;
+      if (typeof fileUri !== 'string' || fileUri.length > 1000 ||
+          !fileUri.startsWith(prefix) || !fileUri.slice(prefix.length) ||
+          fileUri.includes('..') || /[?#\\]/.test(fileUri)) {
+        return Response.json({ error: 'Invalid uploaded file reference' }, { status: 400 });
+      }
+    } else {
+      if (typeof fileUrl !== 'string' || fileUrl.length > 2000) {
+        return Response.json({ error: 'Missing uploaded file' }, { status: 400 });
+      }
+      let parsedUrl;
+      try {
+        parsedUrl = new URL(fileUrl);
+      } catch {
+        return Response.json({ error: 'Invalid fileUrl' }, { status: 400 });
+      }
+      const appStoragePath = `/api/apps/${appId}/files/mp/public/${appId}/`;
+      const mediaStoragePath = `/files/public/${appId}/`;
+      const isAppFile = parsedUrl.hostname === 'base44.app' && parsedUrl.pathname.startsWith(appStoragePath);
+      const isMediaFile = parsedUrl.hostname === 'media.base44.com' && parsedUrl.pathname.startsWith(mediaStoragePath);
+      if (parsedUrl.protocol !== 'https:' || (!isAppFile && !isMediaFile)) {
+        return Response.json({ error: 'fileUrl must point to this app storage' }, { status: 400 });
+      }
+      analysisUrl = fileUrl;
     }
 
     // Per-user rate limit
@@ -59,6 +71,11 @@ export default async function(req) {
     if (!rl.allowed) {
       const mins = Math.ceil(rl.remainingMs / 60000);
       return Response.json({ error: `Rate limit exceeded. Try again in ${mins} minute(s).` }, { status: 429 });
+    }
+
+    if (fileUri) {
+      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri: fileUri, expires_in: 600 });
+      analysisUrl = signed_url;
     }
 
     const prompt = `Extract document structure into topics and sections.
@@ -74,7 +91,7 @@ Return JSON with title, topics array (each with title and sections array with co
 
     const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
-      file_urls: [fileUrl],
+      file_urls: [analysisUrl],
       response_json_schema: {
         type: "object",
         properties: {
