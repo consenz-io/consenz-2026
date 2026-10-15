@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { secrets } from 'base44:runtime';
+import checkExtractionCompleteness from '../../shared/checkExtractionCompleteness.ts';
 
 // Per-user rate limit: document-structure extraction is an expensive LLM call.
 // Cap at 5 extractions per 10 minutes per user to prevent credit abuse.
@@ -168,7 +169,11 @@ Return only JSON matching the provided schema: {title, description, topics: [{ti
       },
     });
 
-    return Response.json(result || { title: '', description: '', topics: [] });
+    const completeness = await checkExtractionCompleteness(base44, analysisUrl, result);
+    if (completeness.status !== 'passed') {
+      return Response.json({ completeness });
+    }
+    return Response.json({ ...result, completeness });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

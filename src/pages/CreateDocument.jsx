@@ -17,6 +17,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 import DocumentDescriptionEditor from '@/components/document/DocumentDescriptionEditor';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import ExtractionCompletenessNotice from '@/components/document/ExtractionCompletenessNotice';
 
 
 const detectLanguage = (text) => {
@@ -83,6 +84,9 @@ export default function CreateDocument() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedStructure, setExtractedStructure] = useState(null);
   const [processingStage, setProcessingStage] = useState("");
+  const [completeness, setCompleteness] = useState(null);
+  const importBlocked = isProcessing || (completeness && completeness.status !== 'passed');
+  const completenessBlockedMessage = language === 'he' ? 'יצירת המסמך חסומה עד לסיום בדיקת שלמות מוצלחת.' : language === 'ar' ? 'إنشاء المستند محظور حتى نجاح فحص الاكتمال.' : 'Creation is blocked until completeness verification succeeds.';
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -137,6 +141,8 @@ export default function CreateDocument() {
     }
 
     setUploadedFile(file);
+    setExtractedStructure(null);
+    setCompleteness({ status: 'checking' });
     setError(null);
     setIsProcessing(true);
     setProcessingStage("מעלה קובץ...");
@@ -148,13 +154,16 @@ export default function CreateDocument() {
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
       console.log("[PDF Upload] File uploaded in", Date.now() - startTime, "ms");
       
-      setProcessingStage("מנתח את מבנה המסמך (עד 2 דקות)...");
+      setProcessingStage(language === 'he' ? 'מחלץ תוכן ובודק שלמות מול הקובץ המקורי...' : language === 'ar' ? 'جارٍ استخراج المحتوى والتحقق من اكتماله مقابل الملف الأصلي...' : 'Extracting content and checking completeness against the original file...');
       console.log("[PDF Upload] Starting LLM analysis...");
       const llmStartTime = Date.now();
 
       const response = await base44.functions.invoke('extractDocumentStructure', { fileUri: file_uri });
       const result = response.data;
-      
+      const report = result?.completeness || { status: 'uncertain' };
+      setCompleteness(report);
+      if (report.status !== 'passed') return;
+       
       console.log("[PDF Upload] LLM completed in", Date.now() - llmStartTime, "ms");
       console.log("[PDF Upload] Result:", JSON.stringify(result).substring(0, 500));
 
@@ -218,6 +227,7 @@ export default function CreateDocument() {
     } catch (err) {
       console.error("[PDF Upload] ERROR:", err);
       console.error("[PDF Upload] Error stack:", err.stack);
+      setCompleteness({ status: 'uncertain' });
       setError(err.response?.data?.error || err.message || "שגיאה בעיבוד המסמך. נסה יצירה ידנית או קובץ אחר.");
       setUploadedFile(null);
       setExtractedStructure(null);
@@ -230,6 +240,7 @@ export default function CreateDocument() {
 
   const createDocMutation = useMutation({
     mutationFn: async (data) => {
+      if (importBlocked) throw new Error(completenessBlockedMessage);
       const urlError = validateUrlName(data.urlName);
       if (urlError) {
         throw new Error(urlError);
@@ -342,6 +353,10 @@ export default function CreateDocument() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(null);
+    if (importBlocked) {
+      setError(completenessBlockedMessage);
+      return;
+    }
 
     if (!formData.title || !formData.title.trim()) {
       setError("Document title is required");
@@ -439,6 +454,8 @@ export default function CreateDocument() {
   };
 
   const resetUpload = () => {
+    setCompleteness(null);
+    setError(null);
     setUploadedFile(null);
     setExtractedStructure(null);
     setTopics([{ title: "", sections: [{ content: "" }] }]);
@@ -475,6 +492,8 @@ export default function CreateDocument() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+
+        {!isProcessing && <ExtractionCompletenessNotice report={completeness} language={language} onReset={resetUpload} />}
 
         <Tabs value={creationMode} onValueChange={(val) => {
           setCreationMode(val);
@@ -770,7 +789,7 @@ export default function CreateDocument() {
               </Button>
               <Button
                 type="submit"
-                disabled={createDocMutation.isPending || !formData.title || !formData.urlName}
+                disabled={createDocMutation.isPending || importBlocked || !formData.title || !formData.urlName}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600"
               >
                 {createDocMutation.isPending ? (
