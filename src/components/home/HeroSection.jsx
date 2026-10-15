@@ -21,23 +21,23 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
 
   const features = {
     he: [
-      { icon: Users, title: 'שיתוף בקבלת החלטות', desc: 'קהילות וארגונים משתפים את חבריהם בתהליך' },
-      { icon: Trophy, title: 'ניקוד וגיימיפיקציה', desc: 'השתתפות מתגמלת וחוויה משחקית' },
-      { icon: CheckCircle, title: 'מנגנון הצבעות חכם', desc: 'קונצנזוס דינמי שמקרב דעות' },
-      { icon: MessageSquare, title: 'דיון ועריכה', desc: 'תהליך פורה גם עם אלפי משתתפים' }
-    ],
+    { icon: Users, title: 'שיתוף בקבלת החלטות', desc: 'קהילות וארגונים משתפים את חבריהם בתהליך' },
+    { icon: Trophy, title: 'ניקוד וגיימיפיקציה', desc: 'השתתפות מתגמלת וחוויה משחקית' },
+    { icon: CheckCircle, title: 'מנגנון הצבעות חכם', desc: 'קונצנזוס דינמי שמקרב דעות' },
+    { icon: MessageSquare, title: 'דיון ועריכה', desc: 'תהליך פורה גם עם אלפי משתתפים' }],
+
     ar: [
-      { icon: Sparkles, title: 'صياغة بالذكاء الاصطناعي', desc: 'يساعد في الصياغة وتكييف المحتوى' },
-      { icon: Languages, title: 'ترجمة تلقائية', desc: 'بين اللغات تلقائياً وبدقة' },
-      { icon: CheckCircle, title: 'إجماع ديناميكي', desc: 'يقرب الآراء ويسمع كل صوت' },
-      { icon: Users, title: 'مجموعات كبيرة', desc: 'منتج حتى مع آلاف المشاركين' }
-    ],
+    { icon: Sparkles, title: 'صياغة بالذكاء الاصطناعي', desc: 'يساعد في الصياغة وتكييف المحتوى' },
+    { icon: Languages, title: 'ترجمة تلقائية', desc: 'بين اللغات تلقائياً وبدقة' },
+    { icon: CheckCircle, title: 'إجماع ديناميكي', desc: 'يقرب الآراء ويسمع كل صوت' },
+    { icon: Users, title: 'مجموعات كبيرة', desc: 'منتج حتى مع آلاف المشاركين' }],
+
     en: [
-      { icon: Sparkles, title: 'AI-Assisted Drafting', desc: 'AI helps draft and adapt content' },
-      { icon: Languages, title: 'Auto-Translation', desc: 'Across languages automatically' },
-      { icon: CheckCircle, title: 'Dynamic Consensus', desc: 'Bridges opinions, every voice heard' },
-      { icon: Users, title: 'Large Groups', desc: 'Productive even with thousands' }
-    ]
+    { icon: Sparkles, title: 'AI-Assisted Drafting', desc: 'AI helps draft and adapt content' },
+    { icon: Languages, title: 'Auto-Translation', desc: 'Across languages automatically' },
+    { icon: CheckCircle, title: 'Dynamic Consensus', desc: 'Bridges opinions, every voice heard' },
+    { icon: Users, title: 'Large Groups', desc: 'Productive even with thousands' }]
+
   };
 
   const startTutorial = () => {
@@ -83,16 +83,16 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
             {t('democraticCollaboration')}
           </Badge>
           <h1 id="hero-heading" className="font-bold leading-tight">
-            <span className="text-slate-900 text-2xl md:text-5xl">{t('buildConsensusTitle')}</span>
+            <span className="text-slate-900 text-xl md:text-xl">{t('buildConsensusTitle')}</span>
             <br />
-            <span className="text-lg md:text-4xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent text-base md:text-base">
               {t('draftTogetherTitle')} {agreementsLabel[language] || agreementsLabel.en}
             </span>
           </h1>
           <div className="max-w-3xl mx-auto py-1 md:py-3 px-2 md:px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 md:gap-3">
-              {(features[language] || features.en).map((feature, idx) => (
-                <div key={idx} className="flex items-start gap-3 bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl p-3 md:p-3.5 shadow-sm hover:shadow-md transition-shadow text-start">
+              {(features[language] || features.en).map((feature, idx) =>
+              <div key={idx} className="flex items-start gap-3 bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl p-3 md:p-3.5 shadow-sm hover:shadow-md transition-shadow text-start">
                   <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white">
                     <feature.icon className="w-5 h-5" aria-hidden="true" />
                   </div>
@@ -101,7 +101,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
                     <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-0.5">{feature.desc}</p>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
           <div className="flex gap-4 justify-center flex-wrap">
