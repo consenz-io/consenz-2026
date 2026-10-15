@@ -493,7 +493,7 @@ export default function CreateDocument() {
 
           <TabsContent value="upload" className="mt-6">
             <Card className="border-2 border-dashed border-slate-300 bg-white">
-              <CardHeader>
+              <CardHeader dir={isRTL ? 'rtl' : 'ltr'} className={isRTL ? 'text-right' : 'text-left'}>
                 <CardTitle>{t('cdUploadSyncTitle')}</CardTitle>
                 <CardDescription>{t('cdUploadSyncDesc')}</CardDescription>
               </CardHeader>
