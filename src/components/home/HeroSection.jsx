@@ -98,12 +98,12 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 md:gap-3">
               {(features[language] || features.en).map((feature, idx) =>
               <div key={idx} className="flex flex-col bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl p-3 md:p-3.5 shadow-sm hover:shadow-md transition-shadow text-start">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white">
-                    <feature.icon className="w-5 h-5" aria-hidden="true" />
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white">
+                    <feature.icon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="font-semibold text-slate-900 text-sm md:text-base leading-tight">{feature.title}</h3>
+                    <h3 className="font-semibold text-slate-900 text-[13px] md:text-base leading-[1.15]">{feature.title}</h3>
                     <p className="text-slate-600 text-xs md:text-sm leading-relaxed mt-0.5 inline">{feature.desc}</p>
                     <button
                       onClick={() => setExpandedCard(expandedCard === idx ? null : idx)}
