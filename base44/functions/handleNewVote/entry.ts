@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { authorizeInternalOrUser } from '../../shared/authGate.ts';
+import { notifyGroupAdmins } from '../../shared/groupAdminNotifications.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -108,6 +109,27 @@ Deno.serve(async (req) => {
       } catch (pointsError) {
         console.error('[VOTE AUTOMATION] Points error (non-critical):', pointsError.message);
       }
+    }
+
+    // ── Notify group admins about the vote ──
+    try {
+      const [voterProfiles, voterUserArr] = await Promise.all([
+        base44.asServiceRole.entities.UserPublicProfile.filter({ userId: realVote.userId }),
+        base44.asServiceRole.entities.User.filter({ id: realVote.userId }),
+      ]);
+      const voterName = voterProfiles[0]?.fullName || voterUserArr[0]?.full_name || 'User';
+      await notifyGroupAdmins(base44.asServiceRole, {
+        documentId: suggestion.documentId,
+        actorId: realVote.userId,
+        titleKey: 'adminVoteTitle',
+        messageKey: 'adminVoteMessage',
+        replacements: { name: voterName },
+        actionUrl: `/suggestiondetail?id=${suggestion.id}`,
+        relatedEntityId: suggestion.id,
+        relatedEntityType: 'suggestion',
+      });
+    } catch (e) {
+      console.error('[VOTE AUTOMATION] Admin notify error:', e.message);
     }
 
     console.log('[VOTE AUTOMATION] ✅ Done');

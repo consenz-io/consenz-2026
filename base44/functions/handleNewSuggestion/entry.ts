@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { authorizeInternalOrUser } from '../../shared/authGate.ts';
 import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
+import { notifyGroupAdmins } from '../../shared/groupAdminNotifications.ts';
 
 Deno.serve(async (req) => {
   const startTime = Date.now();
@@ -138,6 +139,18 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
     console.log('[SUGGESTION AUTOMATION] Created', notifications.length, 'notifications');
+
+    // ── Notify group admins about the new suggestion ──
+    await notifyGroupAdmins(base44.asServiceRole, {
+      documentId: suggestion.documentId,
+      actorId: suggestion.created_by_id,
+      titleKey: 'adminSuggestionTitle',
+      messageKey: 'adminSuggestionMessage',
+      replacements: { name: creatorName },
+      actionUrl: `/documentview?id=${suggestion.documentId}&targetSuggestion=${suggestion.id}`,
+      relatedEntityId: suggestion.id,
+      relatedEntityType: 'suggestion',
+    });
 
     const duration = Date.now() - startTime;
     return Response.json({ success: true, notificationsSent: notifications.length, duration });

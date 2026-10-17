@@ -3,6 +3,7 @@ import { awardSuggestionPointsLogic } from '../../shared/awardSuggestionPointsLo
 import { authorizeInternalOrUser, INTERNAL_AUTOMATION_TOKEN } from '../../shared/authGate.ts';
 import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
 import { detectLanguage, isValidObjectId, filterValidObjectIds } from '../../shared/documentUtils.ts';
+import { notifyGroupAdmins } from '../../shared/groupAdminNotifications.ts';
 
 async function calculateContributors(base44, documentId) {
   const [suggestions, sections, agreements] = await Promise.all([
@@ -694,6 +695,18 @@ Deno.serve(async (req) => {
         console.error('[PROCESS ACCEPTANCE V4] Failed:', err);
       }
     }
+
+    // ── Notify group admins about the acceptance ──
+    await notifyGroupAdmins(base44.asServiceRole, {
+      documentId: document.id,
+      actorId: voterId,
+      titleKey: 'adminAcceptanceTitle',
+      messageKey: 'adminAcceptanceMessage',
+      replacements: { title: suggestion.title || '' },
+      actionUrl: `/documentview?id=${document.id}`,
+      relatedEntityId: suggestion.id,
+      relatedEntityType: 'suggestion',
+    });
 
     console.log('[PROCESS ACCEPTANCE V4] Completed successfully');
 

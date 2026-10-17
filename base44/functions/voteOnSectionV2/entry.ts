@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { calculateContributors, calculateActiveVoterCount, computeConsensusUpdate } from '../../shared/consensusLogic.ts';
 import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
 import { checkDocumentAccess } from '../../shared/documentAuth.ts';
+import { notifyGroupAdmins } from '../../shared/groupAdminNotifications.ts';
 
 // In-memory lock to prevent the same user voting on the same section concurrently
 const processingVotes = new Set();
@@ -329,6 +330,22 @@ Deno.serve(async (req) => {
           }
 
           sectionDeleted = true;
+
+          // ── Notify group admins about the section deletion ──
+          try {
+            await notifyGroupAdmins(base44.asServiceRole, {
+              documentId: section.documentId,
+              actorId: user.id,
+              titleKey: 'adminSectionDeletedTitle',
+              messageKey: 'adminSectionDeletedMessage',
+              replacements: {},
+              actionUrl: deleteSuggestionId ? `/suggestiondetail?id=${deleteSuggestionId}` : `/documentview?id=${section.documentId}`,
+              relatedEntityId: deleteSuggestionId || section.documentId,
+              relatedEntityType: deleteSuggestionId ? 'suggestion' : 'document',
+            });
+          } catch (e) {
+            console.error('[VOTE ON SECTION V2] Admin notify error:', e.message);
+          }
         }
       }
 

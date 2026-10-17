@@ -20,7 +20,9 @@
         "new_suggestion_in_followed_document",
         "document_comment",
         "group_join_request",
-        "direct_message"
+        "direct_message",
+        "admin_group_activity",
+        "admin_group_new_participant"
       ],
       "description": "Type of notification"
     },

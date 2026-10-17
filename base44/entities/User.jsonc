@@ -88,6 +88,11 @@
       "type": "string",
       "format": "date-time",
       "description": "Last time email digest was sent"
+    },
+    "lastAdminDigestAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the admin group activity digest was computed (new participant detection)"
     }
   },
   "required": []

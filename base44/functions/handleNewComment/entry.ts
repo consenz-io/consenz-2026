@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { authorizeInternalOrUser } from '../../shared/authGate.ts';
 import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
+import { notifyGroupAdmins } from '../../shared/groupAdminNotifications.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -231,6 +232,38 @@ Deno.serve(async (req) => {
     if (notifications.length > 0) {
       await base44.asServiceRole.entities.Notification.bulkCreate(notifications);
       console.log(`[AUTOMATION] Created ${notifications.length} comment notifications`);
+    }
+
+    // ── Notify group admins about the comment ──
+    try {
+      let adminDocId = null;
+      let adminActionUrl = '';
+      if (comment.rootEntityType === 'suggestion') {
+        const sugg = await base44.asServiceRole.entities.Suggestion.filter({ id: comment.rootEntityId }).then(r => r[0]);
+        adminDocId = sugg?.documentId;
+        adminActionUrl = `/suggestiondetail?id=${comment.rootEntityId}&commentId=${comment.id}`;
+      } else if (comment.rootEntityType === 'section') {
+        const sec = await base44.asServiceRole.entities.Section.filter({ id: comment.rootEntityId }).then(r => r[0]);
+        adminDocId = sec?.documentId;
+        adminActionUrl = `/documentview?id=${sec?.documentId}&commentId=${comment.id}`;
+      } else if (comment.rootEntityType === 'document') {
+        adminDocId = comment.rootEntityId;
+        adminActionUrl = `/documentview?id=${comment.rootEntityId}&commentId=${comment.id}`;
+      }
+      if (adminDocId) {
+        await notifyGroupAdmins(base44.asServiceRole, {
+          documentId: adminDocId,
+          actorId: comment.created_by_id,
+          titleKey: 'adminCommentTitle',
+          messageKey: 'adminCommentMessage',
+          replacements: { name: commenterName },
+          actionUrl: adminActionUrl,
+          relatedEntityId: comment.id,
+          relatedEntityType: 'comment',
+        });
+      }
+    } catch (e) {
+      console.error('[AUTOMATION] Admin notify error:', e.message);
     }
 
     return Response.json({ success: true, notificationsSent: notifications.length });

@@ -433,6 +433,17 @@ function LayoutContent({ children, currentPageName }) {
     initializeUserData();
   }, [user?.id, queryClient]);
 
+  // Admin activity digest — detect new participants in group documents on login
+  const adminDigestRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!user?.id || adminDigestRef.current) return;
+    if (user.role !== 'admin') return;
+    adminDigestRef.current = true;
+    base44.functions.invoke('getGroupAdminActivityDigest', {})
+      .then(() => queryClient.invalidateQueries({ queryKey: ['notifications'] }))
+      .catch(() => {});
+  }, [user?.id, user?.role, queryClient]);
+
   const handleLogout = () => {
     base44.auth.logout();
   };
