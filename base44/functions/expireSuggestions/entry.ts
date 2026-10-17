@@ -29,6 +29,18 @@ Deno.serve(async (req) => {
     for (const suggestion of expired) {
       console.log('[EXPIRE SUGGESTIONS] Expiring:', suggestion.id, suggestion.title);
 
+      // Fetch the document BEFORE rejecting so we can freeze the acceptance
+      // threshold at rejection time. The progress bar on a rejected suggestion
+      // shows this frozen threshold instead of the live document.threshold,
+      // which may have changed by the time the user views the rejected card.
+      let rejectionThreshold = 2;
+      try {
+        const docs = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId });
+        if (docs[0]?.threshold != null) rejectionThreshold = docs[0].threshold;
+      } catch (docErr) {
+        console.error('[EXPIRE SUGGESTIONS] Failed to fetch document for threshold:', docErr.message);
+      }
+
       // ── Race guard vs processAcceptance (H2) ──────────────────────────
       // Only expire a suggestion that is STILL pending AND NOT currently locked for
       // acceptance. This mirrors processAcceptance's own lock: if processAcceptance
@@ -41,7 +53,7 @@ Deno.serve(async (req) => {
       // on every call and NO suggestion would ever expire, with no error ever logged.
       await base44.asServiceRole.entities.Suggestion.updateMany(
         { id: suggestion.id, status: 'pending', acceptanceLock: false },
-        { $set: { status: 'rejected', rejectedByAdmin: false } }
+        { $set: { status: 'rejected', rejectedByAdmin: false, thresholdAtRejection: rejectionThreshold } }
       );
       const rejectedSuggestion = await base44.asServiceRole.entities.Suggestion.get(suggestion.id);
       if (!rejectedSuggestion || rejectedSuggestion.status !== 'rejected') {

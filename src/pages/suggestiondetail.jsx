@@ -348,6 +348,7 @@ function SuggestionDetail() {
         // The required support threshold is always read live from document.threshold,
         // so clearing these prevents any frozen/stale consensus snapshot from
         // lingering after a reopen.
+        updateData.thresholdAtRejection = null; // Clear frozen threshold — live document.threshold takes over
         updateData.acceptanceLock = false;
         updateData.approvedByAdmin = false;
         updateData.acceptedAt = null;
@@ -369,6 +370,7 @@ function SuggestionDetail() {
         }
       } else if (status === 'rejected') {
         updateData.rejectedByAdmin = true; // Mark as rejected by admin
+        updateData.thresholdAtRejection = document?.threshold || 2; // Freeze threshold at rejection time
       } else if (status === 'accepted') {
         updateData.approvedByAdmin = true; // Mark as approved by admin
       }

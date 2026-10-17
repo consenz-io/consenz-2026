@@ -57,12 +57,16 @@ Deno.serve(async (req) => {
 
     console.log('[REJECT ORPHANED] Found', orphanedSuggestions.length, 'orphaned suggestions');
 
-    // Reject all orphaned suggestions
+    // Reject all orphaned suggestions — freeze the document's acceptance
+    // threshold at rejection time so the progress bar shows the threshold that
+    // was required when the suggestion was rejected, not the live value.
+    const rejectionThreshold = document?.threshold ?? 2;
     await Promise.all(
       orphanedSuggestions.map(s =>
         base44.asServiceRole.entities.Suggestion.update(s.id, {
           status: 'rejected',
-          rejectedByAdmin: false // rejected due to section deletion, not admin action
+          rejectedByAdmin: false, // rejected due to section deletion, not admin action
+          thresholdAtRejection: rejectionThreshold
         })
       )
     );

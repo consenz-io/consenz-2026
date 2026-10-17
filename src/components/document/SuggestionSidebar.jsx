@@ -265,7 +265,7 @@ export default function SuggestionSidebar({
       } else {
         await base44.entities.Suggestion.update(suggestionId, { 
           status,
-          ...(status === 'rejected' ? { rejectedByAdmin: true } : {})
+          ...(status === 'rejected' ? { rejectedByAdmin: true, thresholdAtRejection: (document || parentDocument)?.threshold || 2 } : {})
         });
       }
 

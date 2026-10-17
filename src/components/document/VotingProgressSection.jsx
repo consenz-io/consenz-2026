@@ -104,8 +104,16 @@ export default function VotingProgressSection({ suggestion, document, userVote, 
   const displayConVotes = isDeleteSection ? proVotes : conVotes;
   const delta = proVotes - conVotes;
 
+  // For rejected suggestions, freeze the threshold at what it was required
+  // at rejection time (thresholdAtRejection). Only when an admin returns the
+  // suggestion to voting is that field cleared, so the live document.threshold
+  // takes over again. Legacy rejected suggestions without the field fall back
+  // to the live document threshold.
+  const isRejected = suggestion?.status === 'rejected';
   const threshold = isAccepted ?
   Math.max(2, delta) :
+  isRejected && suggestion?.thresholdAtRejection != null ?
+  Math.max(2, suggestion.thresholdAtRejection) :
   Math.max(2, document?.threshold || 2);
 
   // How many more pro votes needed

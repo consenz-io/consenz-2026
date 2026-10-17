@@ -83,6 +83,10 @@
       "default": false,
       "description": "True if rejected by admin, false if rejected due to expiration"
     },
+    "thresholdAtRejection": {
+      "type": "number",
+      "description": "The document's acceptance threshold (required supporter delta) frozen at the moment the suggestion was rejected. Used by the progress bar to show the threshold that was required at rejection time, rather than the live document threshold which may have changed since. Cleared (set to null) when an admin returns the suggestion to voting, so the live threshold takes over again."
+    },
     "timerEndsAt": {
       "type": "string",
       "format": "date-time",
