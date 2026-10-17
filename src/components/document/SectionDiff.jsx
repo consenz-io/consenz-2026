@@ -205,7 +205,6 @@ export default function SectionDiff({
     direction: isRTL ? 'rtl' : 'ltr',
     textAlign: isRTL ? 'right' : 'left',
     fontFamily: "var(--font-document)",
-    fontSize: "1.375rem",
     lineHeight: "1.8",
     letterSpacing: "0.01em",
     fontWeight: "400"
@@ -216,7 +215,8 @@ export default function SectionDiff({
     <ChangeBlockDiffView
       originalContent={displayOriginal}
       newContent={displayNew}
-      style={{ fontSize: contentStyle.fontSize, lineHeight: contentStyle.lineHeight, fontFamily: contentStyle.fontFamily }}
+      className="suggestion-diff-text"
+      style={{ lineHeight: contentStyle.lineHeight, fontFamily: contentStyle.fontFamily }}
     />
   );
 
@@ -228,14 +228,14 @@ export default function SectionDiff({
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
           {t('originalContent') || 'מקור'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayOriginal) }} />
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="suggestion-diff-text text-slate-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayOriginal) }} />
       </div>
       <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           {t('proposedContent') || 'מוצע'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="suggestion-diff-text text-slate-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
       </div>
     </div>
   );
@@ -248,14 +248,14 @@ export default function SectionDiff({
           <span className="w-2 h-2 bg-red-500 rounded-full"></span>
           {t('originalContent') || 'מקור'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayOriginal) }} />
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="suggestion-diff-text text-slate-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayOriginal) }} />
       </div>
       <div className="p-3 bg-green-50/50 border border-green-200 rounded-lg overflow-hidden">
         <div className="text-xs font-medium text-green-600 mb-2 flex items-center gap-1">
           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
           {t('proposedContent') || 'מוצע'}
         </div>
-        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="text-slate-700 text-sm" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
+        <div style={{...contentStyle, wordWrap: 'break-word', overflowWrap: 'break-word', minWidth: 0}} className="suggestion-diff-text text-slate-700" dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
       </div>
     </div>
   );
@@ -376,7 +376,7 @@ export default function SectionDiff({
             <span className="text-sm">{t('translating')}</span>
           </div>
         ) : !showDiff || !canShowDiff ? (
-          <div style={contentStyle} dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
+          <div className="suggestion-diff-text" style={contentStyle} dangerouslySetInnerHTML={{ __html: sanitizeHtml(displayNew) }} />
         ) : diffMode === DIFF_MODES.INLINE ? (
           renderInlineDiff()
         ) : diffMode === DIFF_MODES.SPLIT ? (

@@ -364,6 +364,18 @@ button:focus-visible {
   border-radius: 8px;
 }
 
+/* Suggestion diff content — matches DocumentTextContent's text-base md:text-xl
+   (16px on mobile, 20px on desktop) so edit-suggestion content renders at the
+   same font size as existing section content in the document page. */
+.suggestion-diff-text {
+  font-size: 1rem;
+}
+@media (min-width: 768px) {
+  .suggestion-diff-text {
+    font-size: 1.25rem;
+  }
+}
+
 /* Translate All button highlight — draws attention when the document is
    written in a language different from the UI/system language. */
 @keyframes translate-all-highlight-pulse {

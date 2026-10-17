@@ -32,7 +32,6 @@ export default function ChangeBlockDiffView({
     direction: isRTL ? "rtl" : "ltr",
     textAlign: isRTL ? "right" : "left",
     fontFamily: "var(--font-document)",
-    fontSize: "1.125rem",
     lineHeight: "1.8",
     ...style,
   };
@@ -40,7 +39,7 @@ export default function ChangeBlockDiffView({
   if (!hasChanges) {
     return (
       <div
-        className={className}
+        className={`suggestion-diff-text ${className}`}
         style={baseStyle}
         dangerouslySetInnerHTML={{ __html: sanitizeHtml(newContent || originalContent || "") }}
       />
@@ -49,7 +48,7 @@ export default function ChangeBlockDiffView({
 
   return (
     <div
-      className={className}
+      className={`suggestion-diff-text ${className}`}
       style={{ ...baseStyle, whiteSpace: "pre-wrap", wordBreak: "break-word" }}
     >
       {segments.map((seg, idx) => {
