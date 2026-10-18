@@ -30,7 +30,7 @@ export default function GamificationIndicator({ gamificationEnabled, language = 
 
   const label = enabled
     ? (language === 'he' ? 'ניקוד פעיל' : language === 'ar' ? 'نقاط مفعّلة' : 'Points on')
-    : (language === 'he' ? 'ללא ניקוד' : language === 'ar' ? 'بدون نقاط' : 'Points off');
+    : (language === 'he' ? 'ניקוד כבוי' : language === 'ar' ? 'بدون نقاط' : 'Points off');
 
   return (
     <TooltipProvider delayDuration={300}>
