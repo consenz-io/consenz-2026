@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 /**
  * Admin Activity Digest — detects new participants in the calling admin's
@@ -20,7 +21,11 @@ export default async function(req) {
 
     const sr = base44.asServiceRole;
 
-    // 1. Find all groups where the user is an admin
+    // 1. Find candidate group memberships. GroupMember.create RLS is open, so a
+    //    membership record alone is NOT proof of admin status — we must verify
+    //    provenance via verifyGroupMembership (same as manageGroupMembership /
+    //    sendGroupEmail / sendGroupInvitation). Otherwise a user could self-grant
+    //    an admin record for a private group and enumerate its participants.
     const adminMemberships = await sr.entities.GroupMember.filter({
       userId: user.id,
       role: 'admin',
@@ -29,7 +34,21 @@ export default async function(req) {
       return Response.json({ success: true, newParticipants: 0, reason: 'not_group_admin' });
     }
 
-    const groupIds = adminMemberships.map((m) => m.groupId).filter(Boolean);
+    const candidateGroupIds = adminMemberships.map((m) => m.groupId).filter(Boolean);
+    const candidateGroups = await sr.entities.Group.filter({ id: { $in: candidateGroupIds } });
+
+    // Only keep groups where the caller's admin status has verified provenance.
+    const verifiedGroups = [];
+    for (const group of candidateGroups) {
+      const { isAdmin } = await verifyGroupMembership(base44, group, user);
+      if (isAdmin) verifiedGroups.push(group);
+    }
+
+    if (verifiedGroups.length === 0) {
+      return Response.json({ success: true, newParticipants: 0, reason: 'not_group_admin' });
+    }
+
+    const groupIds = verifiedGroups.map((g) => g.id);
 
     // 2. Find all documents in those groups
     const documents = await sr.entities.Document.filter({ groupId: { $in: groupIds } });
