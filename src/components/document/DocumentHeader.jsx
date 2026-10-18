@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Languages, MoreVertical, MessageSquare, FileText, AlertCircle, Settings } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import DocumentTitleHeading from "./DocumentTitleHeading";
+import GamificationIndicator from "./GamificationIndicator";
 import { useVersionTranslation } from "./hooks/useVersionTranslation";
 
 const detectLanguage = (text) => {
@@ -56,6 +57,12 @@ const DocumentHeader = React.memo(function DocumentHeader({
       <DocumentTitleHeading id="document-title">
         {showTranslated && hasTranslation ? translatedTitle : document.title}
       </DocumentTitleHeading>
+
+      <GamificationIndicator
+        gamificationEnabled={document?.gamificationEnabled}
+        language={language}
+        isRTL={isRTL}
+      />
 
       <div className="flex-shrink-0">
         {isTranslating ?
