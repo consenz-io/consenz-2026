@@ -13,12 +13,13 @@ const VALID_ENTITY_TYPES = new Set([
 ]);
 
 const MAX_CONTENT_LENGTH = 20000;
-const MAX_UNITS = 100;
+const MAX_UNITS = 20;
 
 // Per-user rate limiter — prevents unmetered LLM credit consumption via batch.
-// 5 batch calls per minute per user (each batch can translate up to 100 units).
+// 2 batch calls per minute per user (each batch can translate up to 20 units).
+// Caps at 40 translations/minute — fast for real use, far less abusable.
 const batchRateLimiter = new Map();
-const BATCH_RATE_LIMIT = 5;
+const BATCH_RATE_LIMIT = 2;
 const BATCH_WINDOW_MS = 60000;
 
 function checkBatchRateLimit(userId: string) {
@@ -83,7 +84,7 @@ export default async function (req: Request): Promise<Response> {
     if (!Array.isArray(units) || units.length === 0)
       return Response.json({ error: "Missing or empty units array" }, { status: 400 });
     if (units.length > MAX_UNITS)
-      return Response.json({ error: `Too many units (max ${MAX_UNITS})` }, { status: 400 });
+      return Response.json({ error: `Too many units (max ${MAX_UNITS} per batch)` }, { status: 400 });
 
     // Verify document exists
     const document = await base44.asServiceRole.entities.Document.filter({

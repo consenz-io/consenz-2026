@@ -3,10 +3,18 @@ import { secrets } from 'base44:runtime';
 import checkExtractionCompleteness from '../../shared/checkExtractionCompleteness.ts';
 
 // Per-user rate limit: document-structure extraction is an expensive LLM call.
-// Cap at 5 extractions per 10 minutes per user to prevent credit abuse.
-const RATE_LIMIT = 5;
+// Cap at 3 extractions per 10 minutes and 10 per day per user to prevent
+// credit abuse.
+const RATE_LIMIT = 3;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
+const DAILY_LIMIT = 10;
 const rateLimiter = new Map();
+const dailyLimiter = new Map();
+
+function getTodayKey() {
+  const d = new Date();
+  return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
+}
 
 function checkRateLimit(userId) {
   const now = Date.now();
@@ -14,13 +22,27 @@ function checkRateLimit(userId) {
   const record = rateLimiter.get(key);
   if (!record || now >= record.resetAt) {
     rateLimiter.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return { allowed: true };
+  } else {
+    record.count++;
+    if (record.count > RATE_LIMIT) {
+      const remainingMs = record.resetAt - now;
+      return { allowed: false, remainingMs };
+    }
   }
-  record.count++;
-  if (record.count > RATE_LIMIT) {
-    const remainingMs = record.resetAt - now;
-    return { allowed: false, remainingMs };
+
+  // Daily cap
+  const dailyKey = `extract-daily-${userId}`;
+  const today = getTodayKey();
+  const daily = dailyLimiter.get(dailyKey);
+  if (!daily || daily.date !== today) {
+    dailyLimiter.set(dailyKey, { date: today, count: 1 });
+  } else {
+    daily.count++;
+    if (daily.count > DAILY_LIMIT) {
+      return { allowed: false, remainingMs: null, daily: true };
+    }
   }
+
   return { allowed: true };
 }
 
@@ -28,6 +50,11 @@ setInterval(() => {
   const now = Date.now();
   for (const [key, record] of rateLimiter.entries()) {
     if (now >= record.resetAt) rateLimiter.delete(key);
+  }
+  // Clean up stale daily entries from previous days
+  const today = getTodayKey();
+  for (const [key, record] of dailyLimiter.entries()) {
+    if (record.date !== today) dailyLimiter.delete(key);
   }
 }, 5 * 60 * 1000);
 
@@ -70,6 +97,9 @@ export default async function(req) {
     // Per-user rate limit
     const rl = checkRateLimit(user.id);
     if (!rl.allowed) {
+      if (rl.daily) {
+        return Response.json({ error: 'Daily extraction limit exceeded. Try again tomorrow.' }, { status: 429 });
+      }
       const mins = Math.ceil(rl.remainingMs / 60000);
       return Response.json({ error: `Rate limit exceeded. Try again in ${mins} minute(s).` }, { status: 429 });
     }

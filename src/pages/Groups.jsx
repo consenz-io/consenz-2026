@@ -77,11 +77,11 @@ export default function Groups() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <CardTitle className="text-xl">
-                            <TranslatableText text={group.name} className="font-bold" />
+                            <TranslatableText text={group.name} className="font-bold" groupId={group.id} />
                           </CardTitle>
                           {group.description && (
                             <div className="mt-2">
-                              <TranslatableText text={group.description} className="text-sm text-slate-500 line-clamp-2" />
+                              <TranslatableText text={group.description} className="text-sm text-slate-500 line-clamp-2" groupId={group.id} />
                             </div>
                           )}
                         </div>

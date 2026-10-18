@@ -9,9 +9,9 @@ const LANG_INSTRUCTIONS = {
   en: `Answer in English only. Be direct, vivid, and narrative. IMPORTANT: Keep all user names exactly as they appear in the data — do NOT translate or transliterate names. Avoid generic phrases.`,
 };
 
-// Per-user rate limiter — document digests use an LLM call. Cap at 5 per 10
+// Per-user rate limiter — document digests use an LLM call. Cap at 3 per 10
 // minutes per user to prevent credit abuse.
-const RATE_LIMIT = 5;
+const RATE_LIMIT = 3;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const digestRateLimiter = new Map();
 

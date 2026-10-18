@@ -25,7 +25,7 @@ const detectLanguage = (text) => {
  *   className   - css class for the text element
  *   buttonClass - extra css class for the translate button
  */
-export default function TranslatableText({ text, isHtml = false, className = "", buttonClass = "" }) {
+export default function TranslatableText({ text, isHtml = false, className = "", buttonClass = "", groupId = null, documentId = null }) {
   const { language, isRTL } = useLanguage();
   const [translated, setTranslated] = useState(null);
   const [showTranslated, setShowTranslated] = useState(false);
@@ -39,6 +39,8 @@ export default function TranslatableText({ text, isHtml = false, className = "",
         content: text,
         targetLanguage: language,
         isHtml: false,
+        groupId,
+        documentId,
       });
       return response.data?.translated || text;
     },

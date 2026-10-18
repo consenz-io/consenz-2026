@@ -15,9 +15,9 @@ const VALID_ENTITY_TYPES = new Set([
 const MAX_CONTENT_LENGTH = 20000;
 
 // Per-user rate limiter — prevents unmetered LLM credit consumption.
-// 20 translations per minute per user.
+// 10 translations per minute per user.
 const translateRateLimiter = new Map();
-const TRANSLATE_RATE_LIMIT = 20;
+const TRANSLATE_RATE_LIMIT = 10;
 const TRANSLATE_WINDOW_MS = 60000;
 
 function checkTranslateRateLimit(userId: string) {

@@ -36,7 +36,7 @@ export default function GroupCard({ group, docCount, participantsCount, isAdmin 
         <CardHeader>
           <div className="flex flex-col gap-2">
             <CardTitle className="text-lg">
-              <TranslatableText text={group.name} className="font-bold break-words" />
+              <TranslatableText text={group.name} className="font-bold break-words" groupId={group.id} />
             </CardTitle>
             <div className="flex flex-wrap items-center gap-1">
               <Badge variant="outline" className={visual.cls}>
@@ -54,7 +54,7 @@ export default function GroupCard({ group, docCount, participantsCount, isAdmin 
         <CardContent>
           {group.description && (
             <div className="mb-3">
-              <TranslatableText text={group.description} className="text-sm text-slate-600 line-clamp-2" />
+              <TranslatableText text={group.description} className="text-sm text-slate-600 line-clamp-2" groupId={group.id} />
             </div>
           )}
           <div className="space-y-2">

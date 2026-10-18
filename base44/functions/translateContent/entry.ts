@@ -1,14 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { PROMPT_INJECTION_GUARD, wrapUntrusted, validateTranslationIntegrity } from "../../shared/translatePromptSafety.ts";
+import { checkDocumentAccess, verifyGroupMembership } from "../../shared/documentAuth.ts";
 
 const LANGUAGE_PROMPTS = { en: "English", he: "Hebrew", ar: "Arabic" };
 const VALID_LANGS = new Set(["en", "he", "ar"]);
 const MAX_CONTENT_LENGTH = 20000;
 
 // Per-user rate limiter — prevents unmetered LLM credit consumption.
-// 10 translations per minute per user, matching the in-app client limiter.
+// 5 translations per minute per user. Requires a documentId so the endpoint
+// cannot be used as a free general-purpose translation API.
 const translateRateLimiter = new Map();
-const TRANSLATE_RATE_LIMIT = 10;
+const TRANSLATE_RATE_LIMIT = 5;
 const TRANSLATE_WINDOW_MS = 60000;
 
 function checkTranslateRateLimit(userId) {
@@ -49,7 +51,7 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { content, targetLanguage, isHtml } = await req.json();
+    const { content, targetLanguage, isHtml, documentId, groupId } = await req.json();
     if (!content || typeof content !== 'string') {
       return Response.json({ error: 'Missing content' }, { status: 400 });
     }
@@ -59,6 +61,13 @@ export default async function(req) {
     if (content.length > MAX_CONTENT_LENGTH) {
       return Response.json({ error: 'Content too long' }, { status: 400 });
     }
+    // Require either a documentId or groupId so this endpoint cannot be used as
+    // a free general-purpose translation API. The caller must prove access to
+    // the entity whose content they are translating.
+    if ((!documentId || typeof documentId !== 'string') &&
+        (!groupId || typeof groupId !== 'string')) {
+      return Response.json({ error: 'Missing documentId or groupId' }, { status: 400 });
+    }
 
     const rateLimitCheck = checkTranslateRateLimit(user.id);
     if (!rateLimitCheck.allowed) {
@@ -66,6 +75,31 @@ export default async function(req) {
         { error: 'Rate limit exceeded', remainingSeconds: rateLimitCheck.remainingSeconds },
         { status: 429 }
       );
+    }
+
+    // Authorization: verify the user can access the document or group whose
+    // content they are translating. Without this, any authenticated user could
+    // use this endpoint as a free general-purpose translation API, burning LLM
+    // credits on content unrelated to the platform.
+    if (documentId) {
+      const document = await base44.asServiceRole.entities.Document
+        .filter({ id: documentId })
+        .then(r => r[0])
+        .catch(() => null);
+      if (!document) return Response.json({ error: 'Document not found' }, { status: 404 });
+      const { authorized } = await checkDocumentAccess(base44, document, user);
+      if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
+    } else if (groupId) {
+      const group = await base44.asServiceRole.entities.Group
+        .filter({ id: groupId })
+        .then(r => r[0])
+        .catch(() => null);
+      if (!group) return Response.json({ error: 'Group not found' }, { status: 404 });
+      // Public groups are accessible to all; private/hidden require membership.
+      if (group.status === 'private' || group.status === 'hidden') {
+        const { isMember } = await verifyGroupMembership(base44, group, user);
+        if (!isMember) return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
     }
 
     const langName = LANGUAGE_PROMPTS[targetLanguage];
