@@ -58,15 +58,6 @@ export default function SuggestionSidebar({
     refetchIntervalInBackground: false,
   });
 
-  const { data: allDocumentSuggestions } = useQuery({
-    queryKey: ['allDocumentSuggestions', suggestion?.documentId],
-    queryFn: () => base44.entities.Suggestion.filter({ documentId: suggestion.documentId }),
-    enabled: !!suggestion?.documentId,
-    initialData: [],
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
-  });
-
   const { data: document } = useQuery({
     queryKey: ['document', suggestion?.documentId],
     queryFn: () => base44.entities.Document.filter({ id: suggestion.documentId }).then(d => d[0]),
@@ -115,16 +106,19 @@ export default function SuggestionSidebar({
     refetchIntervalInBackground: false,
   });
 
-  const { data: users } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-  });
-
-  const { data: publicProfiles } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
+  // Fetch only the suggestion creator's profile — not all users/profiles in
+  // the system (was User.list() + UserPublicProfile.list(), fetching 1000+
+  // records each on every sidebar open just to resolve one name).
+  const creatorId = suggestion?.created_by_id;
+  const { data: creatorProfile } = useQuery({
+    queryKey: ['userProfile', creatorId],
+    queryFn: async () => {
+      if (!creatorId) return null;
+      const profiles = await base44.entities.UserPublicProfile.filter({ userId: creatorId });
+      return profiles[0] || null;
+    },
+    enabled: !!creatorId,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: suggestionComments = [] } = useQuery({
@@ -141,16 +135,12 @@ export default function SuggestionSidebar({
     return suggestionComments.length;
   }, [suggestionComments]);
 
-  // Accepts a userId (created_by_id) or, as legacy fallback, an email.
+  // Resolve the creator's display name from the single targeted profile fetch.
   const getUserName = (identifier) => {
     if (!identifier) return 'User';
-    // Try public profile first (accessible to everyone)
-    const profile = publicProfiles?.find(p => p.userId === identifier || p.email === identifier);
-    if (profile?.fullName) return cleanDisplayName(profile.fullName, profile.email);
-    // Fallback to User entity (admins only)
-    const u = users?.find(usr => usr.id === identifier || usr.email === identifier);
-    if (u?.full_name) return cleanDisplayName(u.full_name, u.email);
-    // User hasn't completed profile yet
+    if (creatorProfile?.userId === identifier && creatorProfile?.fullName) {
+      return cleanDisplayName(creatorProfile.fullName, creatorProfile.email);
+    }
     return 'User';
   };
 
@@ -484,13 +474,10 @@ export default function SuggestionSidebar({
           <div className="text-xs text-slate-500 flex flex-wrap gap-x-2 gap-y-0.5">
             <span>
               {t('by')} {(() => {
-                const creatorId = suggestion.created_by_id;
-                const profile = publicProfiles?.find(p => p.userId === creatorId);
-                const userObj = users?.find(u => u.id === creatorId);
-                const userId = profile?.userId || userObj?.id;
-                const userName = getUserName(creatorId);
-                return userId ? (
-                  <Link to={`${createPageUrl("Profile")}?userId=${userId}`} className="hover:underline text-blue-600">{userName}</Link>
+                const cId = suggestion.created_by_id;
+                const userName = getUserName(cId);
+                return cId ? (
+                  <Link to={`${createPageUrl("Profile")}?userId=${cId}`} className="hover:underline text-blue-600">{userName}</Link>
                 ) : (
                   <span className="text-slate-600">{userName}</span>
                 );
