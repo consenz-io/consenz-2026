@@ -40,7 +40,10 @@ export default async function(req) {
     if (user.role !== 'admin') return Response.json({ error: 'Admin access required' }, { status: 403 });
 
     const body = await req.json().catch(() => ({}));
-    const { testType = 'full', cleanup = false } = body;
+    // Default cleanup to true — the test creates synthetic documents, votes,
+    // and suggestions that trigger real automations (point awards, notifications).
+    // Without cleanup, each run pollutes production data permanently.
+    const { testType = 'full', cleanup = true } = body;
 
     const sr = base44.asServiceRole;
     const report = {

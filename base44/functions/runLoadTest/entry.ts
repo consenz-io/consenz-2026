@@ -9,7 +9,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
-    const { testType, documentId, concurrentUsers = 100 } = await req.json();
+    const { testType, documentId, concurrentUsers = 10 } = await req.json();
+
+    // Cap concurrentUsers to prevent large-scale synthetic data from
+    // triggering real automations (point awards, notifications) on production.
+    const cappedConcurrentUsers = Math.min(concurrentUsers, 10);
 
     const results = {};
     const startTime = Date.now();
@@ -24,7 +28,7 @@ Deno.serve(async (req) => {
 
       // סימולציה של משתמשים מרובים מצביעים בו זמנית
       const votePromises = [];
-      for (let i = 0; i < concurrentUsers; i++) {
+      for (let i = 0; i < cappedConcurrentUsers; i++) {
         const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
         const vote = Math.random() > 0.5 ? 'pro' : 'con';
         
@@ -44,7 +48,7 @@ Deno.serve(async (req) => {
       results.votesCreated = successfulVotes;
       results.votesFailed = failedVotes;
       results.votesTime = Date.now() - startTime;
-      results.avgTimePerVote = results.votesTime / concurrentUsers;
+      results.avgTimePerVote = results.votesTime / cappedConcurrentUsers;
 
     } else if (testType === 'concurrent_comments') {
       // בדיקת תגובות מקבילות
@@ -154,6 +158,52 @@ Deno.serve(async (req) => {
     }
 
     results.totalTime = Date.now() - startTime;
+
+    // ── Cleanup: delete all synthetic records created during the test ──
+    // The test creates votes/comments/suggestions with `test-user-*` userIds
+    // and `test-user-*@test.com` created_by values. These trigger real entity
+    // automations (handleNewVote awards points, handleNewComment sends
+    // notifications). We cannot undo the point awards or notifications, but
+    // we MUST remove the synthetic records so they don't pollute production
+    // data (fake vote counts, fake suggestions in the document, etc.).
+    try {
+      const sr = base44.asServiceRole;
+      const [suggs, sections] = await Promise.all([
+        sr.entities.Suggestion.filter({ documentId }),
+        sr.entities.Section.filter({ documentId }),
+      ]);
+      const suggIds = suggs.map(s => s.id);
+      const secIds = sections.map(s => s.id);
+
+      // Delete synthetic votes (userId starts with test-user-)
+      const votes = suggIds.length > 0
+        ? await sr.entities.Vote.filter({ suggestionId: { $in: suggIds } })
+        : [];
+      const syntheticVotes = votes.filter(v => typeof v.userId === 'string' && v.userId.startsWith('test-user-'));
+
+      // Delete synthetic comments (created_by starts with test-user-)
+      const commentTargetIds = [...suggIds, ...secIds, documentId];
+      const comments = await sr.entities.Comment.filter({ rootEntityId: { $in: commentTargetIds } });
+      const syntheticComments = comments.filter(c => typeof c.created_by === 'string' && c.created_by.startsWith('test-user-'));
+
+      // Delete synthetic suggestions (created_by starts with test-user-)
+      const syntheticSuggs = suggs.filter(s => typeof s.created_by === 'string' && s.created_by.startsWith('test-user-'));
+
+      await Promise.all([
+        ...syntheticVotes.map(v => sr.entities.Vote.delete(v.id).catch(() => {})),
+        ...syntheticComments.map(c => sr.entities.Comment.delete(c.id).catch(() => {})),
+        ...syntheticSuggs.map(s => sr.entities.Suggestion.delete(s.id).catch(() => {})),
+      ]);
+
+      results.cleanup = {
+        votesDeleted: syntheticVotes.length,
+        commentsDeleted: syntheticComments.length,
+        suggestionsDeleted: syntheticSuggs.length,
+      };
+    } catch (cleanupErr) {
+      console.error('[LOAD TEST] Cleanup failed:', cleanupErr.message);
+      results.cleanup = { error: cleanupErr.message };
+    }
 
     return Response.json({
       success: true,

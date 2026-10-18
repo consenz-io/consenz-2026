@@ -1,133 +1,83 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { addPointsAtomic, spendPointsAtomic } from '../../shared/pointsOperations.ts';
 
-// In-memory queue for points operations
-const pointsQueue = [];
-const processing = { active: false };
+// Processes points operations for admin users. Each operation is routed
+// through the shared atomic helpers (addPointsAtomic / spendPointsAtomic)
+// which serialize per-user via a mutex (preventing TOCTOU races) and create
+// a PointsTransaction audit record.
+//
+// AUTH: admin-only.
+//
+// The previous version had two problems:
+// 1. The `processImmediate` path did a raw User.update with any caller-
+//    supplied userId + amount — no cap, no idempotency, no mutex — so a
+//    compromised admin session could inflate any user's points to any value.
+// 2. The queued path was dead code: the setInterval grouped operations but
+//    never wrote to the DB, silently dropping every queued operation.
+//
+// Caps: max 50 operations per call, max 1000 points per single operation.
 
-// Process queue in batches every 3 seconds
-setInterval(async () => {
-  if (processing.active || pointsQueue.length === 0) return;
-  
-  processing.active = true;
-  const batch = pointsQueue.splice(0, Math.min(50, pointsQueue.length)); // Process up to 50 at once
-  
-  console.log('[POINTS QUEUE] Processing batch of', batch.length, 'operations');
-  
-  try {
-    // Group by userId for efficient updates
-    const userPointsMap = new Map();
-    const transactions = [];
-    
-    for (const op of batch) {
-      if (!userPointsMap.has(op.userId)) {
-        userPointsMap.set(op.userId, { total: 0, operations: [] });
-      }
-      const userData = userPointsMap.get(op.userId);
-      userData.total += op.amount;
-      userData.operations.push(op);
-      
-      transactions.push({
-        userId: op.userId,
-        amount: op.amount,
-        action: op.action,
-        description: op.description,
-        relatedEntityId: op.relatedEntityId,
-        relatedEntityType: op.relatedEntityType
-      });
-    }
-    
-    console.log('[POINTS QUEUE] Grouped into', userPointsMap.size, 'unique users');
-    console.log('[POINTS QUEUE] Batch ready for processing');
-    
-  } catch (error) {
-    console.error('[POINTS QUEUE] Error processing batch:', error);
-    // Re-add failed operations to queue
-    batch.forEach(op => pointsQueue.push(op));
-  } finally {
-    processing.active = false;
-  }
-}, 3000);
+const MAX_OPERATIONS_PER_CALL = 50;
+const MAX_AMOUNT_PER_OPERATION = 1000;
 
-Deno.serve(async (req) => {
+export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Authenticate caller — this endpoint uses asServiceRole to modify arbitrary
-    // users' points, so it must be restricted to admin users only.
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json();
-    const { operations, processImmediate = false } = body;
+    const { operations } = body;
 
     if (!operations || !Array.isArray(operations) || operations.length === 0) {
       return Response.json({ error: 'Missing or invalid operations array' }, { status: 400 });
     }
-
-    console.log('[POINTS QUEUE] Received', operations.length, 'operations from admin', user.id);
-
-    if (processImmediate) {
-      // Process immediately (for critical operations)
-      console.log('[POINTS QUEUE] Processing immediately...');
-      
-      const userPointsMap = new Map();
-      const transactions = [];
-      
-      // Deduplicate and aggregate by user
-      for (const op of operations) {
-        const key = `${op.userId}-${op.relatedEntityId}-${op.action}`;
-        if (!userPointsMap.has(key)) {
-          userPointsMap.set(key, op);
-          transactions.push({
-            userId: op.userId,
-            amount: op.amount,
-            action: op.action,
-            description: op.description,
-            relatedEntityId: op.relatedEntityId,
-            relatedEntityType: op.relatedEntityType
-          });
-        }
-      }
-
-      // Fetch all users - note: no complex query support, fetch all and filter
-      const userIds = [...new Set(transactions.map(t => t.userId))];
-      const allUsers = await base44.asServiceRole.entities.User.list();
-      const users = allUsers.filter(u => userIds.includes(u.id));
-      
-      const userUpdates = users.map(user => {
-        const userTransactions = transactions.filter(t => t.userId === user.id);
-        const totalPoints = userTransactions.reduce((sum, t) => sum + t.amount, 0);
-        const newPoints = (user.points || 1000) + totalPoints;
-        
-        return base44.asServiceRole.entities.User.update(user.id, { points: newPoints });
-      });
-
-      await Promise.all([
-        ...userUpdates,
-        base44.entities.PointsTransaction.bulkCreate(transactions)
-      ]);
-
-      return Response.json({ 
-        success: true, 
-        processed: transactions.length,
-        message: `Processed ${transactions.length} points operations`
-      });
-    } else {
-      // Add to queue for batch processing
-      operations.forEach(op => pointsQueue.push(op));
-      
-      return Response.json({ 
-        success: true, 
-        queued: operations.length,
-        message: `Queued ${operations.length} operations for processing`
-      });
+    if (operations.length > MAX_OPERATIONS_PER_CALL) {
+      return Response.json({ error: `Too many operations: max ${MAX_OPERATIONS_PER_CALL} per call` }, { status: 400 });
     }
 
+    // Validate each operation and cap amounts before processing
+    for (const op of operations) {
+      if (!op.userId || !op.action || typeof op.amount !== 'number') {
+        return Response.json({ error: 'Each operation requires userId, action, and amount' }, { status: 400 });
+      }
+      if (Math.abs(op.amount) > MAX_AMOUNT_PER_OPERATION) {
+        return Response.json({ error: `Amount exceeds cap: max ${MAX_AMOUNT_PER_OPERATION} per operation` }, { status: 400 });
+      }
+    }
+
+    const serviceBase44 = base44.asServiceRole;
+    const results = [];
+
+    for (const op of operations) {
+      const { userId, amount, action, description, relatedEntityId, relatedEntityType } = op;
+      const desc = description || `${action}: ${amount}`;
+
+      if (amount > 0) {
+        await addPointsAtomic(
+          serviceBase44, userId, amount, action, desc,
+          relatedEntityId, relatedEntityType
+        );
+        results.push({ userId, amount, result: 'ok' });
+      } else if (amount < 0) {
+        const result = await spendPointsAtomic(
+          serviceBase44, userId, Math.abs(amount), action, desc,
+          relatedEntityId, relatedEntityType
+        );
+        results.push({ userId, amount, result: result.error || 'ok' });
+      }
+    }
+
+    const processed = results.filter(r => r.result === 'ok').length;
+    return Response.json({
+      success: true,
+      processed,
+      results,
+    });
   } catch (error) {
     console.error('[POINTS QUEUE ERROR]', error);
-    return Response.json({ 
-      error: 'Internal server error'
-    }, { status: 500 });
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
-});
+}
