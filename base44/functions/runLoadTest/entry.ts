@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       }
 
       const commentPromises = [];
-      for (let i = 0; i < concurrentUsers; i++) {
+      for (let i = 0; i < cappedConcurrentUsers; i++) {
         const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
         
         commentPromises.push(
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
       results.commentsCreated = successfulComments;
       results.commentsFailed = failedComments;
       results.commentsTime = Date.now() - startTime;
-      results.avgTimePerComment = results.commentsTime / concurrentUsers;
+      results.avgTimePerComment = results.commentsTime / cappedConcurrentUsers;
 
     } else if (testType === 'concurrent_suggestions') {
       // בדיקת הצעות מקבילות
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       }
 
       const suggestionPromises = [];
-      for (let i = 0; i < Math.min(concurrentUsers, 50); i++) { // מגביל ל-50 כדי לא ליצור יותר מדי
+      for (let i = 0; i < Math.min(cappedConcurrentUsers, 10); i++) { // מגביל ל-10 כדי לא ליצור יותר מדי
         const randomSection = sections[Math.floor(Math.random() * sections.length)];
         
         suggestionPromises.push(
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
       results.suggestionsCreated = successfulSuggestions;
       results.suggestionsFailed = failedSuggestions;
       results.suggestionsTime = Date.now() - startTime;
-      results.avgTimePerSuggestion = results.suggestionsTime / Math.min(concurrentUsers, 50);
+      results.avgTimePerSuggestion = results.suggestionsTime / Math.min(cappedConcurrentUsers, 10);
 
     } else if (testType === 'read_performance') {
       // בדיקת ביצועי קריאה
