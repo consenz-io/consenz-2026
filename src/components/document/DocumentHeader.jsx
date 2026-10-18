@@ -54,15 +54,25 @@ const DocumentHeader = React.memo(function DocumentHeader({
 
   return (
     <div className={`document-title-area flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
+      {isRTL && (
+        <GamificationIndicator
+          gamificationEnabled={document?.gamificationEnabled}
+          language={language}
+          isRTL={isRTL}
+        />
+      )}
+
       <DocumentTitleHeading id="document-title">
         {showTranslated && hasTranslation ? translatedTitle : document.title}
       </DocumentTitleHeading>
 
-      <GamificationIndicator
-        gamificationEnabled={document?.gamificationEnabled}
-        language={language}
-        isRTL={isRTL}
-      />
+      {!isRTL && (
+        <GamificationIndicator
+          gamificationEnabled={document?.gamificationEnabled}
+          language={language}
+          isRTL={isRTL}
+        />
+      )}
 
       <div className="flex-shrink-0">
         {isTranslating ?
