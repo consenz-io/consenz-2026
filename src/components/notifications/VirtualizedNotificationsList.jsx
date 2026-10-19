@@ -17,6 +17,7 @@ const LEGACY_FALLBACKS = {
     comment_reply: { title: "Reply to your comment", message: "Someone replied to your comment" },
     new_suggestion_in_followed_document: { title: "New suggestion in document", message: "A new suggestion was added to a document you follow" },
     suggestion_expiring: { title: "Voting period ended", message: "The voting period for a suggestion has ended" },
+    suggestion_reopened: { title: "Suggestion returned to voting", message: "A suggestion was returned to voting by the document admin" },
     document_comment: { title: "New comment in document", message: "Someone commented in a document discussion" },
     group_join_request: { title: "Join request approved!", message: "You have been accepted to the group" },
     direct_message: { title: "New message", message: "You have a new direct message" },
@@ -32,6 +33,7 @@ const LEGACY_FALLBACKS = {
     comment_reply: { title: "رد على تعليقك", message: "رد أحدهم على تعليقك" },
     new_suggestion_in_followed_document: { title: "اقتراح جديد في المستند", message: "تمت إضافة اقتراح جديد إلى مستند تتابعه" },
     suggestion_expiring: { title: "انتهت فترة التصويت", message: "انتهت فترة التصويت على اقتراح" },
+    suggestion_reopened: { title: "عاد الاقتراح إلى التصويت", message: "تمت إعادة اقتراح إلى التصويت من قبل مدير المستند" },
     document_comment: { title: "تعليق جديد في المستند", message: "علق أحدهم في نقاش المستند" },
     group_join_request: { title: "تمت الموافقة على طلب الانضمام!", message: "تم قبولك في المجموعة" },
     direct_message: { title: "رسالة جديدة", message: "لديك رسالة مباشرة جديدة" },
@@ -78,6 +80,7 @@ const NotificationItem = React.memo(({
       case 'suggestion_comment': return 'bg-purple-50 border-purple-200';
       case 'section_comment': return 'bg-amber-50 border-amber-200';
       case 'suggestion_expiring': return 'bg-orange-50 border-orange-200';
+      case 'suggestion_reopened': return 'bg-blue-50 border-blue-200';
       default: return 'bg-slate-50 border-slate-200';
     }
   };

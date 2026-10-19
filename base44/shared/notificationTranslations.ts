@@ -65,6 +65,9 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     adminSectionDeletedMessage: "A section was removed by community vote in \"{doc}\"",
     adminNewParticipantTitle: "New participant in your group's document",
     adminNewParticipantMessage: "{name} joined the document \"{doc}\"",
+    // notifySuggestionReopened — admin returns an expired/rejected suggestion to voting
+    suggestionReopenedTitle: "Suggestion returned to voting",
+    suggestionReopenedMessage: "The suggestion \"{title}\" was returned to voting by the document admin",
   },
   he: {
     replyTitle: "תשובה לתגובה שלך",
@@ -112,6 +115,8 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     adminSectionDeletedMessage: "סעיף הוסר בהצבעת קהילה במסמך \"{doc}\"",
     adminNewParticipantTitle: "משתתף חדש במסמך בקבוצה שלך",
     adminNewParticipantMessage: "{name} הצטרף/ה למסמך \"{doc}\"",
+    suggestionReopenedTitle: "הצעה חזרה להצבעה",
+    suggestionReopenedMessage: "ההצעה \"{title}\" הוחזרה להצבעה על ידי מנהל המסמך",
   },
   ar: {
     replyTitle: "رد على تعليقك",
@@ -159,6 +164,8 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     adminSectionDeletedMessage: "تمت إزالة بند بتصويت المجتمع في المستند \"{doc}\"",
     adminNewParticipantTitle: "مشارك جديد في مستند مجموعتك",
     adminNewParticipantMessage: "{name} انضم إلى المستند \"{doc}\"",
+    suggestionReopenedTitle: "عاد الاقتراح إلى التصويت",
+    suggestionReopenedMessage: "تمت إعادة الاقتراح \"{title}\" إلى التصويت من قبل مدير المستند",
   },
 };
 

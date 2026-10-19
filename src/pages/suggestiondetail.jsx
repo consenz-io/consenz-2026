@@ -426,7 +426,18 @@ function SuggestionDetail() {
       const updatedSuggestion = updatedSuggestions[0] || { ...suggestion, status };
 
       await new Promise((r) => setTimeout(r, 300));
-      await notifySuggestionStatusChange({ suggestion: updatedSuggestion, newStatus: status });
+      // For reopen (status → 'pending'), notify ALL document participants via a
+      // dedicated backend function with a distinct `suggestion_reopened` type.
+      // For accept/reject, notify only the creator via the frontend helper.
+      if (status === 'pending') {
+        try {
+          await base44.functions.invoke('notifySuggestionReopened', { suggestionId });
+        } catch (reopenErr) {
+          console.error('[REOPEN] Failed to notify participants:', reopenErr);
+        }
+      } else {
+        await notifySuggestionStatusChange({ suggestion: updatedSuggestion, newStatus: status });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suggestion', suggestionId] });

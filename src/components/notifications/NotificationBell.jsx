@@ -123,6 +123,8 @@ export default function NotificationBell({ user }) {
         return '💬';
       case 'suggestion_expiring':
         return '⏰';
+      case 'suggestion_reopened':
+        return '🔄';
       case 'new_suggestion_in_followed_document':
         return '📝';
       case 'section_deleted':

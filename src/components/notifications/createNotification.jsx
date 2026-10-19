@@ -101,6 +101,14 @@ export async function notifySuggestionStatusChange({
     return;
   }
 
+  // Reopen (status → 'pending') is handled by the notifySuggestionReopened
+  // backend function, which notifies all document participants with a distinct
+  // `suggestion_reopened` type. Skip here to avoid re-sending the stale
+  // `suggestion_expiring` notification to the creator.
+  if (newStatus === 'pending') {
+    return;
+  }
+
   try {
     const actionUrl = `${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestion.id}`;
     const replacements = { title: suggestion.title || '' };
