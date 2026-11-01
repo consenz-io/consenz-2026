@@ -234,6 +234,27 @@ button:focus-visible {
   }
 }
 
+/* Tutorial: glow the points counter while the points explanation bubble is shown.
+   Keeps the amber identity of the badge instead of the generic blue outline. */
+@keyframes tutorial-points-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.55), 0 0 18px rgba(245, 158, 11, 0.6);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(251, 191, 36, 0.22), 0 0 34px rgba(245, 158, 11, 0.85);
+    transform: scale(1.08);
+  }
+}
+
+.user-points-badge.tutorial-points-glow {
+  outline: 3px solid #f59e0b !important;
+  outline-offset: 4px;
+  position: relative;
+  z-index: 1;
+  animation: tutorial-points-glow-pulse 1.4s ease-in-out infinite !important;
+}
+
 /* Tutorial: pulse animation (CSS-based instead of inline style) */
 @keyframes tutorial-pulse-ring {
   0% {
