@@ -401,14 +401,9 @@ export default function TutorialController() {
     if (step.highlightButton) {
       el.classList.add('tutorial-lit-up');
     }
-    // Points counter: extra amber glow so it stands out while the points bubble is shown.
-    if (step.highlightPoints) {
-      el.classList.add('tutorial-points-glow');
-    }
     return () => {
       el.classList.remove('tutorial-highlight-target');
       el.classList.remove('tutorial-lit-up');
-      el.classList.remove('tutorial-points-glow');
     };
   }, [phase, currentStep, navPending]);
 

@@ -417,7 +417,6 @@ export const TUTORIAL_STEPS = [
    tooltipPosition: 'bottom',
    heading: 'points.ranking.explain.heading',
    body: 'points.ranking.explain.body',
-   highlightPoints: true,
   },
 
   // 19. Tour summary — back on DocumentView
