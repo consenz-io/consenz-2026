@@ -87,7 +87,7 @@ export default function VersionNavigation({
               if (prev > 0) window.dispatchEvent(new CustomEvent('versions:selected'));
             }}
             disabled={isLoading || !hasMultipleVersions || isCurrentVersion}
-            className="h-9 px-2 md:px-4 gap-1 text-xs font-medium flex-shrink-0"
+            className="versions-newer-btn h-9 px-2 md:px-4 gap-1 text-xs font-medium flex-shrink-0"
           >
             <span className="hidden md:inline">{language === 'he' ? 'גרסה חדשה יותר' : language === 'ar' ? 'إصدار أحدث' : 'Newer'}</span>
             {isRTL ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}

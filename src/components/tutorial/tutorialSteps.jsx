@@ -394,6 +394,8 @@ export const TUTORIAL_STEPS = [
     tooltipPosition: 'top',
     heading: 'versions.browse.explain.heading',
     body: 'versions.browse.explain.body',
+    // Light both browse buttons — the bubble explains the navigation arrows.
+    additionalSpotlights: ['.versions-newer-btn'],
     actionOnNext: 'navigateOlderVersion',
   },
 

@@ -1,13 +1,36 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
+
+// Extra breathing room around a spotlight so the target's blue outline and its
+// glow/ring animations are not clipped by the scrim edge.
+const HOLE_PADDING = 10;
+
+function rectOf(selector) {
+  if (!selector) return null;
+  const el = document.querySelector(selector);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  if (r.width === 0 && r.height === 0) return null;
+  return {
+    x: r.left - HOLE_PADDING,
+    y: r.top - HOLE_PADDING,
+    w: r.width + HOLE_PADDING * 2,
+    h: r.height + HOLE_PADDING * 2,
+  };
+}
 
 /**
- * Renders the dark scrim with a spotlight cutout on the target element.
- * Uses box-shadow trick: the TARGET element gets the huge inset shadow,
- * which paints the scrim. The scrim div itself is pointer-events-none.
+ * Renders the dark scrim with true cut-outs over the spotlight targets.
+ *
+ * The scrim is a full-viewport SVG whose mask punches holes exactly on the
+ * target elements (and any `additionalSpotlights`). Unlike raising the target's
+ * z-index, a cut-out also reveals targets that live inside a lower stacking
+ * context — sticky headers (`z-30`), fixed bars (`z-50`) — which the z-index
+ * trick could never lift above the scrim.
  */
 export default function TutorialOverlay({ targetSelector, additionalSpotlights = [], children }) {
-  const [targetRect, setTargetRect] = useState(null);
-  const styleRef = useRef(null);
+  const [holes, setHoles] = useState([]);
+  const [size, setSize] = useState({ w: 0, h: 0 });
+  const spotlightsKey = [targetSelector, ...additionalSpotlights].filter(Boolean).join('|');
 
   useEffect(() => {
     // Inject pulse keyframes once
@@ -31,13 +54,19 @@ export default function TutorialOverlay({ targetSelector, additionalSpotlights =
   }, []);
 
   useEffect(() => {
-    let frame;
+    const selectors = spotlightsKey.split('|').filter(Boolean);
+    let lastKey = '';
 
     function update() {
-      const el = document.querySelector(targetSelector);
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      setTargetRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+      const rects = selectors.map(rectOf).filter(Boolean);
+      const nextSize = { w: window.innerWidth, h: window.innerHeight };
+      // Skip state updates when nothing moved — avoids re-rendering the
+      // tooltip on every poll tick.
+      const key = JSON.stringify({ rects, w: nextSize.w, h: nextSize.h });
+      if (key === lastKey) return;
+      lastKey = key;
+      setHoles(rects);
+      setSize(nextSize);
     }
 
     update();
@@ -51,49 +80,53 @@ export default function TutorialOverlay({ targetSelector, additionalSpotlights =
       window.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
       clearInterval(interval);
-      cancelAnimationFrame(frame);
     };
-  }, [targetSelector]);
+  }, [spotlightsKey]);
 
-  useEffect(() => {
-    // Apply spotlight box-shadow directly to target element
-    const el = document.querySelector(targetSelector);
-    if (!el || !targetRect) return;
-
-    const computedRadius = window.getComputedStyle(el).borderRadius || '8px';
-    el.style.position = 'relative';
-    el.style.zIndex = '10001';
-    el.style.borderRadius = computedRadius;
-
-    // Additional spotlight elements (raised z-index only, no shadow)
-    const additionalEls = additionalSpotlights
-      .map(sel => document.querySelector(sel))
-      .filter(Boolean);
-    additionalEls.forEach(aEl => {
-      aEl.style.position = 'relative';
-      aEl.style.zIndex = '10001';
-    });
-
-    return () => {
-      el.style.position = '';
-      el.style.zIndex = '';
-      el.style.boxShadow = '';
-      additionalEls.forEach(aEl => {
-        aEl.style.position = '';
-        aEl.style.zIndex = '';
-      });
-    };
-  }, [targetSelector, targetRect, additionalSpotlights]);
+  const maskId = 'tutorial-spotlight-mask';
 
   return (
     <>
-      {/* Scrim — full-viewport dim (covers sidebar too, which the box-shadow
-          trick could not reach because the main content clips overflow).
-          pointer-events-none so clicks pass through to tooltip/target. */}
-      <div
-        className="fixed inset-0 z-[10000] pointer-events-none bg-black/60"
-        aria-hidden="true"
-      />
+      {holes.length === 0 ? (
+        // No target resolved yet — dim everything.
+        <div
+          className="fixed inset-0 z-[10000] pointer-events-none bg-black/60"
+          aria-hidden="true"
+        />
+      ) : (
+        <svg
+          className="fixed inset-0 z-[10000] pointer-events-none"
+          width={size.w || '100%'}
+          height={size.h || '100%'}
+          aria-hidden="true"
+        >
+          <defs>
+            <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width={size.w} height={size.h}>
+              <rect x="0" y="0" width={size.w} height={size.h} fill="white" />
+              {holes.map((h, i) => (
+                <rect
+                  key={i}
+                  x={h.x}
+                  y={h.y}
+                  width={h.w}
+                  height={h.h}
+                  rx="8"
+                  ry="8"
+                  fill="black"
+                />
+              ))}
+            </mask>
+          </defs>
+          <rect
+            x="0"
+            y="0"
+            width={size.w}
+            height={size.h}
+            fill="rgba(0,0,0,0.6)"
+            mask={`url(#${maskId})`}
+          />
+        </svg>
+      )}
       {/* Tooltip and other interactive content */}
       {children}
     </>
