@@ -402,29 +402,19 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
           const commentsKey = `suggestion-${currentVersion.id}`;
           return (
             <>
-              <div className="flex items-center gap-2 flex-wrap mt-2">
-                
-
-
-
-
-
-
-
-
-
-                
+              <div className={`flex items-center gap-2 flex-wrap mt-2 ${isRTL ? 'flex-row-reverse' : 'flex-row'}`}>
                 {user && currentVersion.status === 'pending' &&
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEditSuggestion && onEditSuggestion(currentVersion);
                   }}
-                  className="h-8 text-xs px-2">
+                  className="text-xs h-8 px-3 flex-shrink-0">
                   
-                    <Edit2 className="w-4 h-4" />
+                    <Edit2 className={`w-3.5 h-3.5 shrink-0 ${isRTL ? 'ml-1' : 'mr-1'}`} />
+                    <span className="truncate">{t('suggestEditSection')}</span>
                   </Button>
                 }
                 {canDelete &&
@@ -450,7 +440,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
                     e.stopPropagation();
                     toggleComments(commentsKey);
                   }}
-                  className={`h-8 text-sm px-3 gap-1.5 flex-shrink-0 transition-all ${
+                  className={`h-8 text-sm px-3 gap-1.5 relative flex-shrink-0 transition-all ${isRTL ? 'mr-auto' : 'ml-auto'} ${
                   hasComments ?
                   'font-semibold text-blue-700 border-blue-300 bg-blue-50 hover:bg-blue-100' :
                   'text-slate-600 hover:text-blue-600'}`
