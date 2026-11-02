@@ -272,7 +272,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     <div
       ref={cardRef}
       id={`suggestion-${suggestion.id}`}
-      className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-yellow-50">
+      className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50">
       
       {/* כותרת אחידה: סוג הצעה + יוצר + דפדוף גרסאות */}
       <div className="flex items-center justify-center mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100">

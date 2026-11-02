@@ -149,6 +149,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const currentSuggestionDisplayId = currentView?.type === 'suggestion'
     ? `suggestion-${currentView.data.id}`
     : `section-${section.id}`;
+  // While browsing a proposal, the card gets the light-brown "proposal" tint so it
+  // reads differently from the approved section's white card.
+  const isSuggestionView = currentView?.type === 'suggestion';
 
   // ── Effects ──────────────────────────────────────────────────────────────────
 
@@ -299,7 +302,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
             ? 'section-deleted-flash border-red-500 bg-gradient-to-br from-red-50 to-red-100/30'
             : flashingSection
               ? 'suggestion-accepted-flash border-green-400 bg-gradient-to-br from-white to-slate-50/30'
-              : 'border-slate-300 hover:border-blue-400 bg-gradient-to-br from-white to-slate-50/30'
+              : isSuggestionView
+                ? 'border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50'
+                : 'border-slate-300 hover:border-blue-400 bg-gradient-to-br from-white to-slate-50/30'
       }`}
     >
       {/* Edit hint icon */}
