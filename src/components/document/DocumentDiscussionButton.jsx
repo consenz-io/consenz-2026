@@ -15,9 +15,10 @@ export default function DocumentDiscussionButton({ onClick, active, count, langu
       onClick={onClick}
       variant="outline"
       size="sm"
+      dir={isRTL ? "rtl" : "ltr"}
       className={`group gap-2 border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100 hover:border-indigo-300 text-indigo-700 ${
         active ? 'border-indigo-400 bg-indigo-100' : ''
-      } ${isRTL ? "flex-row-reverse" : ""}`}
+      }`}
     >
       <MessageSquare className="w-4 h-4 text-indigo-600 group-hover:scale-110 transition-transform" />
       <span className="font-semibold">{label}</span>
