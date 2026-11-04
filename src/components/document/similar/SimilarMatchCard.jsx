@@ -3,14 +3,17 @@ import { AlertCircle, ArrowDown, ArrowUp, CheckCircle, ExternalLink, Loader2 } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
-import { formatRelativeTime } from "@/components/utils/dateFormatter";
+import { parseUserDate } from "@/components/utils/dateFormatter";
+import moment from "moment";
+import "moment/locale/he";
+import "moment/locale/ar";
 
 /**
  * One existing match: what it is, who opened it and when, what it says, and the
  * two actions that matter — vote on it, or open it and read the full thing.
  */
 export default function SimilarMatchCard({ match, documentId, locked, isVoting, votedResult, errorMessage, onVote }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const isSection = match.kind === "section";
 
@@ -34,7 +37,7 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
 
   const meta = [
     match.authorName ? t("similarByAuthor", { name: match.authorName }) : null,
-    match.createdDate ? formatRelativeTime(match.createdDate) : null,
+    match.createdDate ? moment(parseUserDate(match.createdDate)).locale(language || "en").fromNow() : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -88,9 +91,14 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
       )}
 
       {match.snippet && (
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 line-clamp-3" dir="auto">
-          {match.snippet}
-        </p>
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-slate-500">
+            {isSection ? t("similarCurrentWording") : t("similarProposedWording")}
+          </p>
+          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 line-clamp-3" dir="auto">
+            {match.snippet}
+          </p>
+        </div>
       )}
 
       {hasVotes && !votedResult && (
@@ -132,7 +140,7 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
       )}
 
       {!locked && (
-        <>
+        <div className="border-t border-slate-100 pt-3 space-y-2">
           <div>
             <Button
               type="button"
@@ -147,6 +155,8 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
               </span>
             </Button>
           </div>
+
+          <p className="text-xs font-medium text-slate-500">{t("similarOptionsLabel")}</p>
 
           <div className="flex flex-col sm:flex-row gap-2">
             <Button
@@ -174,7 +184,7 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
               <span className="text-xs sm:text-sm">{againstLabel}</span>
             </Button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

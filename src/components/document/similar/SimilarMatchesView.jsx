@@ -150,6 +150,7 @@ export default function SimilarMatchesView({
         </div>
       ) : (
         <div className="space-y-2 border-t border-slate-100 pt-3">
+          <p className="text-xs font-medium text-slate-600">{t("similarOtherPaths")}</p>
           <div className="flex flex-col sm:flex-row gap-2">
             <Button type="button" onClick={onBackToDraft} className="flex-1">
               {t("similarBackToDraft")}
