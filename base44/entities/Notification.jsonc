@@ -23,7 +23,8 @@
         "group_join_request",
         "direct_message",
         "admin_group_activity",
-        "admin_group_new_participant"
+        "admin_group_new_participant",
+        "similarity_check_failed"
       ],
       "description": "Type of notification"
     },

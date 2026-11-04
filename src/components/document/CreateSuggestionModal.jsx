@@ -24,6 +24,9 @@ import InsufficientPointsDialog from "../InsufficientPointsDialog";
 import PointsCostConfirmDialog from "../PointsCostConfirmDialog";
 import { ensureUserPublicProfile } from "../ensureUserPublicProfile";
 import ChangeBlockDiffView from "./ChangeBlockDiffView";
+import { findSimilarProposals } from "./similar/similarProposals";
+import SimilarCheckView from "./similar/SimilarCheckView";
+import SimilarMatchesView from "./similar/SimilarMatchesView";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -36,6 +39,9 @@ const detectLanguage = (text) => {
 
 const POINTS_COST_EDIT = 200;
 const POINTS_COST_NEW = 350;
+// After this long the similarity check is considered slow and the user may
+// continue publishing without waiting for it.
+const SIMILAR_SLOW_MS = 5000;
 
 // Notifications for new suggestions are handled by the handleNewSuggestion backend automation (entity trigger on create).
 // No frontend notification call needed here.
@@ -74,12 +80,22 @@ export default function CreateSuggestionModal({
     window.addEventListener('tutorial:closeModal', handler);
     return () => window.removeEventListener('tutorial:closeModal', handler);
   }, [onClose]);
+
+  // Ignore a similarity-check result that arrives after the modal was closed.
+  useEffect(() => () => {
+    checkAbandonedRef.current = true;
+  }, []);
   const [isLoadingTranslation, setIsLoadingTranslation] = useState(false);
   const [showInsufficientPointsDialog, setShowInsufficientPointsDialog] = useState(false);
   const [showPointsConfirm, setShowPointsConfirm] = useState(false);
   const [pendingFormData, setPendingFormData] = useState(null);
   const [showDiff, setShowDiff] = useState(false);
   const [originalLoadedContent, setOriginalLoadedContent] = useState(null);
+  const [similarView, setSimilarView] = useState('form');
+  const [similarMatches, setSimilarMatches] = useState([]);
+  const [checkSlow, setCheckSlow] = useState(false);
+  const [checkFailed, setCheckFailed] = useState(false);
+  const checkAbandonedRef = React.useRef(false);
   
   const currentUser = user;
   
@@ -364,6 +380,82 @@ export default function CreateSuggestionModal({
     },
   });
 
+  // Publishes the proposal exactly as before — the similarity check only runs in
+  // front of it and can always be skipped.
+  const proceedToPublish = (data) => {
+    // Skip points check if direct edit
+    if (isDirectEdit) {
+      createSuggestionMutation.mutate(data);
+      return;
+    }
+
+    const gamificationEnabled = document.gamificationEnabled || false;
+    const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_suggestion') === 'true';
+    const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
+
+    if (gamificationEnabled && !skipConfirm) {
+      const currentPoints = currentUser.points || 1000;
+      if (currentPoints >= pointsCost) {
+        setPendingFormData(data);
+        setShowPointsConfirm(true);
+        return;
+      }
+    }
+
+    createSuggestionMutation.mutate(data);
+  };
+
+  const handleContinuePublishing = () => {
+    checkAbandonedRef.current = true;
+    setSimilarView('form');
+    proceedToPublish(formData);
+  };
+
+  // The draft is the local form — choosing an existing discussion discards it.
+  const clearDraft = () => {
+    setFormData((prev) => ({ topicId: prev.topicId, newContent: '', explanation: '' }));
+    setIsCreatingNewTopic(false);
+    setNewTopicName('');
+  };
+
+  const runSimilarityCheck = async () => {
+    checkAbandonedRef.current = false;
+    setSimilarView('checking');
+    setCheckSlow(false);
+    setCheckFailed(false);
+    setSimilarMatches([]);
+
+    const slowTimer = setTimeout(() => setCheckSlow(true), SIMILAR_SLOW_MS);
+
+    try {
+      const result = await findSimilarProposals({
+        documentId: document.id,
+        type: isNewSection ? 'new_section' : 'edit_section',
+        sectionId: isNewSection ? null : (existingSection?.id || editingSection?.id || null),
+        topicId: isNewSection && !isCreatingNewTopic ? formData.topicId : null,
+        newContent: formData.newContent,
+        explanation: formData.explanation,
+        language,
+      });
+
+      if (checkAbandonedRef.current) return;
+
+      if (result.matches?.length > 0) {
+        setSimilarMatches(result.matches);
+        setSimilarView('matches');
+      } else {
+        setSimilarView('form');
+        proceedToPublish(formData);
+      }
+    } catch (err) {
+      if (checkAbandonedRef.current) return;
+      console.error('[SIMILAR CHECK]', err);
+      setCheckFailed(true);
+    } finally {
+      clearTimeout(slowTimer);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     setError(null);
@@ -378,27 +470,13 @@ export default function CreateSuggestionModal({
       return;
     }
 
-    // Skip points check if direct edit
-    if (isDirectEdit) {
-      createSuggestionMutation.mutate(formData);
+    // Direct edits and edits to another suggestion keep their existing flow.
+    if (isDirectEdit || isEditingSuggestion) {
+      proceedToPublish(formData);
       return;
     }
-    
-    // Check if should show points confirmation dialog
-    const gamificationEnabled = document.gamificationEnabled || false;
-    const skipConfirm = localStorage.getItem('consenz_skip_points_confirm_suggestion') === 'true';
-    const pointsCost = isNewSection ? POINTS_COST_NEW : POINTS_COST_EDIT;
-    
-    if (gamificationEnabled && !skipConfirm) {
-      const currentPoints = currentUser.points || 1000;
-      if (currentPoints >= pointsCost) {
-        setPendingFormData(formData);
-        setShowPointsConfirm(true);
-        return;
-      }
-    }
-    
-    createSuggestionMutation.mutate(formData);
+
+    runSimilarityCheck();
   };
 
   const handleConfirmPoints = () => {
@@ -450,7 +528,13 @@ export default function CreateSuggestionModal({
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-labelledby="suggestion-modal-title" aria-describedby="suggestion-modal-description">
         <DialogHeader className={isRTL ? "text-start" : "text-start"}>
           <DialogTitle id="suggestion-modal-title" className="text-start">
-            {isDirectEdit ? 'Direct Edit' : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
+            {isDirectEdit
+              ? 'Direct Edit'
+              : similarView === 'checking'
+              ? t('similarCheckTitle')
+              : similarView === 'matches'
+              ? t('similarMatchesTitle')
+              : (isNewSection ? t('suggestNewSection') : t('suggestEditSection'))}
           </DialogTitle>
         </DialogHeader>
 
@@ -462,6 +546,20 @@ export default function CreateSuggestionModal({
             : 'Suggest changes to an existing section'}
         </p>
 
+        {similarView === 'checking' ? (
+          <SimilarCheckView slow={checkSlow} failed={checkFailed} onContinue={handleContinuePublishing} />
+        ) : similarView === 'matches' ? (
+          <SimilarMatchesView
+            document={document}
+            user={currentUser}
+            matches={similarMatches}
+            onBackToDraft={() => setSimilarView('form')}
+            onContinuePublishing={handleContinuePublishing}
+            onDraftCleared={clearDraft}
+            onClose={onClose}
+          />
+        ) : (
+        <>
         {error && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
@@ -632,6 +730,8 @@ export default function CreateSuggestionModal({
             </Button>
           </DialogFooter>
         </form>
+        </>
+        )}
       </DialogContent>
     </Dialog>
     </>

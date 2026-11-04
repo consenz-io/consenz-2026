@@ -30,6 +30,9 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     // voteOnSection / voteOnSectionV2
     sectionDeletedTitle: "A section was removed from the document",
     sectionDeletedMessage: "A section in the document \"{title}\" was removed by community vote",
+    // findSimilarProposals
+    similarCheckFailedTitle: "Duplicate-proposal check failed",
+    similarCheckFailedMessage: "The check for duplicate proposals in the document \"{doc}\" did not complete. Technical details: {detail}",
     // rejectOrphanedSuggestions
     rejectedTitle: "Your suggestion was rejected",
     rejectedMessage: "The suggestion \"{title}\" was rejected because the section it referenced no longer exists",
@@ -84,6 +87,8 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     editSuggestionMessage: "{name} הציע/ה עריכה להצעה במסמך \"{title}\"",
     sectionDeletedTitle: "סעיף הוסר מהמסמך",
     sectionDeletedMessage: "סעיף במסמך \"{title}\" הוסר בהצבעת קהילה",
+    similarCheckFailedTitle: "בדיקת ההצעות הדומות נכשלה",
+    similarCheckFailedMessage: "הבדיקה לאיתור הצעות דומות במסמך \"{doc}\" לא הושלמה. פרטים טכניים: {detail}",
     rejectedTitle: "ההצעה שלך נדחתה",
     rejectedMessage: "ההצעה \"{title}\" נדחתה מכיוון שהסעיף אליו היא התייחסה הוסר",
     creatorTitle: "🎉 ההצעה שלך התקבלה!",
@@ -133,6 +138,8 @@ const NOTIFICATION_TRANSLATIONS: Record<string, Record<string, string>> = {
     editSuggestionMessage: "{name} اقترح تعديلاً على اقتراح في المستند \"{title}\"",
     sectionDeletedTitle: "تمت إزالة بند من الوثيقة",
     sectionDeletedMessage: "تمت إزالة بند في الوثيقة \"{title}\" بتصويت المجتمع",
+    similarCheckFailedTitle: "فشل التحقق من الاقتراحات المشابهة",
+    similarCheckFailedMessage: "لم يكتمل التحقق من الاقتراحات المشابهة في الوثيقة \"{doc}\". تفاصيل تقنية: {detail}",
     rejectedTitle: "تم رفض اقتراحك",
     rejectedMessage: "تم رفض الاقتراح \"{title}\" لأن القسم المرتبط به لم يعد موجوداً",
     creatorTitle: "🎉 تم قبول اقتراحك!",
