@@ -160,6 +160,10 @@ export default async function (req) {
       title: s.title || '',
       topicTitle: topicTitleById.get(s.topicId) || '',
       text: toPlainText(s.newContent || s.originalContent || ''),
+      createdById: s.created_by_id || null,
+      createdDate: s.created_date || null,
+      proVotes: s.proVotes || 0,
+      conVotes: s.conVotes || 0,
     });
 
     const sectionCandidate = (sec) => ({
@@ -172,6 +176,10 @@ export default async function (req) {
       title: topicTitleById.get(sec.topicId) || '',
       topicTitle: topicTitleById.get(sec.topicId) || '',
       text: toPlainText(sec.content || ''),
+      createdById: sec.created_by_id || null,
+      createdDate: sec.created_date || null,
+      proVotes: 0,
+      conVotes: 0,
     });
 
     const inTargetTopic = (id) => !!targetTopicId && id === targetTopicId;
@@ -285,10 +293,44 @@ RULES
 
     // Only the earliest priority stage that produced a strong match is shown.
     const earliestTier = Math.min(...strong.map((s) => s.tier));
-    const matches = strong
-      .filter((s) => s.tier === earliestTier)
-      .slice(0, MAX_RESULTS)
-      .map((s) => ({
+    const selected = strong.filter((s) => s.tier === earliestTier).slice(0, MAX_RESULTS);
+
+    // Author name, age and current vote counts give each match enough context to
+    // act on without opening it first.
+    const authorIds = [...new Set(selected.map((s) => s.createdById).filter(Boolean))];
+    const sectionIds = selected.filter((s) => s.kind === 'section').map((s) => s.id);
+
+    const [profiles, sectionVotes] = await Promise.all([
+      authorIds.length
+        ? base44.asServiceRole.entities.UserPublicProfile
+            .filter({ userId: { $in: authorIds } })
+            .catch(() => [])
+        : Promise.resolve([]),
+      sectionIds.length
+        ? base44.asServiceRole.entities.SectionVote
+            .filter({ sectionId: { $in: sectionIds } })
+            .catch(() => [])
+        : Promise.resolve([]),
+    ]);
+
+    const nameById = new Map<string, string>();
+    for (const profile of profiles) {
+      if (profile?.userId && !nameById.has(profile.userId) && profile.fullName) {
+        nameById.set(profile.userId, profile.fullName);
+      }
+    }
+
+    const sectionVotesById = new Map<string, { pro: number; con: number }>();
+    for (const vote of sectionVotes) {
+      const current = sectionVotesById.get(vote.sectionId) || { pro: 0, con: 0 };
+      if (vote.vote === 'pro') current.pro += 1;
+      else if (vote.vote === 'con') current.con += 1;
+      sectionVotesById.set(vote.sectionId, current);
+    }
+
+    const matches = selected.map((s) => {
+      const sectionCounts = s.kind === 'section' ? sectionVotesById.get(s.id) : null;
+      return {
         key: s.key,
         kind: s.kind,
         id: s.id,
@@ -299,7 +341,12 @@ RULES
         topicTitle: s.topicTitle,
         snippet: truncate(s.text, SNIPPET_IN_RESULT),
         explanation: s.explanation,
-      }));
+        authorName: s.createdById ? nameById.get(s.createdById) || null : null,
+        createdDate: s.createdDate || null,
+        proVotes: sectionCounts ? sectionCounts.pro : s.proVotes || 0,
+        conVotes: sectionCounts ? sectionCounts.con : s.conVotes || 0,
+      };
+    });
 
     return Response.json({ success: true, checkFailed: false, matches });
   } catch (error) {

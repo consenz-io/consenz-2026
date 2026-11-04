@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQueryClient } from "@tanstack/react-query";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -18,9 +19,9 @@ import SimilarMatchCard from "./SimilarMatchCard";
 import { plainText } from "./similarProposals";
 
 /**
- * Shows up to three strong matches. The user can vote directly on an existing
- * proposal or section instead of publishing a duplicate — after voting the
- * flow ends and no new proposal is published.
+ * The duplicate-review window: how many existing matches were found, what each
+ * one is, and the two ways forward — vote on what already exists, or go back and
+ * publish anyway. Voting ends the flow and no new proposal is published.
  */
 export default function SimilarMatchesView({
   document,
@@ -110,11 +111,19 @@ export default function SimilarMatchesView({
     }
   };
 
+  const countLabel =
+    matches.length === 1
+      ? t("similarMatchOne")
+      : t("similarMatchMany", { count: matches.length });
+
   return (
     <div className="space-y-4">
-      <div>
-        <p className="font-semibold text-slate-900">{t("similarMatchesTitle")}</p>
-        <p className="text-sm text-slate-600 mt-1">{t("similarMatchesBody")}</p>
+      <div className="space-y-1">
+        <h2 className="text-lg font-semibold text-slate-900 flex items-start gap-2">
+          <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" aria-hidden="true" />
+          <span>{countLabel}</span>
+        </h2>
+        <p className="text-sm text-slate-600">{t("similarMatchesBody")}</p>
       </div>
 
       <div className="space-y-3">
@@ -133,20 +142,23 @@ export default function SimilarMatchesView({
       </div>
 
       {result ? (
-        <div className="space-y-2">
+        <div className="space-y-2 border-t border-slate-100 pt-3">
           <p className="text-xs text-slate-500">{t("similarDraftDeletedNote")}</p>
           <Button type="button" onClick={onClose} className="w-full">
             {t("similarShowDocument")}
           </Button>
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row gap-2 pt-1">
-          <Button type="button" variant="outline" onClick={onBackToDraft} className="flex-1">
-            {t("similarBackToDraft")}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onContinuePublishing} className="flex-1">
-            {t("similarContinuePublishing")}
-          </Button>
+        <div className="space-y-2 border-t border-slate-100 pt-3">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button type="button" onClick={onBackToDraft} className="flex-1">
+              {t("similarBackToDraft")}
+            </Button>
+            <Button type="button" variant="outline" onClick={onContinuePublishing} className="flex-1">
+              {t("similarContinuePublishing")}
+            </Button>
+          </div>
+          <p className="text-xs text-slate-500">{t("similarDuplicateNote")}</p>
         </div>
       )}
 

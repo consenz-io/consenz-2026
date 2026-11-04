@@ -3,7 +3,12 @@ import { AlertCircle, ArrowDown, ArrowUp, CheckCircle, ExternalLink, Loader2 } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
+import { formatRelativeTime } from "@/components/utils/dateFormatter";
 
+/**
+ * One existing match: what it is, who opened it and when, what it says, and the
+ * two actions that matter — vote on it, or open it and read the full thing.
+ */
 export default function SimilarMatchCard({ match, documentId, locked, isVoting, votedResult, errorMessage, onVote }) {
   const { t } = useLanguage();
 
@@ -17,6 +22,7 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
       : `/suggestiondetail?id=${match.id}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
+
   const typeLabel = isSection
     ? t("similarExistingSection")
     : match.suggestionType === "new_section"
@@ -25,6 +31,15 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
 
   const forLabel = isSection ? t("similarVoteKeepSection") : t("similarVoteForProposal");
   const againstLabel = isSection ? t("similarVoteOpposeSection") : t("similarVoteAgainstProposal");
+
+  const meta = [
+    match.authorName ? t("similarByAuthor", { name: match.authorName }) : null,
+    match.createdDate ? formatRelativeTime(match.createdDate) : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const hasVotes = (match.proVotes || 0) + (match.conVotes || 0) > 0;
 
   const accepted = !!votedResult && (votedResult.accepted || votedResult.sectionDeleted || votedResult.alreadyAccepted);
 
@@ -46,30 +61,41 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
         accepted ? "border-emerald-300 bg-emerald-50" : "border-slate-200 bg-white"
       }`}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <Badge variant="secondary">{typeLabel}</Badge>
         {match.topicTitle && (
           <span className="text-xs text-slate-500" dir="auto">
-            {match.topicTitle}
+            {t("topic")}: {match.topicTitle}
+          </span>
+        )}
+        {meta && (
+          <span className="text-xs text-slate-500 sm:ms-auto" dir="auto">
+            {meta}
           </span>
         )}
       </div>
 
-      {match.title && (
+      {match.title && match.title !== match.topicTitle && (
         <p className="font-semibold text-slate-900 text-sm" dir="auto">
           {match.title}
         </p>
       )}
 
       {match.explanation && (
-        <p className="text-sm text-slate-700" dir="auto">
+        <p className="text-sm text-slate-800 leading-relaxed" dir="auto">
           {match.explanation}
         </p>
       )}
 
       {match.snippet && (
-        <p className="text-xs text-slate-500" dir="auto">
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 line-clamp-3" dir="auto">
           {match.snippet}
+        </p>
+      )}
+
+      {hasVotes && !votedResult && (
+        <p className="text-xs text-slate-500">
+          {t("similarVoteCounts", { pro: match.proVotes || 0, con: match.conVotes || 0 })}
         </p>
       )}
 
@@ -106,49 +132,49 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
       )}
 
       {!locked && (
-        <div>
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            onClick={openInDocument}
-            className="px-0 h-auto text-blue-700 hover:text-blue-900"
-          >
-            <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
-            <span className="text-xs sm:text-sm">
-              {isSection ? t("similarOpenSection") : t("similarOpenProposal")}
-            </span>
-          </Button>
-        </div>
-      )}
+        <>
+          <div>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              onClick={openInDocument}
+              className="px-0 h-auto text-blue-700 hover:text-blue-900"
+            >
+              <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="text-xs sm:text-sm">
+                {isSection ? t("similarOpenSection") : t("similarOpenProposal")}
+              </span>
+            </Button>
+          </div>
 
-      {!locked && (
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onVote("pro")}
-            disabled={isVoting}
-            className="flex-1 border-emerald-300 text-emerald-800 hover:bg-emerald-50 hover:text-emerald-900"
-          >
-            {isVoting ? (
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <ArrowUp className="w-4 h-4" aria-hidden="true" />
-            )}
-            <span className="text-xs sm:text-sm">{forLabel}</span>
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onVote("con")}
-            disabled={isVoting}
-            className="flex-1 border-red-300 text-red-800 hover:bg-red-50 hover:text-red-900"
-          >
-            {!isVoting && <ArrowDown className="w-4 h-4" aria-hidden="true" />}
-            <span className="text-xs sm:text-sm">{againstLabel}</span>
-          </Button>
-        </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onVote("pro")}
+              disabled={isVoting}
+              className="flex-1 border-emerald-300 text-emerald-800 hover:bg-emerald-50 hover:text-emerald-900"
+            >
+              {isVoting ? (
+                <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <ArrowUp className="w-4 h-4" aria-hidden="true" />
+              )}
+              <span className="text-xs sm:text-sm">{forLabel}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onVote("con")}
+              disabled={isVoting}
+              className="flex-1 border-red-300 text-red-800 hover:bg-red-50 hover:text-red-900"
+            >
+              {!isVoting && <ArrowDown className="w-4 h-4" aria-hidden="true" />}
+              <span className="text-xs sm:text-sm">{againstLabel}</span>
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );

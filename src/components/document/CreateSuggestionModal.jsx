@@ -527,7 +527,10 @@ export default function CreateSuggestionModal({
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-labelledby="suggestion-modal-title" aria-describedby="suggestion-modal-description">
         <DialogHeader className={isRTL ? "text-start" : "text-start"}>
-          <DialogTitle id="suggestion-modal-title" className="text-start">
+          <DialogTitle
+            id="suggestion-modal-title"
+            className={similarView === 'form' ? "text-start" : "sr-only"}
+          >
             {isDirectEdit
               ? 'Direct Edit'
               : similarView === 'checking'
