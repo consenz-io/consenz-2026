@@ -1,21 +1,23 @@
 import React from "react";
 import { AlertCircle, ArrowDown, ArrowUp, CheckCircle, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import { parseUserDate } from "@/components/utils/dateFormatter";
+import SimilarComparison from "./SimilarComparison";
 import moment from "moment";
 import "moment/locale/he";
 import "moment/locale/ar";
 
 /**
- * One existing match: what it is, who opened it and when, what it says, and the
- * two actions that matter — vote on it, or open it and read the full thing.
+ * One existing match: your own proposal next to the wording that already exists,
+ * who opened it and when, and the two votes that matter. Opening the full
+ * proposal in the document stays a secondary link so the draft is never lost.
  */
-export default function SimilarMatchCard({ match, documentId, locked, isVoting, votedResult, errorMessage, onVote }) {
+export default function SimilarMatchCard({ match, documentId, draftText, locked, isVoting, votedResult, errorMessage, onVote }) {
   const { t, language } = useLanguage();
 
   const isSection = match.kind === "section";
+  const existingLabel = isSection ? t("similarExistingSectionLabel") : t("similarExistingProposalLabel");
 
   // Opens the match in the document in a new tab, so the draft in this modal is
   // never discarded just for reading the existing wording.
@@ -25,12 +27,6 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
       : `/suggestiondetail?id=${match.id}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };
-
-  const typeLabel = isSection
-    ? t("similarExistingSection")
-    : match.suggestionType === "new_section"
-    ? t("similarNewSectionProposal")
-    : t("similarEditProposal");
 
   const forLabel = isSection ? t("similarVoteKeepSection") : t("similarVoteForProposal");
   const againstLabel = isSection ? t("similarVoteOpposeSection") : t("similarVoteAgainstProposal");
@@ -65,7 +61,6 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
       }`}
     >
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <Badge variant="secondary">{typeLabel}</Badge>
         {match.topicTitle && (
           <span className="text-xs text-slate-500" dir="auto">
             {t("topic")}: {match.topicTitle}
@@ -84,19 +79,13 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
         </p>
       )}
 
-      {match.explanation && (
-        <p className="text-sm text-slate-800 leading-relaxed" dir="auto">
-          {match.explanation}
-        </p>
-      )}
+      <SimilarComparison yourText={draftText} existingText={match.snippet} existingLabel={existingLabel} />
 
-      {match.snippet && (
+      {match.explanation && (
         <div className="space-y-1">
-          <p className="text-xs font-medium text-slate-500">
-            {isSection ? t("similarCurrentWording") : t("similarProposedWording")}
-          </p>
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg px-3 py-2 line-clamp-3" dir="auto">
-            {match.snippet}
+          <p className="text-xs font-medium text-slate-500">{t("similarWhyProposed")}</p>
+          <p className="text-xs sm:text-sm text-slate-700 leading-relaxed" dir="auto">
+            {match.explanation}
           </p>
         </div>
       )}
@@ -141,23 +130,6 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
 
       {!locked && (
         <div className="border-t border-slate-100 pt-3 space-y-2">
-          <div>
-            <Button
-              type="button"
-              variant="link"
-              size="sm"
-              onClick={openInDocument}
-              className="px-0 h-auto text-blue-700 hover:text-blue-900"
-            >
-              <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
-              <span className="text-xs sm:text-sm">
-                {isSection ? t("similarOpenSection") : t("similarOpenProposal")}
-              </span>
-            </Button>
-          </div>
-
-          <p className="text-xs font-medium text-slate-500">{t("similarOptionsLabel")}</p>
-
           <div className="flex flex-col sm:flex-row gap-2">
             <Button
               type="button"
@@ -182,6 +154,21 @@ export default function SimilarMatchCard({ match, documentId, locked, isVoting, 
             >
               {!isVoting && <ArrowDown className="w-4 h-4" aria-hidden="true" />}
               <span className="text-xs sm:text-sm">{againstLabel}</span>
+            </Button>
+          </div>
+
+          <div>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              onClick={openInDocument}
+              className="px-0 h-auto text-blue-700 hover:text-blue-900"
+            >
+              <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+              <span className="text-xs sm:text-sm">
+                {isSection ? t("similarOpenSection") : t("similarOpenProposal")}
+              </span>
             </Button>
           </div>
         </div>

@@ -27,6 +27,7 @@ export default function SimilarMatchesView({
   document,
   user,
   matches,
+  draftText,
   onBackToDraft,
   onContinuePublishing,
   onDraftCleared,
@@ -116,6 +117,8 @@ export default function SimilarMatchesView({
       ? t("similarMatchOne")
       : t("similarMatchMany", { count: matches.length });
 
+  const draftSnippet = plainText(draftText).slice(0, 300);
+
   return (
     <div className="space-y-4">
       <div className="space-y-1">
@@ -132,6 +135,7 @@ export default function SimilarMatchesView({
             key={match.key}
             match={match}
             documentId={document.id}
+            draftText={draftSnippet}
             locked={!!result || !!votingKey}
             isVoting={votingKey === match.key}
             votedResult={result?.key === match.key ? result : null}
@@ -150,16 +154,13 @@ export default function SimilarMatchesView({
         </div>
       ) : (
         <div className="space-y-2 border-t border-slate-100 pt-3">
-          <p className="text-xs font-medium text-slate-600">{t("similarOtherPaths")}</p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Button type="button" onClick={onBackToDraft} className="flex-1">
-              {t("similarBackToDraft")}
-            </Button>
-            <Button type="button" variant="outline" onClick={onContinuePublishing} className="flex-1">
-              {t("similarContinuePublishing")}
-            </Button>
-          </div>
-          <p className="text-xs text-slate-500">{t("similarDuplicateNote")}</p>
+          <Button type="button" onClick={onBackToDraft} className="w-full">
+            {t("similarBackToEdit")}
+          </Button>
+          <Button type="button" variant="outline" onClick={onContinuePublishing} className="w-full">
+            {t("similarPublishAnyway")}
+          </Button>
+          <p className="text-xs text-slate-500">{t("similarPublishAnywayNote")}</p>
         </div>
       )}
 

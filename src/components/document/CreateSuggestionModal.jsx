@@ -556,6 +556,7 @@ export default function CreateSuggestionModal({
             document={document}
             user={currentUser}
             matches={similarMatches}
+            draftText={formData.newContent}
             onBackToDraft={() => setSimilarView('form')}
             onContinuePublishing={handleContinuePublishing}
             onDraftCleared={clearDraft}
