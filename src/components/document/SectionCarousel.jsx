@@ -434,6 +434,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
             t={t}
             canParticipate={canParticipate}
             isGhost={isGhost}
+            isAdmin={isAdmin}
             getUserVote={getUserVote}
             voteMutation={voteMutation}
             getUserName={getUserName}

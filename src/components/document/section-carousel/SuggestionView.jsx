@@ -1,6 +1,7 @@
 import React from "react";
-import { Edit, MessageSquare } from "lucide-react";
+import { Edit, MessageSquare, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import SectionDiff from "../SectionDiff";
 import TranslatableContent from "../TranslatableContent";
 import DocumentTextContent from "../DocumentTextContent";
@@ -24,6 +25,7 @@ const SuggestionView = React.memo(function SuggestionView({
   t,
   canParticipate,
   isGhost,
+  isAdmin,
   getUserVote,
   voteMutation,
   getUserName,
@@ -38,6 +40,34 @@ const SuggestionView = React.memo(function SuggestionView({
   const suggestion = currentView.data;
   const isDeleteType = suggestion.type === 'delete_section';
   const hasOriginalContent = suggestion.originalContent && !isGhost;
+
+  const queryClient = useQueryClient();
+  const [isDeleted, setIsDeleted] = React.useState(false);
+
+  const deleteSuggestionMutation = useMutation({
+    mutationFn: async () => {
+      // Re-check ownership at deletion time — never rely on the button's visibility.
+      const currentUser = await base44.auth.me();
+      const isOwner =
+        currentUser?.id === suggestion.created_by_id ||
+        currentUser?.email === suggestion.created_by;
+      if (!currentUser || (!isOwner && currentUser.role !== 'admin')) {
+        throw new Error('Not allowed to delete this suggestion');
+      }
+      await base44.entities.Suggestion.delete(suggestion.id);
+    },
+    onSuccess: () => {
+      setIsDeleted(true);
+      queryClient.invalidateQueries({ queryKey: ['suggestions', document?.id] });
+    }
+  });
+
+  const canDelete =
+    !!user &&
+    (isAdmin || user.id === suggestion.created_by_id || user.email === suggestion.created_by) &&
+    suggestion.status !== 'accepted';
+
+  if (isDeleted) return null;
 
   const commentCount = typeof getCommentsCount === 'function' ? getCommentsCount('suggestion', suggestion.id) : 0;
   const hasComments = commentCount > 0;
@@ -183,6 +213,23 @@ const SuggestionView = React.memo(function SuggestionView({
             
               <Edit className="w-4 h-4" />
               <span className="hidden sm:inline">{t('suggestEditSection')}</span>
+            </Button>
+          }
+          {canDelete &&
+          <Button
+            variant="ghost"
+            size="sm"
+            title={t('delete')}
+            aria-label={t('delete')}
+            disabled={deleteSuggestionMutation.isPending}
+            onClick={() => {
+              if (window.confirm(t('confirmDeleteSuggestion'))) {
+                deleteSuggestionMutation.mutate();
+              }
+            }}
+            className="h-8 px-2 flex-shrink-0 text-red-600 hover:text-red-700 hover:bg-red-50">
+            
+              <Trash2 className="w-4 h-4" />
             </Button>
           }
           <Button
