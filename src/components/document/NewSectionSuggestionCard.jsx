@@ -90,13 +90,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
     }
   });
 
-  // Deletable by the proposal's author or an admin — checked against the shown
-  // version as well as the root proposal, so a version in the chain stays deletable.
-  const canDelete = !!user && (isAdmin ||
-    user.id === (currentVersion?.created_by_id || suggestion.created_by_id) ||
-    user.email === (currentVersion?.created_by || suggestion.created_by)) &&
-    (currentVersion?.status || suggestion.status) !== 'accepted';
-
   // Build version chain for this suggestion (new_section + edit_suggestion types)
   const suggestionChain = React.useMemo(() => {
     if (ghostChain && ghostChain.length > 0) return ghostChain;
@@ -167,6 +160,15 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
 
   const currentView = allViews[currentViewIndex] || allViews[0];
   const currentVersion = currentView?.data || suggestion;
+
+  // Deletable by the proposal's author or an admin — checked against the shown
+  // version as well as the root proposal, so a version in the chain stays deletable.
+  const canDelete = !!user && (isAdmin ||
+    user.id === currentVersion.created_by_id ||
+    user.id === suggestion.created_by_id ||
+    user.email === currentVersion.created_by ||
+    user.email === suggestion.created_by) &&
+    currentVersion.status !== 'accepted';
 
   // Next view for the bottom marquee navigation button
   const nextView = allViews.length > 0 ? allViews[(currentViewIndex + 1) % allViews.length] : null;
