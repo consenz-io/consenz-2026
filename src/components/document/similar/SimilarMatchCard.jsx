@@ -3,17 +3,17 @@ import { AlertCircle, ArrowDown, ArrowUp, CheckCircle, ExternalLink, Loader2 } f
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/LanguageContext";
 import { parseUserDate } from "@/components/utils/dateFormatter";
-import SimilarComparison from "./SimilarComparison";
+import ExistingItemBlock from "./ExistingItemBlock";
 import moment from "moment";
 import "moment/locale/he";
 import "moment/locale/ar";
 
 /**
- * One existing match: your own proposal next to the wording that already exists,
- * who opened it and when, and the two votes that matter. Opening the full
+ * One existing match: the wording that already exists in the document, who
+ * opened it and when, and the two votes that matter. Opening the full
  * proposal in the document stays a secondary link so the draft is never lost.
  */
-export default function SimilarMatchCard({ match, documentId, draftText, locked, isVoting, votedResult, errorMessage, onVote }) {
+export default function SimilarMatchCard({ match, documentId, locked, isVoting, votedResult, errorMessage, onVote }) {
   const { t, language } = useLanguage();
 
   const isSection = match.kind === "section";
@@ -79,7 +79,7 @@ export default function SimilarMatchCard({ match, documentId, draftText, locked,
         </p>
       )}
 
-      <SimilarComparison yourText={draftText} existingText={match.snippet} existingLabel={existingLabel} />
+      <ExistingItemBlock label={existingLabel} text={match.snippet} />
 
       {match.explanation && (
         <div className="space-y-1">

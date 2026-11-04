@@ -27,7 +27,6 @@ export default function SimilarMatchesView({
   document,
   user,
   matches,
-  draftText,
   onBackToDraft,
   onContinuePublishing,
   onDraftCleared,
@@ -117,8 +116,6 @@ export default function SimilarMatchesView({
       ? t("similarMatchOne")
       : t("similarMatchMany", { count: matches.length });
 
-  const draftSnippet = plainText(draftText).slice(0, 300);
-
   return (
     <div className="space-y-4">
       <div className="space-y-1">
@@ -135,7 +132,6 @@ export default function SimilarMatchesView({
             key={match.key}
             match={match}
             documentId={document.id}
-            draftText={draftSnippet}
             locked={!!result || !!votingKey}
             isVoting={votingKey === match.key}
             votedResult={result?.key === match.key ? result : null}
