@@ -1,13 +1,22 @@
 import React from "react";
-import { AlertCircle, ArrowDown, ArrowUp, CheckCircle, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, CheckCircle, ExternalLink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 
-export default function SimilarMatchCard({ match, locked, isVoting, votedResult, errorMessage, onVote }) {
+export default function SimilarMatchCard({ match, documentId, locked, isVoting, votedResult, errorMessage, onVote }) {
   const { t } = useLanguage();
 
   const isSection = match.kind === "section";
+
+  // Opens the match in the document in a new tab, so the draft in this modal is
+  // never discarded just for reading the existing wording.
+  const openInDocument = () => {
+    const url = isSection
+      ? `/DocumentView?id=${documentId}&scrollTo=section-${match.id}`
+      : `/suggestiondetail?id=${match.id}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
   const typeLabel = isSection
     ? t("similarExistingSection")
     : match.suggestionType === "new_section"
@@ -93,6 +102,23 @@ export default function SimilarMatchCard({ match, locked, isVoting, votedResult,
         <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-2">
           <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 shrink-0" aria-hidden="true" />
           <p className="text-xs text-red-700">{errorMessage}</p>
+        </div>
+      )}
+
+      {!locked && (
+        <div>
+          <Button
+            type="button"
+            variant="link"
+            size="sm"
+            onClick={openInDocument}
+            className="px-0 h-auto text-blue-700 hover:text-blue-900"
+          >
+            <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+            <span className="text-xs sm:text-sm">
+              {isSection ? t("similarOpenSection") : t("similarOpenProposal")}
+            </span>
+          </Button>
         </div>
       )}
 

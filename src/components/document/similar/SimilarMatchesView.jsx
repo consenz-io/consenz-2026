@@ -122,6 +122,7 @@ export default function SimilarMatchesView({
           <SimilarMatchCard
             key={match.key}
             match={match}
+            documentId={document.id}
             locked={!!result || !!votingKey}
             isVoting={votingKey === match.key}
             votedResult={result?.key === match.key ? result : null}
