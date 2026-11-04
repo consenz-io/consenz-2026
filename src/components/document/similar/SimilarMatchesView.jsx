@@ -32,7 +32,7 @@ export default function SimilarMatchesView({
   onDraftCleared,
   onClose,
 }) {
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   const [pendingVote, setPendingVote] = useState(null);
   const [votingKey, setVotingKey] = useState(null);
@@ -161,8 +161,8 @@ export default function SimilarMatchesView({
       )}
 
       <AlertDialog open={!!pendingVote} onOpenChange={(open) => !open && setPendingVote(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
+        <AlertDialogContent dir={isRTL ? "rtl" : "ltr"}>
+          <AlertDialogHeader className={isRTL ? "text-right sm:text-right" : ""}>
             <AlertDialogTitle>{t("similarDraftWarningTitle")}</AlertDialogTitle>
             <AlertDialogDescription>{t("similarDraftWarningBody")}</AlertDialogDescription>
           </AlertDialogHeader>
