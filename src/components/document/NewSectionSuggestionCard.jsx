@@ -295,12 +295,6 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
             language={language}
             getUserName={getUserName} />
           
-          {allViews.length > 1 && currentView.type === 'original' &&
-          <p className="text-xs text-amber-700 font-semibold flex-shrink-0">
-              <span className="text-base">{allViews.length - 1}</span>{' '}
-              {language === 'he' ? 'הצעות עריכה' : language === 'ar' ? 'اقتراحات تعديل' : 'Edit Suggestions'}
-            </p>
-          }
         </div>
       </div>
 
