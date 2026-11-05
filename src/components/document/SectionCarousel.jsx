@@ -316,7 +316,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
       {/* Header: section index + badge + suggestion title/timestamp + history button */}
       <div className="flex items-center justify-between mb-3 md:mb-4 gap-2">
-        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
           {/* Section index with the view counter stacked underneath it — keeps the
               counter from eating the little horizontal space a phone has */}
           <div className="flex flex-col items-start gap-0.5 flex-shrink-0">

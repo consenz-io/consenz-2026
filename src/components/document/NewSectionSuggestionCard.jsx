@@ -284,7 +284,7 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       
       {/* כותרת אחידה עם כרטיס הצעת עריכת סעיף: סוג הצעה + מציע + תאריך */}
       <div className="flex items-center justify-between mb-3 md:mb-4 gap-2 pb-3 border-b border-amber-200">
-        <div className="flex flex-wrap items-center gap-2 md:gap-3 min-w-0">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
           {allViews.length > 1 &&
           <Badge variant="outline" className="text-[10px] md:text-xs flex-shrink-0">
               {currentViewIndex + 1} / {allViews.length}
