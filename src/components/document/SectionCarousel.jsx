@@ -317,29 +317,33 @@ const SectionCarousel = React.memo(function SectionCarousel({
       {/* Header: section index + badge + suggestion title/timestamp + history button */}
       <div className="flex items-center justify-between mb-3 md:mb-4 gap-2">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          {isGhost ? null : (
-            <div className={`text-xs md:text-sm font-medium flex-shrink-0 ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
-              {historyMode
-                ? <span className="flex items-center gap-1"><History className="w-3.5 h-3.5" />{t('history')}</span>
-                : `${t('section')} ${sectionIndex + 1}`}
-            </div>
-          )}
-          {!historyMode && allViews.length > 1 && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-[10px] md:text-xs flex-shrink-0 cursor-help">
-                  {currentIndex + 1} / {allViews.length}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-[220px] text-center">
-                {language === 'he'
-                  ? `מציג ${currentIndex + 1} מתוך ${allViews.length} — הסעיף הנוכחי וההצעות הפתוחות עבורו`
-                  : language === 'ar'
-                  ? `عرض ${currentIndex + 1} من ${allViews.length} — البند الحالي والاقتراحات المفتوحة له`
-                  : `Showing ${currentIndex + 1} of ${allViews.length} — the current section and its open suggestions`}
-              </TooltipContent>
-            </Tooltip>
-          )}
+          {/* Section index with the view counter stacked underneath it — keeps the
+              counter from eating the little horizontal space a phone has */}
+          <div className="flex flex-col items-start gap-0.5 flex-shrink-0">
+            {isGhost ? null : (
+              <div className={`text-xs md:text-sm font-medium ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
+                {historyMode
+                  ? <span className="flex items-center gap-1"><History className="w-3.5 h-3.5" />{t('history')}</span>
+                  : `${t('section')} ${sectionIndex + 1}`}
+              </div>
+            )}
+            {!historyMode && allViews.length > 1 && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-[10px] md:text-xs cursor-help px-1.5 py-0">
+                    {currentIndex + 1} / {allViews.length}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-[220px] text-center">
+                  {language === 'he'
+                    ? `מציג ${currentIndex + 1} מתוך ${allViews.length} — הסעיף הנוכחי וההצעות הפתוחות עבורו`
+                    : language === 'ar'
+                    ? `عرض ${currentIndex + 1} من ${allViews.length} — البند الحالي والاقتراحات المفتوحة له`
+                    : `Showing ${currentIndex + 1} of ${allViews.length} — the current section and its open suggestions`}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
           {/* Suggestion title + timestamp — inline, at the same height as the section number */}
           {!historyMode && allViews.length > 1 && !isFirstView && (
             <CarouselTitleInline
