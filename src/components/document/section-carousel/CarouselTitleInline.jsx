@@ -30,7 +30,7 @@ const CarouselTitleInline = React.memo(function CarouselTitleInline({
   const isDeleteType = type === 'delete_section';
 
   return (
-    <div className="flex flex-nowrap items-start justify-between gap-2 flex-1 min-w-0">
+    <div className="flex items-baseline justify-between gap-2 flex-1 min-w-0">
       <span className="text-sm font-bold text-slate-800 break-words min-w-0 flex-1">
         {isDeleteType ? (
           label
@@ -51,7 +51,7 @@ const CarouselTitleInline = React.memo(function CarouselTitleInline({
         )}
       </span>
       {createdDate && (
-        <span className="text-[10px] text-slate-400 flex-shrink-0 whitespace-nowrap pt-1">
+        <span className="text-[10px] text-slate-400 flex-shrink-0 whitespace-nowrap">
           {parseUserDate(createdDate).toLocaleDateString(
             lang === 'he' ? 'he-IL' : lang === 'ar' ? 'ar-SA' : 'en-GB',
             { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
