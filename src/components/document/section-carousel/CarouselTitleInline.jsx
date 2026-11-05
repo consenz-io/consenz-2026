@@ -4,8 +4,11 @@ import { createPageUrl } from "@/utils";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 
 /**
- * Inline suggestion title + timestamp, rendered on the same row as the
- * section number / position badge (compact, single line).
+ * Shared proposal-card header line: proposal type + proposer + timestamp.
+ * Used by both the edit-section proposal card (SectionCarousel) and the
+ * new-section proposal card, so both headers read identically.
+ * The proposer's name wraps instead of truncating, so it stays fully
+ * visible on mobile.
  */
 const CarouselTitleInline = React.memo(function CarouselTitleInline({
   currentView,
@@ -13,32 +16,42 @@ const CarouselTitleInline = React.memo(function CarouselTitleInline({
   getUserName,
 }) {
   const lang = language || 'he';
-  const isDeleteType = currentView?.data?.type === 'delete_section';
-  const createdDate = currentView?.data?.created_date;
+  const data = currentView?.data;
+  const type = data?.type;
+  const createdDate = data?.created_date;
+
+  const label =
+    type === 'delete_section'
+      ? lang === 'he' ? 'הצעה למחיקת הסעיף' : lang === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion'
+      : type === 'new_section'
+        ? lang === 'he' ? 'הצעה לסעיף חדש מאת' : lang === 'ar' ? 'اقتراح قسم جديد بواسطة' : 'New section suggestion by'
+        : lang === 'he' ? 'הצעת עריכה מאת' : lang === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by';
+
+  const isDeleteType = type === 'delete_section';
 
   return (
-    <div className="flex items-center gap-2 min-w-0">
-      <span className="text-sm font-bold text-slate-800 truncate">
+    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 min-w-0">
+      <span className="text-sm font-bold text-slate-800 break-words min-w-0">
         {isDeleteType ? (
-          lang === 'he' ? 'הצעה למחיקת הסעיף' : lang === 'ar' ? 'اقتراح لحذف القسم' : 'Delete Section Suggestion'
+          label
         ) : (
           <>
-            {lang === 'he' ? 'הצעת עריכה מאת' : lang === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by'}{' '}
-            {currentView?.data?.created_by_id ? (
+            {label}{' '}
+            {data?.created_by_id ? (
               <Link
-                to={`${createPageUrl("Profile")}?userId=${currentView.data.created_by_id}`}
+                to={`${createPageUrl("Profile")}?userId=${data.created_by_id}`}
                 className="text-blue-700 hover:text-blue-900 hover:underline transition-colors"
               >
-                {getUserName(currentView.data.created_by_id)}
+                {getUserName(data.created_by_id)}
               </Link>
             ) : (
-              <span>{getUserName(currentView?.data?.created_by_id)}</span>
+              <span>{getUserName(data?.created_by_id)}</span>
             )}
           </>
         )}
       </span>
       {createdDate && (
-        <span className="text-[10px] text-slate-400 flex-shrink-0 hidden sm:inline">
+        <span className="text-[10px] text-slate-400">
           {parseUserDate(createdDate).toLocaleDateString(
             lang === 'he' ? 'he-IL' : lang === 'ar' ? 'ar-SA' : 'en-GB',
             { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }

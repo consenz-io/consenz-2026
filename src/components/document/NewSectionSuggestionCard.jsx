@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AcceptedAnimation from "./AcceptedAnimation";
 import SectionDiff from "./SectionDiff";
 import MarqueeText from "./section-carousel/MarqueeText";
+import CarouselTitleInline from "./section-carousel/CarouselTitleInline";
 
 const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
   suggestion,
@@ -281,47 +282,26 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
       id={`suggestion-${suggestion.id}`}
       className="group relative p-3 md:p-6 border-2 rounded-lg transition-all scroll-mt-24 border-amber-300 hover:border-amber-400 bg-gradient-to-br from-amber-50 to-orange-50">
       
-      {/* כותרת אחידה: סוג הצעה + יוצר + דפדוף גרסאות */}
-      <div className="flex items-center justify-center mb-4 pb-4 border-b-2 p-3 rounded-lg shadow-sm border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100">
-          <div className="text-center flex-1 px-2 min-w-0">
-            <div className="flex flex-col items-center gap-0.5">
-              <p className="text-sm font-bold text-slate-800 break-words">
-                {(() => {
-                  const author = getUserName(currentVersion.created_by_id);
-                  const isEdit = suggestion.type === 'edit_section';
-                  const label = isEdit
-                    ? (language === 'he' ? 'הצעת עריכה מאת' : language === 'ar' ? 'اقتراح تعديل بواسطة' : 'Edit suggestion by')
-                    : (language === 'he' ? 'הצעה לסעיף חדש מאת' : language === 'ar' ? 'اقتراح قسم جديد بواسطة' : 'New section suggestion by');
-                  return (
-                    <>
-                      {label}{' '}
-                      {currentVersion.created_by_id ? (
-                        <Link
-                          to={`${createPageUrl("Profile")}?userId=${currentVersion.created_by_id}`}
-                          className="text-blue-700 hover:text-blue-900 hover:underline transition-colors"
-                        >
-                          {author}
-                        </Link>
-                      ) : (
-                        <span>{author}</span>
-                      )}
-                    </>
-                  );
-                })()}
-              </p>
-              {allViews.length > 1 && currentView.type === 'original' &&
-                <p className="text-xs text-amber-700 font-semibold">
-                  <span className="text-lg">{allViews.length - 1}</span>{' '}
-                  {language === 'he' ? 'הצעות עריכה' : language === 'ar' ? 'اقتراحات تعديل' : 'Edit Suggestions'}
-                </p>
-              }
-              {currentVersion.created_date &&
-                <span className="text-[10px] text-slate-400">
-                  {parseUserDate(currentVersion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                </span>
-              }
-            </div>
-          </div>
+      {/* כותרת אחידה עם כרטיס הצעת עריכת סעיף: סוג הצעה + מציע + תאריך */}
+      <div className="flex items-center justify-between mb-3 md:mb-4 gap-2 pb-3 border-b border-amber-200">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3 min-w-0">
+          {allViews.length > 1 &&
+          <Badge variant="outline" className="text-[10px] md:text-xs flex-shrink-0">
+              {currentViewIndex + 1} / {allViews.length}
+            </Badge>
+          }
+          <CarouselTitleInline
+            currentView={currentView}
+            language={language}
+            getUserName={getUserName} />
+          
+          {allViews.length > 1 && currentView.type === 'original' &&
+          <p className="text-xs text-amber-700 font-semibold flex-shrink-0">
+              <span className="text-base">{allViews.length - 1}</span>{' '}
+              {language === 'he' ? 'הצעות עריכה' : language === 'ar' ? 'اقتراحات تعديل' : 'Edit Suggestions'}
+            </p>
+          }
+        </div>
       </div>
 
       {/* תוכן ההצעה */}
