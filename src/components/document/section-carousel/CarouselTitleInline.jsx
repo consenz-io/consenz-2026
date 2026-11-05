@@ -49,16 +49,15 @@ const CarouselTitleInline = React.memo(function CarouselTitleInline({
             )}
           </>
         )}
-        {/* Timestamp sits inline right after the name so it doesn't take a row of its own on mobile */}
-        {createdDate && (
-          <span className="text-[10px] text-slate-400 font-normal whitespace-nowrap ms-2">
-            {parseUserDate(createdDate).toLocaleDateString(
-              lang === 'he' ? 'he-IL' : lang === 'ar' ? 'ar-SA' : 'en-GB',
-              { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
-            )}
-          </span>
-        )}
       </span>
+      {createdDate && (
+        <span className="text-[10px] text-slate-400">
+          {parseUserDate(createdDate).toLocaleDateString(
+            lang === 'he' ? 'he-IL' : lang === 'ar' ? 'ar-SA' : 'en-GB',
+            { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+          )}
+        </span>
+      )}
     </div>
   );
 });
