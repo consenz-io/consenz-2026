@@ -316,7 +316,7 @@ const SectionCarousel = React.memo(function SectionCarousel({
 
       {/* Header: section index + badge + suggestion title/timestamp + history button */}
       <div className="flex items-center justify-between mb-3 md:mb-4 gap-2">
-        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+        <div className="flex items-center gap-1.5 md:gap-3 min-w-0">
           {isGhost ? null : (
             <div className={`text-xs md:text-sm font-medium flex-shrink-0 ${historyMode ? 'text-teal-700' : 'text-slate-500'}`}>
               {historyMode
@@ -327,8 +327,8 @@ const SectionCarousel = React.memo(function SectionCarousel({
           {!historyMode && allViews.length > 1 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant="outline" className="text-[10px] md:text-xs flex-shrink-0 cursor-help">
-                  {currentIndex + 1} / {allViews.length}
+                <Badge variant="outline" className="text-[10px] md:text-xs flex-shrink-0 cursor-help px-1 md:px-2 h-[18px] md:h-5 font-semibold tabular-nums">
+                  {currentIndex + 1}/{allViews.length}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent className="max-w-[220px] text-center">
