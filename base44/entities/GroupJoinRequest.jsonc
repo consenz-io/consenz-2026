@@ -18,7 +18,21 @@
     },
     "userEmail": {
       "type": "string",
-      "description": "User email"
+      "description": "User email",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
     },
     "userName": {
       "type": "string",

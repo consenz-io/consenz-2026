@@ -462,7 +462,8 @@ export default function CommentsSection({ entityType, entityId, user, documentId
     queryFn: async () => {
       const query = [];
       if (commenterIds.ids.length > 0) query.push({ userId: { $in: commenterIds.ids } });
-      if (commenterIds.emails.length > 0) query.push({ email: { $in: commenterIds.emails } });
+      // UserPublicProfile.email is a private field (visible to the record's
+      // owner and admins only), so it cannot be used as a lookup key here.
       if (query.length === 0) return [];
       return await base44.entities.UserPublicProfile.filter({ $or: query }).catch(() => []);
     },

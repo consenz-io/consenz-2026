@@ -14,7 +14,21 @@
     },
     "email": {
       "type": "string",
-      "description": "User email for lookups"
+      "description": "User email for lookups",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
     },
     "fullName": {
       "type": "string",

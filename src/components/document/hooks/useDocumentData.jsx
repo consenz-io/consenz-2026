@@ -111,9 +111,10 @@ export function useDocumentData(documentId) {
       allSections.forEach(s => { if (s.lastEditedBy) userIds.add(s.lastEditedBy); });
       votes.forEach(v => { if (v.userId) userIds.add(v.userId); });
       comments.forEach(c => { if (c.created_by) emails.add(c.created_by); });
+      // UserPublicProfile.email is a private field (owner/admin only), so
+      // profiles are resolved by userId only.
       const profileQuery = [];
       if (userIds.size > 0) profileQuery.push({ userId: { $in: Array.from(userIds) } });
-      if (emails.size > 0) profileQuery.push({ email: { $in: Array.from(emails) } });
       const publicProfiles = profileQuery.length > 0
         ? await base44.entities.UserPublicProfile.filter({ $or: profileQuery }).catch(() => [])
         : [];

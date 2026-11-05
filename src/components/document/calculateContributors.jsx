@@ -41,13 +41,14 @@ export async function calculateDocumentContributors(documentId) {
     suggestions.forEach(s => { if (s.created_by_id) userIds.add(s.created_by_id); if (s.created_by) emails.add(s.created_by); });
     sections.forEach(s => { if (s.lastEditedBy) userIds.add(s.lastEditedBy); });
     allVotes.forEach(v => { if (v.userId) userIds.add(v.userId); if (v.created_by) emails.add(v.created_by); });
-    allComments.forEach(c => { if (c.created_by) emails.add(c.created_by); });
+    allComments.forEach(c => { if (c.created_by_id) userIds.add(c.created_by_id); if (c.created_by) emails.add(c.created_by); });
     allSectionVotes.forEach(v => { if (v.userId) userIds.add(v.userId); if (v.created_by) emails.add(v.created_by); });
     documentAgreements.forEach(a => { if (a.userId) userIds.add(a.userId); if (a.userEmail) emails.add(a.userEmail); });
 
+    // UserPublicProfile.email is a private field (owner/admin only), so
+    // profiles are resolved by userId only.
     const profileQuery = [];
     if (userIds.size > 0) profileQuery.push({ userId: { $in: Array.from(userIds) } });
-    if (emails.size > 0) profileQuery.push({ email: { $in: Array.from(emails) } });
     const publicProfiles = profileQuery.length > 0
       ? await base44.entities.UserPublicProfile.filter({ $or: profileQuery })
       : [];
@@ -77,13 +78,14 @@ export async function calculateDocumentContributors(documentId) {
 
     // 2-4. Commenters on suggestions, sections, and document
     allComments.forEach(c => {
-      if (!c.created_by) return;
+      if (!c.created_by && !c.created_by_id) return;
       if (
         (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
         (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
         (c.rootEntityType === 'document' && c.rootEntityId === documentId)
       ) {
-        addByEmail(c.created_by);
+        if (c.created_by_id) uniqueParticipants.add(c.created_by_id);
+        else addByEmail(c.created_by);
       }
     });
 
@@ -156,13 +158,14 @@ export function calculateContributorsFromData({
 
   // 2-4. Commenters on suggestions, sections, and document
   allComments.forEach(c => {
-    if (!c.created_by) return;
+    if (!c.created_by && !c.created_by_id) return;
     if (
       (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
       (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
       (c.rootEntityType === 'document' && c.rootEntityId === document?.id)
     ) {
-      addByEmail(c.created_by);
+      if (c.created_by_id) uniqueParticipants.add(c.created_by_id);
+      else addByEmail(c.created_by);
     }
   });
 

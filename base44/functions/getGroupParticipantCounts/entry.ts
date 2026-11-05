@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 /**
  * Returns participant counts per group, computed server-side.
@@ -25,21 +26,25 @@ export default async function(req) {
 
     // Authorization: private/hidden groups leak participant data, so only
     // return counts for groups the caller is allowed to see — public groups
-    // (visible to all), or groups the caller is a member of, or any group if
-    // the caller is an admin.
-    const [groups, callerMemberships] = await Promise.all([
-      svc.entities.Group.filter({ id: { $in: groupIds } }, null, 1000),
-      svc.entities.GroupMember.filter(
-        { groupId: { $in: groupIds }, userId: user.id }, null, 1000
-      ),
-    ]);
-    const callerGroupIds = new Set(callerMemberships.map(m => m.groupId));
+    // (visible to all), groups the caller is a verified member of, or any
+    // group if the caller is an admin.
+    //
+    // A GroupMember record is NOT proof of membership: its create rule is
+    // open, so anyone can mint a record naming any group. Membership is
+    // verified with provenance via verifyGroupMembership.
+    const groups = await svc.entities.Group.filter({ id: { $in: groupIds } }, null, 1000);
     const isAdmin = user.role === 'admin';
-    const authorizedGroupIds = groupIds.filter(gid => {
-      if (isAdmin || callerGroupIds.has(gid)) return true;
+    const authorizedGroupIds: string[] = [];
+    for (const gid of groupIds) {
       const group = groups.find(g => g.id === gid);
-      return group?.status === 'public';
-    });
+      if (!group) continue;
+      if (isAdmin || group.status === 'public') {
+        authorizedGroupIds.push(gid);
+        continue;
+      }
+      const { isMember } = await verifyGroupMembership(base44, group, user);
+      if (isMember) authorizedGroupIds.push(gid);
+    }
     if (authorizedGroupIds.length === 0) {
       return Response.json({ counts: {} });
     }

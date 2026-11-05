@@ -486,7 +486,6 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
                     </div>
                     <div>
                       <p className="text-sm font-medium">{request.userName}</p>
-                      <p className="text-xs text-slate-500">{request.userEmail}</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

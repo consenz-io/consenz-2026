@@ -414,7 +414,11 @@ function LayoutContent({ children, currentPageName }) {
           // re-registers with the same email after their old account was
           // removed. Without this, the old orphaned profile remains and
           // creates a duplicate-email entry in the database.
-          const sameEmailProfiles = await base44.entities.UserPublicProfile.filter({ email: user.email });
+          // email is a private field on UserPublicProfile — the read may be
+          // filtered out, so a failed lookup must not block profile creation.
+          const sameEmailProfiles = await base44.entities.UserPublicProfile
+            .filter({ email: user.email })
+            .catch(() => []);
           const staleProfiles = sameEmailProfiles.filter(p => p.userId !== user.id);
           if (staleProfiles.length > 0) {
             await Promise.all(

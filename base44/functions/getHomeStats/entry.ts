@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 
 /**
  * Returns aggregate home-page stats computed server-side.
@@ -29,26 +30,43 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     // Public app: anonymous visitors get public-only stats (no 401).
-    // isAdmin is false and callerMemberGroupIds is empty, so only public
+    // isAdmin is false and verifiedMemberGroupIds is empty, so only public
     // group counts are returned.
     const user = await base44.auth.me().catch(() => null);
     const isAdmin = user?.role === 'admin';
+
+    // A GroupMember record is NOT proof of membership: its create rule is
+    // open, so anyone can mint a record naming any private/hidden group.
+    // Only memberships verified with provenance count as "member of a
+    // private/hidden group". Public groups need no membership at all.
+    const verifiedMemberGroupIds = new Set<string>();
+    if (user && !isAdmin) {
+      const memberships = await base44.asServiceRole.entities.GroupMember
+        .filter({ userId: user.id }).catch(() => []);
+      const memberGroupIds = [...new Set(memberships.map((m: any) => m.groupId).filter(Boolean))];
+      const memberGroups = memberGroupIds.length
+        ? await base44.asServiceRole.entities.Group.filter({ id: { $in: memberGroupIds } }).catch(() => [])
+        : [];
+      for (const g of memberGroups) {
+        if (g.status !== 'private' && g.status !== 'hidden') {
+          verifiedMemberGroupIds.add(g.id);
+          continue;
+        }
+        const { isMember } = await verifyGroupMembership(base44, g, user);
+        if (isMember) verifiedMemberGroupIds.add(g.id);
+      }
+    }
 
     const cacheKey = user ? (isAdmin ? 'admin' : 'user') : 'anonymous';
     const cached = statsCache.get(cacheKey);
     if (cached && Date.now() < cached.expiresAt) {
       // Cache hit — shared stats are reused, but per-caller visibility
       // (groupParticipantCounts, documentContributorCounts) is recomputed
-      // from the caller's own memberships so private-group counts never
-      // leak from another user's cached response.
-      const callerMemberGroupIds = new Set(
-        user
-          ? (await base44.asServiceRole.entities.GroupMember.filter({ userId: user.id })).map((m: any) => m.groupId)
-          : []
-      );
+      // from the caller's own verified memberships so private-group counts
+      // never leak from another user's cached response.
       const canSeeGroup = (gid: string) =>
         isAdmin ||
-        callerMemberGroupIds.has(gid) ||
+        verifiedMemberGroupIds.has(gid) ||
         cached.groupStatusById.get(gid) === 'public';
 
       const groupParticipantCounts: Record<string, number> = {};
@@ -319,13 +337,10 @@ Deno.serve(async (req) => {
     });
 
     // ── Per-caller visibility filter (runs on every request, never cached) ──
-    const callerMemberGroupIds = new Set(
-      user ? groupMembers.filter(m => m.userId === user.id).map(m => m.groupId) : []
-    );
     const groupStatusById = new Map(groups.map(g => [g.id, g.status]));
     const canSeeGroup = (gid) =>
       isAdmin ||
-      callerMemberGroupIds.has(gid) ||
+      verifiedMemberGroupIds.has(gid) ||
       groupStatusById.get(gid) === 'public';
 
     const groupParticipantCounts = {};

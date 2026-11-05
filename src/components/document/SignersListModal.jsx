@@ -88,9 +88,8 @@ export default function SignersListModal({
     const profile = publicProfiles.find(p => p.userId === signer.userId);
     if (profile?.fullName) return profile.fullName;
     
-    // Fallback to email if available
-    if (signer.userEmail) return signer.userEmail.split('@')[0];
-    
+    // Signature emails are private (owner/admin only) — no email fallback here.
+
     // Fallback to allUsers (only accessible if user has permissions)
     const foundUser = allUsers.find(u => u.id === signer.userId);
     if (foundUser?.full_name) return foundUser.full_name;

@@ -12,7 +12,21 @@
     },
     "userEmail": {
       "type": "string",
-      "description": "User email for easy lookup"
+      "description": "User email for easy lookup",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
     }
   },
   "required": [
