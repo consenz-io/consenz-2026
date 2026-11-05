@@ -275,7 +275,7 @@ Deno.serve(async (req) => {
         if (!p?.userId || seen.has(p.userId)) return false;
         seen.add(p.userId);
         return true;
-      });
+      }).map(p => ({ userId: p.userId, fullName: p.fullName, avatar: p.avatar }));
     }
 
     // ── Per-document contributor counts (userId as primary key, email as fallback) ──
