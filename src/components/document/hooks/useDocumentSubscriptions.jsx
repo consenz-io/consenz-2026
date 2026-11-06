@@ -30,6 +30,17 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
     }, 400);
   }, [documentId, queryClient]);
 
+  // Shared debounce for the suggestions refetch. Vote events used to invalidate
+  // the suggestion list (up to 1000 records) on EVERY vote — a burst of votes on a
+  // popular document meant one full refetch per vote per open client.
+  const suggestionsTimerRef = React.useRef(null);
+  const debouncedInvalidateSuggestions = React.useCallback(() => {
+    if (suggestionsTimerRef.current) clearTimeout(suggestionsTimerRef.current);
+    suggestionsTimerRef.current = setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
+    }, 400);
+  }, [documentId, queryClient]);
+
   // Stable setter functions — defined once, never change reference
   // (inline arrow functions would create a new reference on every render)
   const setTopicsRef = React.useCallback((v) => {
@@ -131,11 +142,11 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
       const voteSuggestionId = event.data?.suggestionId;
       if (voteSuggestionId && suggestionIdsRef.current.has(voteSuggestionId)) {
         debouncedInvalidateAggregated();
-        queryClient.invalidateQueries({ queryKey: ['suggestions', documentId] });
+        debouncedInvalidateSuggestions();
       }
     });
     return unsubscribe;
-  }, [documentId, queryClient]);
+  }, [documentId, queryClient, debouncedInvalidateAggregated, debouncedInvalidateSuggestions]);
 
   // Agreement / Version subscriptions
   React.useEffect(() => {
@@ -168,6 +179,7 @@ export function useDocumentSubscriptions(documentId, document, documentMetadata)
   React.useEffect(() => {
     return () => {
       if (aggregatedTimerRef.current) clearTimeout(aggregatedTimerRef.current);
+      if (suggestionsTimerRef.current) clearTimeout(suggestionsTimerRef.current);
     };
   }, []);
 

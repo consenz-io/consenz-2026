@@ -121,10 +121,21 @@ export default function DocumentView() {
   }, [suggestions]);
 
   // ── Derived data (memoized) ───────────────────────────────────────────────────
-  const documentComments = React.useMemo(() =>
-    allComments.filter(c => c.rootEntityType === 'document' && c.rootEntityId === documentId),
-    [allComments, documentId]
-  );
+  // Single pass over comments: derives the document-level thread AND the section
+  // comment count (previously two separate O(comments) filters on every change).
+  const { documentComments, sectionCommentsCount } = React.useMemo(() => {
+    const sectionIds = new Set(sections.map(s => s.id));
+    const docComments = [];
+    let sectionComments = 0;
+    for (const c of allComments) {
+      if (c.rootEntityType === 'document') {
+        if (c.rootEntityId === documentId) docComments.push(c);
+      } else if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) {
+        sectionComments++;
+      }
+    }
+    return { documentComments: docComments, sectionCommentsCount: sectionComments };
+  }, [allComments, documentId, sections]);
 
   const consensusPct = React.useMemo(() => {
     const consensuses = document?.consensuses || [];
@@ -138,11 +149,6 @@ export default function DocumentView() {
     const uniqueVersionNumbers = new Set(documentVersions.map(v => v.version || 0));
     return uniqueVersionNumbers.size + 1;
   }, [documentVersions]);
-
-  const sectionCommentsCount = React.useMemo(() => {
-    const sectionIds = new Set(sections.map(s => s.id));
-    return allComments.filter(c => c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)).length;
-  }, [allComments, sections]);
 
   const contributorsCount = React.useMemo(() => {
     const emailToUserId = new Map();
@@ -406,10 +412,22 @@ export default function DocumentView() {
     return () => { clearTimeout(scrollTimer); clearTimeout(highlightTimer); };
   }, [commentIdFromUrl]);
 
+  // rAF-throttled + passive: the scroll event fires ~60×/s and previously
+  // scheduled a React state update on every single one.
   useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 300);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    let frame = null;
+    const handleScroll = () => {
+      if (frame !== null) return;
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        setShowScrollTop(window.scrollY > 300);
+      });
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
   }, []);
 
   useEffect(() => {
@@ -742,21 +760,26 @@ export default function DocumentView() {
             />
           )}
 
-          <CurrentVersionModal
-            open={showCurrentVersion}
-            onClose={() => setShowCurrentVersion(false)}
-            document={document}
-            topics={topics}
-            sections={sections}
-            language={language}
-            isRTL={isRTL}
-            lastVersionDate={lastVersionDate}
-            documentId={documentId}
-            participantsCount={contributorsCount}
-            suggestionsCount={suggestions?.length || 0}
-            votesCount={(allVotes?.length || 0) + (allSectionVotes?.length || 0)}
-            consensusPct={consensusPct}
-          />
+          {/* Mounted only while open — this modal builds its whole document markup
+              (and sanitizes every section's HTML) during render, which otherwise
+              re-runs on every DocumentView render for a dialog nobody has opened. */}
+          {showCurrentVersion && (
+            <CurrentVersionModal
+              open
+              onClose={() => setShowCurrentVersion(false)}
+              document={document}
+              topics={topics}
+              sections={sections}
+              language={language}
+              isRTL={isRTL}
+              lastVersionDate={lastVersionDate}
+              documentId={documentId}
+              participantsCount={contributorsCount}
+              suggestionsCount={suggestions?.length || 0}
+              votesCount={(allVotes?.length || 0) + (allSectionVotes?.length || 0)}
+              consensusPct={consensusPct}
+            />
+          )}
         </div>
       </div>
     </TranslationProvider>

@@ -327,13 +327,23 @@ function LayoutContent({ children, currentPageName }) {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // rAF-throttled + passive — the scroll event fires on every frame of a scroll,
+  // and this listener is mounted on every page of the app.
   React.useEffect(() => {
+    let frame = null;
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
+      if (frame !== null) return;
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        setShowScrollTop(window.scrollY > 300);
+      });
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
   }, []);
 
   // Initialize browser notifications on mount
