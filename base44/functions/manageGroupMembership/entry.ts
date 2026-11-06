@@ -43,6 +43,21 @@ export default async function(req) {
         return Response.json({ error: 'Member does not belong to this group' }, { status: 403 });
       }
       const newRole = currentRole === 'admin' ? 'member' : 'admin';
+
+      // A member record the user authored themselves cannot be trusted for
+      // admin status (they can rewrite their own role). When promoting such a
+      // member, replace it with a service-owned record so the promotion is
+      // verifiable by verifyGroupMembership.
+      if (newRole === 'admin' && targetMember.created_by_id === targetMember.userId) {
+        await base44.asServiceRole.entities.GroupMember.delete(memberId);
+        const created = await base44.asServiceRole.entities.GroupMember.create({
+          groupId,
+          userId: targetMember.userId,
+          role: 'admin',
+        });
+        return Response.json({ success: true, newRole, memberId: created.id });
+      }
+
       await base44.asServiceRole.entities.GroupMember.update(memberId, { role: newRole });
       return Response.json({ success: true, newRole });
     }
@@ -61,9 +76,19 @@ export default async function(req) {
       const userId = joinRequest.userId;
 
       if (approved) {
-        // Check if already a member to avoid duplicates
+        // Check if already a member to avoid duplicates. A membership record the
+        // requester created themselves has no provenance (they could have minted
+        // it), so replace it with a service-owned record to make the approval
+        // effective and verifiable.
         const existing = members.find(m => m.userId === userId);
         if (!existing) {
+          await base44.asServiceRole.entities.GroupMember.create({
+            groupId,
+            userId,
+            role: 'member',
+          });
+        } else if (existing.created_by_id === existing.userId) {
+          await base44.asServiceRole.entities.GroupMember.delete(existing.id);
           await base44.asServiceRole.entities.GroupMember.create({
             groupId,
             userId,

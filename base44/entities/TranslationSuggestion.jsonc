@@ -115,7 +115,21 @@
     },
     "reviewedByEmail": {
       "type": "string",
-      "description": "Admin who reviewed the suggestion"
+      "description": "Admin who reviewed the suggestion (private, for admins and the submitter)",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
     },
     "reviewedAt": {
       "type": "string",

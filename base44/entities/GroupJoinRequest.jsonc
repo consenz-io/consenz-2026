@@ -57,7 +57,8 @@
   ],
   "rls": {
     "create": {
-      "data.userId": "{{user.id}}"
+      "data.userId": "{{user.id}}",
+      "data.status": "pending"
     },
     "read": null,
     "update": {

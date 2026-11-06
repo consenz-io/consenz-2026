@@ -39,21 +39,36 @@ export async function checkDocumentAuthorization(base44, documentId, user) {
   return { authorized: hasValidAdmin, document };
 }
 
+/** Records written by a backend function (service role) are prefixed like this. */
+const SERVICE_OWNER_PREFIX = 'service_';
+
+/** True when the record was created by a backend function, not by a browser. */
+export function isServiceOwned(ownerId) {
+  return typeof ownerId === 'string' && ownerId.startsWith(SERVICE_OWNER_PREFIX);
+}
+
 /**
  * Verify that a user's group membership is legitimate (not self-forged).
- * GroupMember.create RLS allows any user to mint a record with arbitrary
- * groupId/userId/role. We only trust a membership if it was established
- * through a verified flow:
  *
- *   1. The membership record was created by the group's creator
- *      (member.created_by_id === group.created_by_id)
- *   2. Backed by an accepted GroupInvitation that was created by the group's
- *      creator, or by a user whose own membership was created by the group
- *      creator (transitively trusted, no recursion)
- *   3. Backed by an approved GroupJoinRequest. The update RLS is admin-only,
- *      so a requester cannot self-approve via the entity API; approval is only
- *      set by the manageGroupMembership backend function (asServiceRole) after
- *      verifying the caller is a group admin/creator.
+ * GroupMember.create is open and the author of a record may also update it,
+ * so a record the user created themselves proves nothing — neither membership
+ * nor admin status. A membership only counts when its provenance is verifiable:
+ *
+ *   1. The record was created by the group's creator, or by a backend function
+ *      (service role — e.g. the approved-join-request and accepted-invitation
+ *      flows in manageGroupMembership / acceptGroupInvitation).
+ *   2. The record was created by someone who is themselves a trusted member of
+ *      the group (the group creator, or a service-owned membership) — one level
+ *      of transitivity, so members added by a group admin are trusted too.
+ *   3. Backed by an accepted GroupInvitation created by the group creator or by
+ *      a trusted member.
+ *   4. Backed by an approved GroupJoinRequest. Approvals are only ever written
+ *      by the admin-only update rule / the manageGroupMembership backend
+ *      function, so a record created already-'approved' is rejected (creation
+ *      RLS also restricts status to 'pending').
+ *
+ * Admin status is derived only from a record with the above provenance — never
+ * from a self-created record's client-writable role field.
  *
  * Returns { isMember, isAdmin }.
  */
@@ -68,48 +83,68 @@ export async function verifyGroupMembership(base44, group, user) {
 
   if (memberships.length === 0) return { isMember: false, isAdmin: false };
 
-  const member = memberships[0];
+  // A record the user authored themselves can be minted (and later edited) at
+  // will through the entity API, so it carries no trust.
+  const isTrustedRecord = (m) => !!m.created_by_id && m.created_by_id !== user.id;
+  const member = memberships.find(isTrustedRecord);
+
+  // Is the author of a membership record itself trusted inside this group?
+  const isTrustedAuthor = async (authorId) => {
+    if (!authorId) return false;
+    if (authorId === group.created_by_id || isServiceOwned(authorId)) return true;
+    const authorMemberships = await base44.asServiceRole.entities.GroupMember
+      .filter({ groupId, userId: authorId })
+      .catch(() => []);
+    return authorMemberships.some(
+      m => m.created_by_id === group.created_by_id || isServiceOwned(m.created_by_id)
+    );
+  };
+
   let hasProvenance = false;
 
-  // 1. Created by group creator
-  if (member.created_by_id === group.created_by_id) {
-    hasProvenance = true;
+  // 1 + 2. Membership record with verifiable provenance
+  if (member) {
+    if (member.created_by_id === group.created_by_id || isServiceOwned(member.created_by_id)) {
+      hasProvenance = true;
+    } else if (await isTrustedAuthor(member.created_by_id)) {
+      hasProvenance = true;
+    }
   }
 
-  // 2. Backed by accepted GroupInvitation with provenance
+  // 3. Backed by accepted GroupInvitation with provenance
   if (!hasProvenance && user.email) {
     const invitations = await base44.asServiceRole.entities.GroupInvitation
       .filter({ groupId, email: user.email, status: 'accepted' })
       .catch(() => []);
     for (const inv of invitations) {
-      if (inv.created_by_id === group.created_by_id) {
+      if (inv.created_by_id === group.created_by_id || isServiceOwned(inv.created_by_id)) {
         hasProvenance = true;
         break;
       }
-      // Inviter must have a membership created by the group creator
-      const inviterMemberships = await base44.asServiceRole.entities.GroupMember
-        .filter({ groupId, userId: inv.created_by_id })
-        .catch(() => []);
-      if (inviterMemberships.some(m => m.created_by_id === group.created_by_id)) {
+      // Inviter must itself be a trusted member of the group
+      if (await isTrustedAuthor(inv.created_by_id)) {
         hasProvenance = true;
         break;
       }
     }
   }
 
-  // 3. Backed by approved GroupJoinRequest
+  // 4. Backed by an approved GroupJoinRequest. A request created already
+  // 'approved' was forged (approval is always an update by the backend
+  // function), so require that it was modified after creation.
   if (!hasProvenance) {
     const requests = await base44.asServiceRole.entities.GroupJoinRequest
       .filter({ groupId, userId: user.id, status: 'approved' })
       .catch(() => []);
-    if (requests.length > 0) {
-      hasProvenance = true;
-    }
+    hasProvenance = requests.some(
+      r => new Date(r.updated_date || 0).getTime() > new Date(r.created_date || 0).getTime()
+    );
   }
 
   if (!hasProvenance) return { isMember: false, isAdmin: false };
 
-  return { isMember: true, isAdmin: member.role === 'admin' };
+  // Admin status only from a record whose role could not be self-assigned.
+  return { isMember: true, isAdmin: !!member && member.role === 'admin' };
 }
 
 /**

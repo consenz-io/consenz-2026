@@ -1,4 +1,5 @@
 import { buildTranslations, t } from './notificationTranslations.ts';
+import { verifyGroupMembership } from './documentAuth.ts';
 
 /**
  * Creates `admin_group_activity` notifications for all admins of the group
@@ -49,13 +50,35 @@ export async function notifyGroupAdmins(base44, {
     });
     if (!adminMembers || adminMembers.length === 0) return { sent: 0, reason: 'no_admins' };
 
-    const adminUserIds = adminMembers
+    const candidateIds = adminMembers
       .map((m) => m.userId)
       .filter(Boolean)
       .filter((id) => id !== actorId);
-    if (adminUserIds.length === 0) return { sent: 0, reason: 'actor_is_only_admin' };
+    if (candidateIds.length === 0) return { sent: 0, reason: 'actor_is_only_admin' };
 
-    const users = await base44.entities.User.filter({ id: { $in: adminUserIds } });
+    const candidateUsers = await base44.entities.User.filter({ id: { $in: candidateIds } });
+
+    // GroupMember.role is client-writable for records the member created
+    // themselves, so admin status must be verified before sending group
+    // activity to a self-declared admin.
+    const groups = await base44.entities.Group.filter({ id: document.groupId });
+    const group = groups?.[0];
+    if (!group) return { sent: 0, reason: 'no_group' };
+
+    const verifiedAdmins = [];
+    for (const candidate of candidateUsers) {
+      const { isAdmin } = await verifyGroupMembership(base44, group, {
+        id: candidate.id,
+        email: candidate.email,
+        role: candidate.role,
+      });
+      if (isAdmin) verifiedAdmins.push(candidate);
+    }
+
+    const adminUserIds = verifiedAdmins.map((u) => u.id);
+    if (adminUserIds.length === 0) return { sent: 0, reason: 'no_verified_admins' };
+
+    const users = verifiedAdmins;
     const translations = buildTranslations(titleKey, messageKey, replacements);
 
     const notifications = users.map((user) => {

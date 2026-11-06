@@ -239,7 +239,9 @@ export default function TranslationReview() {
                     <span>
                       {text.submittedBy}: {item.userName || item.created_by || "—"}
                     </span>
-                    {item.status !== "pending" && item.reviewedByEmail && (
+                    {item.status !== "pending" &&
+                      item.reviewedByEmail &&
+                      (user?.role === "admin" || item.created_by_id === user?.id) && (
                       <span>
                         {text.reviewedBy}: {item.reviewedByEmail}
                       </span>
