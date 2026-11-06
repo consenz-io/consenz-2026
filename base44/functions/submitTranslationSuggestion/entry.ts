@@ -4,6 +4,7 @@ const LANGS = ['en', 'he', 'ar'];
 const SCOPES = ['platform', 'content'];
 const CONTENT_ENTITY_TYPES = ['section', 'version', 'suggestion', 'document', 'topic', 'comment'];
 const LANG_NAMES: Record<string, string> = { en: 'English', he: 'עברית', ar: 'العربية' };
+const RATE_LIMIT_PER_HOUR = 10;
 
 export default async function (req: Request): Promise<Response> {
   try {
@@ -47,6 +48,20 @@ export default async function (req: Request): Promise<Response> {
       if (!sourceEntityId || !documentId || !sourceVersionId) {
         return Response.json({ error: 'missing_source' }, { status: 400 });
       }
+    }
+
+    // Per-user rate limit: without it a signed-in account can flood the review
+    // queue with suggestions in a loop.
+    const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const recentResult: any = await base44.asServiceRole.entities.TranslationSuggestion.filter(
+      { userId: user.id, created_date: { $gt: hourAgo } },
+      { limit: RATE_LIMIT_PER_HOUR }
+    );
+    const recentCount = Array.isArray(recentResult)
+      ? recentResult.length
+      : (recentResult?.items?.length ?? 0);
+    if (recentCount >= RATE_LIMIT_PER_HOUR) {
+      return Response.json({ error: 'rate_limited' }, { status: 429 });
     }
 
     // Prevent duplicate active suggestions for the same source + target language
@@ -99,7 +114,25 @@ export default async function (req: Request): Promise<Response> {
     // Notify admins about the new suggestion
     const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
     const langName = LANG_NAMES[targetLanguage] || targetLanguage;
-    const notifications = admins.slice(0, 50).map((admin: any) => ({
+    const adminIds = admins.slice(0, 50).map((admin: any) => admin.id);
+
+    // Only ping admins who have no unread translation notification waiting, so a
+    // burst of submissions cannot fill every admin's notification list.
+    const pendingNotifications: any = adminIds.length > 0
+      ? await base44.asServiceRole.entities.Notification.filter({
+          userId: { $in: adminIds },
+          type: 'translation_suggestion',
+          read: false,
+        }).catch(() => [])
+      : [];
+    const alreadyNotified = new Set(
+      (Array.isArray(pendingNotifications) ? pendingNotifications : []).map((n: any) => n.userId)
+    );
+    const recipients = admins
+      .slice(0, 50)
+      .filter((admin: any) => !alreadyNotified.has(admin.id));
+
+    const notifications = recipients.map((admin: any) => ({
       userId: admin.id,
       type: 'translation_suggestion',
       title: 'הצעת תרגום חדשה',

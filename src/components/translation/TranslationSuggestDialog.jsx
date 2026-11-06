@@ -30,6 +30,7 @@ const labels = {
     errors: {
       duplicate_own: "כבר יש לך הצעה ממתינה לטקסט הזה בשפה הזו",
       too_many_pending: "יש כבר כמה הצעות ממתינות לטקסט הזה. נסו שוב לאחר שיוכרעו.",
+      rate_limited: "שלחת יותר מדי הצעות בשעה האחרונה. נסו שוב מאוחר יותר.",
       identical: "הנוסח המוצע זהה לנוסח הנוכחי",
       invalid_text: "הנוסח המוצע קצר מדי או ארוך מדי",
       default: "שליחת ההצעה נכשלה. נסו שוב.",
@@ -50,6 +51,7 @@ const labels = {
     errors: {
       duplicate_own: "لديك بالفعل اقتراح معلق لهذا النص بهذه اللغة",
       too_many_pending: "توجد اقتراحات معلقة كثيرة لهذا النص. حاول بعد البت فيها.",
+      rate_limited: "أرسلت اقتراحات كثيرة في الساعة الأخيرة. حاول لاحقاً.",
       identical: "الصياغة المقترحة مطابقة للصياغة الحالية",
       invalid_text: "الصياغة المقترحة قصيرة جداً أو طويلة جداً",
       default: "لم يتم إرسال الاقتراح. حاول مرة أخرى.",
@@ -70,6 +72,7 @@ const labels = {
     errors: {
       duplicate_own: "You already have a pending suggestion for this text in this language",
       too_many_pending: "There are already several pending suggestions for this text. Try again after they are reviewed.",
+      rate_limited: "You have sent too many suggestions in the last hour. Please try again later.",
       identical: "The proposed wording is identical to the current one",
       invalid_text: "The proposed wording is too short or too long",
       default: "The suggestion was not sent. Please try again.",
