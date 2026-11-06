@@ -24,7 +24,8 @@
         "direct_message",
         "admin_group_activity",
         "admin_group_new_participant",
-        "similarity_check_failed"
+        "similarity_check_failed",
+        "translation_suggestion"
       ],
       "description": "Type of notification"
     },
@@ -54,7 +55,8 @@
         "comment",
         "topic",
         "group",
-        "conversation"
+        "conversation",
+        "translation"
       ],
       "description": "Type of related entity"
     },

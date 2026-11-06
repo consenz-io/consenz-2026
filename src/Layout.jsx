@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { FileText, Home, User, Settings, LogOut, Plus, Globe, Languages, ArrowUp, Users, MessageSquare, LogIn } from "lucide-react";
 import { LanguageProvider, useLanguage } from "@/components/LanguageContext";
+import TranslationAssistProvider from "@/components/translation/TranslationAssistContext";
+import TranslationAssistToggle from "@/components/translation/TranslationAssistToggle";
 import { Toaster } from "sonner";
 import { initBrowserNotifications } from "@/components/notifications/browserNotifications";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -144,7 +146,21 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
               {language === 'he' ? 'ניהול' : language === 'ar' ? 'إدارة' : 'Admin'}
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu></SidebarMenu>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    className={`hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 rounded-lg mb-1 ${
+                    location.pathname === createPageUrl("TranslationReview") ? 'bg-blue-50 text-blue-700' : ''}`}>
+                    <Link to={createPageUrl("TranslationReview")} onClick={closeSidebarOnMobile} className="flex items-center gap-3 px-3 py-3 min-h-[44px]">
+                      <Languages className="w-4 h-4" />
+                      <span className="font-medium">
+                        {language === 'he' ? 'הצעות תרגום' : language === 'ar' ? 'اقتراحات الترجمة' : 'Translation suggestions'}
+                      </span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         }
@@ -171,6 +187,9 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
                   <option value="ar">العربية</option>
                   <option value="he">עברית</option>
                 </select>
+              </div>
+              <div className="mt-2">
+                <TranslationAssistToggle language={language} />
               </div>
             </div>
           </SidebarGroupContent>
@@ -611,8 +630,10 @@ export default function Layout({ children, currentPageName }) {
   return (
     <ErrorBoundary>
       <LanguageProvider>
-        <Toaster position="top-center" richColors closeButton />
-        <LayoutContent children={children} currentPageName={currentPageName} />
+        <TranslationAssistProvider>
+          <Toaster position="top-center" richColors closeButton />
+          <LayoutContent children={children} currentPageName={currentPageName} />
+        </TranslationAssistProvider>
       </LanguageProvider>
     </ErrorBoundary>);
 

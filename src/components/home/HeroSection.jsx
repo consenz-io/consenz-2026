@@ -8,6 +8,7 @@ import { ArrowRight, ArrowLeft, Users, Trophy, CheckCircle, MessageSquare } from
 import { useLanguage } from "@/components/LanguageContext";
 import StatsCards from "./StatsCards";
 import SingleLineHeroTitle from "@/components/home/SingleLineHeroTitle";
+import TranslatablePlatformText from "@/components/translation/TranslatablePlatformText";
 
 const scrollToGroups = () => {
   const el = window.document?.getElementById('recent-documents-section');
@@ -85,7 +86,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
       <div className="relative max-w-7xl md:py-32 py-20 px-5">
         <div className="text-center space-y-3 md:space-y-6">
           <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-4 py-2">
-            {t('democraticCollaboration')}
+            <TranslatablePlatformText tKey="democraticCollaboration" />
           </Badge>
           <h1 id="hero-heading" className="font-bold leading-tight">
             <SingleLineHeroTitle>{t('buildConsensusTitle')}</SingleLineHeroTitle>

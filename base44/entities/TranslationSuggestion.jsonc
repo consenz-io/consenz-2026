@@ -1,0 +1,149 @@
+{
+  "name": "TranslationSuggestion",
+  "type": "object",
+  "properties": {
+    "scope": {
+      "type": "string",
+      "enum": [
+        "platform",
+        "content"
+      ],
+      "description": "platform = a fixed UI string, content = user content (section, suggestion, comment, topic, document)"
+    },
+    "platformKey": {
+      "type": "string",
+      "description": "Translation key of the platform string (e.g. 'democraticCollaboration'). Empty for content suggestions."
+    },
+    "sourceEntityType": {
+      "type": "string",
+      "enum": [
+        "platform",
+        "section",
+        "version",
+        "suggestion",
+        "document",
+        "topic",
+        "comment"
+      ],
+      "description": "Type of the source text"
+    },
+    "sourceEntityId": {
+      "type": "string",
+      "description": "ID of the source entity (empty for platform strings)"
+    },
+    "sourceVersionId": {
+      "type": "string",
+      "description": "Stable version identifier of the translated source (matches Translation.sourceVersionId)"
+    },
+    "sourceField": {
+      "type": "string",
+      "description": "Source field being translated (content, title, description, newContent, explanation...)"
+    },
+    "documentId": {
+      "type": "string",
+      "description": "Parent document ID for content suggestions"
+    },
+    "sourceLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "description": "Language of the original text"
+    },
+    "targetLanguage": {
+      "type": "string",
+      "enum": [
+        "en",
+        "he",
+        "ar"
+      ],
+      "description": "Language of the translation the user is improving"
+    },
+    "sourceContentHash": {
+      "type": "string",
+      "description": "Hash of the source content at proposal time (used to keep the approved translation consistent)"
+    },
+    "currentText": {
+      "type": "string",
+      "description": "The translation text the user saw and wants to improve"
+    },
+    "proposedText": {
+      "type": "string",
+      "description": "The improved translation proposed by the user"
+    },
+    "note": {
+      "type": "string",
+      "description": "Optional explanation for the change"
+    },
+    "userId": {
+      "type": "string",
+      "description": "User ID who submitted the suggestion"
+    },
+    "userName": {
+      "type": "string",
+      "description": "Display name of the submitter"
+    },
+    "userEmail": {
+      "type": "string",
+      "description": "Email of the submitter (private, for admins)",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Review status"
+    },
+    "reviewedByEmail": {
+      "type": "string",
+      "description": "Admin who reviewed the suggestion"
+    },
+    "reviewedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the suggestion was approved or rejected"
+    }
+  },
+  "required": [
+    "scope",
+    "targetLanguage",
+    "currentText",
+    "proposedText",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "data.userId": "{{user.id}}"
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

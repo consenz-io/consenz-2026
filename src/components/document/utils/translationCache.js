@@ -16,6 +16,23 @@ export const hashContent = (content) => {
 };
 
 /**
+ * Client-side mirror of the backend buildVersionId (base44/shared/
+ * translationVersioning.ts). Must produce the same identifier so a translation
+ * suggestion targets the exact canonical translation record.
+ */
+export const buildSourceVersionId = (sourceEntityType, sourceEntityId, sourceField = "content") => {
+  if (!sourceEntityType || !sourceEntityId) return "";
+  if (sourceEntityType === "section") return `section:${sourceEntityId}:current`;
+  if (sourceEntityType === "version") return `version:${sourceEntityId}`;
+  if (sourceEntityType === "suggestion") {
+    if (sourceField === "newContent") return `suggestion:${sourceEntityId}:proposed`;
+    if (sourceField === "originalContent") return `suggestion:${sourceEntityId}:original`;
+    return `suggestion:${sourceEntityId}:${sourceField}`;
+  }
+  return `${sourceEntityType}:${sourceEntityId}:${sourceField}`;
+};
+
+/**
  * Build the React Query cache key for a translation unit.
  * Must match the key built in useVersionTranslation's useQuery.
  */

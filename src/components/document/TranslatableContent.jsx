@@ -7,6 +7,8 @@ import { useDocumentTranslation } from "./TranslationContext";
 import { useVersionTranslation } from "./hooks/useVersionTranslation";
 import TranslatablePreview from "./TranslatablePreview";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import TranslationSuggestButton from "@/components/translation/TranslationSuggestButton";
+import { hashContent, buildSourceVersionId } from "./utils/translationCache";
 
 const languageNames = {
   en: "English",
@@ -180,6 +182,27 @@ export default function TranslatableContent({
                   {showTranslated && hasTranslation ? languageNames[resolvedSourceLanguage] : languageNames[language]}
                 </span>
               </Button>
+              {showTranslated && hasTranslation && resolvedEntityId && (
+                <TranslationSuggestButton
+                  language={language}
+                  currentText={translatedContent}
+                  target={{
+                    scope: "content",
+                    documentId,
+                    sourceEntityType: resolvedSourceType,
+                    sourceEntityId: resolvedEntityId,
+                    sourceVersionId: buildSourceVersionId(
+                      resolvedSourceType,
+                      resolvedEntityId,
+                      resolvedSourceField
+                    ),
+                    sourceField: resolvedSourceField,
+                    sourceLanguage: resolvedSourceLanguage,
+                    targetLanguage: language,
+                    sourceContentHash: hashContent(content),
+                  }}
+                />
+              )}
             </div>
           )}
         </>

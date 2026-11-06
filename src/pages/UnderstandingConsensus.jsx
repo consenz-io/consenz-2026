@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 import ConsensusGaugeAnimation from "@/components/document/ConsensusGaugeAnimation";
 import AcceptedSuggestionsConsensusList from "@/components/document/AcceptedSuggestionsConsensusList";
+import TranslatablePlatformText from "@/components/translation/TranslatablePlatformText";
 
 export default function UnderstandingConsensus() {
   const { t, isRTL, language } = useLanguage();
@@ -250,8 +251,14 @@ export default function UnderstandingConsensus() {
               <div className="space-y-3">
                 <h3 className="font-bold text-amber-900 text-lg">{t('howItWorksTitle')}</h3>
                 <div className="space-y-2 text-amber-800 text-sm leading-relaxed">
-                  <p><strong>{t('consensusMeterExplain1')}</strong> {t('consensusMeterExplain2')}</p>
-                  <p><strong>{t('thresholdExplain1')}</strong> {t('thresholdExplain2')}</p>
+                  <p>
+                    <strong><TranslatablePlatformText tKey="consensusMeterExplain1" /></strong>{' '}
+                    <TranslatablePlatformText tKey="consensusMeterExplain2" />
+                  </p>
+                  <p>
+                    <strong><TranslatablePlatformText tKey="thresholdExplain1" /></strong>{' '}
+                    <TranslatablePlatformText tKey="thresholdExplain2" />
+                  </p>
                 </div>
               </div>
             </div>
@@ -266,7 +273,7 @@ export default function UnderstandingConsensus() {
               {t('whatThisMeansTitle')}
             </h3>
             <p className="text-slate-300 leading-relaxed text-lg">
-              {t('thresholdMeaningDetailed', { threshold })}
+              <TranslatablePlatformText tKey="thresholdMeaningDetailed" values={{ threshold }} />
             </p>
             
 

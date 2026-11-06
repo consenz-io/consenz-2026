@@ -17,6 +17,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import RejectedSuggestions from './pages/RejectedSuggestions';
 import Messages from './pages/Messages';
+import TranslationReview from './pages/TranslationReview';
 
 // Clear cache - EmailLogs has been removed
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -98,6 +99,14 @@ const AuthenticatedApp = () => {
           element={
             <LayoutWrapper currentPageName="Messages">
               <Messages />
+            </LayoutWrapper>
+          }
+        />
+        <Route
+          path="/TranslationReview"
+          element={
+            <LayoutWrapper currentPageName="TranslationReview">
+              <TranslationReview />
             </LayoutWrapper>
           }
         />
