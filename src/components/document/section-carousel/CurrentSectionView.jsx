@@ -31,6 +31,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
   toggleComments,
   showComments,
   sourceSuggestion,
+  scrollToCommentId,
 }) {
   const { language } = useLanguage();
   const commentsKey = `section-${section.id}`;
@@ -140,7 +141,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
             entityId={activeCommentEntity.entityId}
             user={user}
             documentId={document?.id}
-            scrollToCommentId={conCommentScrollId}
+            scrollToCommentId={conCommentScrollId || scrollToCommentId}
           />
         </div>
       )}

@@ -17,7 +17,7 @@ const labels = {
     inTopic: "בנושא",
     inDocument: "במסמך",
     quote: "הנוסח המקושר",
-    open: "פתיחה במסמך",
+    open: "מעבר לפריט המקושר",
     deleted: "התוכן המקושר כבר לא קיים",
   },
   ar: {
@@ -34,7 +34,7 @@ const labels = {
     inTopic: "في موضوع",
     inDocument: "في وثيقة",
     quote: "الصياغة المرتبطة",
-    open: "فتح في الوثيقة",
+    open: "الانتقال إلى العنصر المرتبط",
     deleted: "المحتوى المرتبط لم يعد موجوداً",
   },
   en: {
@@ -51,7 +51,7 @@ const labels = {
     inTopic: "in topic",
     inDocument: "in document",
     quote: "Linked wording",
-    open: "Open in document",
+    open: "Go to linked item",
     deleted: "The linked content no longer exists",
   },
 };

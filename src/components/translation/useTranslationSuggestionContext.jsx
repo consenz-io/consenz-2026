@@ -84,8 +84,22 @@ async function loadContext(ids) {
   const documentById = index(allDocumentTitles);
   const argumentById = index(argumentsList);
 
-  const sectionUrl = (documentId) => (documentId ? `/DocumentView?id=${documentId}` : null);
-  const suggestionUrl = (id) => (id ? `/suggestiondetail?id=${id}` : null);
+  const documentUrl = (documentId) => (documentId ? `/DocumentView?id=${documentId}` : null);
+  const sectionUrl = (documentId, sectionId) => {
+    if (!documentId) return null;
+    return sectionId
+      ? `/DocumentView?id=${documentId}&scrollTo=section-${sectionId}`
+      : `/DocumentView?id=${documentId}`;
+  };
+  // The suggestion page opens its comment thread and scrolls to the comment.
+  const suggestionUrl = (id, commentId) =>
+    id ? `/suggestiondetail?id=${id}${commentId ? `&commentId=${commentId}` : ""}` : null;
+  // A section comment lives inside a collapsed thread on the document page, so
+  // the link opens that thread and scrolls to the exact comment.
+  const sectionCommentUrl = (documentId, sectionId, commentId) => {
+    if (!documentId || !sectionId) return documentUrl(documentId);
+    return `/DocumentView?id=${documentId}&scrollTo=section-${sectionId}&openSectionComments=${sectionId}&sectionCommentId=${commentId}`;
+  };
 
   const context = {};
 
@@ -97,7 +111,7 @@ async function loadContext(ids) {
         source: "comment",
         targetKind: "suggestion",
         title: suggestion?.title || null,
-        url: suggestionUrl(comment.rootEntityId),
+        url: suggestionUrl(comment.rootEntityId, comment.id),
       };
     } else if (comment.rootEntityType === "argument") {
       const argument = argumentById[comment.rootEntityId];
@@ -106,7 +120,7 @@ async function loadContext(ids) {
         source: "comment",
         targetKind: "argument",
         title: suggestion?.title || null,
-        url: suggestion ? suggestionUrl(suggestion.id) : null,
+        url: suggestion ? suggestionUrl(suggestion.id, comment.id) : null,
       };
     } else if (comment.rootEntityType === "section") {
       const section = sectionById[comment.rootEntityId];
@@ -117,7 +131,7 @@ async function loadContext(ids) {
         title: topic?.title || null,
         titleKind: "topic",
         quote: toPreview(section?.content),
-        url: sectionUrl(section?.documentId),
+        url: sectionCommentUrl(section?.documentId, section?.id, comment.id),
       };
     } else if (comment.rootEntityType === "document") {
       const document = documentById[comment.rootEntityId];
@@ -125,7 +139,9 @@ async function loadContext(ids) {
         source: "comment",
         targetKind: "document",
         title: document?.title || null,
-        url: comment.rootEntityId ? `/DocumentView?id=${comment.rootEntityId}` : null,
+        url: comment.rootEntityId
+          ? `/DocumentView?id=${comment.rootEntityId}&commentId=${comment.id}`
+          : null,
       };
     }
     if (entry) context[`comment:${comment.id}`] = entry;
@@ -151,7 +167,7 @@ async function loadContext(ids) {
       titleKind: "topic",
       subtitle: document?.title || null,
       quote: toPreview(section.content),
-      url: sectionUrl(section.documentId),
+      url: sectionUrl(section.documentId, section.id),
     };
   });
 
@@ -165,7 +181,7 @@ async function loadContext(ids) {
       titleKind: "topic",
       subtitle: document?.title || null,
       quote: toPreview(version.content),
-      url: sectionUrl(version.documentId),
+      url: sectionUrl(version.documentId, version.sectionId),
     };
   });
 
@@ -177,7 +193,7 @@ async function loadContext(ids) {
       title: topic.title || null,
       titleKind: "topic",
       subtitle: document?.title || null,
-      url: sectionUrl(topic.documentId),
+      url: documentUrl(topic.documentId),
     };
   });
 
@@ -186,7 +202,7 @@ async function loadContext(ids) {
       source: "content",
       targetKind: "document",
       title: document.title || null,
-      url: `/DocumentView?id=${document.id}`,
+      url: documentUrl(document.id),
     };
   });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { History, X, Edit } from "lucide-react";
@@ -81,11 +82,24 @@ const SectionCarousel = React.memo(function SectionCarousel({
   const [showJoinGroupDialog, setShowJoinGroupDialog] = useState(false);
   const [historyMode, setHistoryMode] = useState(false);
 
+  // Deep link from a notification or a translation suggestion pointing at a
+  // comment inside this section: the thread is collapsed by default, so it has
+  // to be opened before the comment can be scrolled to.
+  const [searchParams] = useSearchParams();
+  const openCommentsSectionId = searchParams.get("openSectionComments");
+  const deepLinkedCommentId = searchParams.get("sectionCommentId");
+
   // Local comments visibility — avoids re-rendering all sections when one toggles
   const [showComments, setShowComments] = useState({});
   const toggleComments = useCallback((key) => {
     setShowComments(prev => ({ ...prev, [key]: !prev[key] }));
   }, []);
+
+  useEffect(() => {
+    if (!openCommentsSectionId || openCommentsSectionId !== section.id) return;
+    const key = `section-${section.id}`;
+    setShowComments(prev => (prev[key] ? prev : { ...prev, [key]: true }));
+  }, [openCommentsSectionId, section.id]);
 
   const deleteFlashTimerRef = useRef(null);
   const flashTimerRef = useRef(null);
@@ -426,6 +440,9 @@ const SectionCarousel = React.memo(function SectionCarousel({
             toggleComments={toggleComments}
             showComments={showComments}
             sourceSuggestion={sourceSuggestion}
+            scrollToCommentId={
+              openCommentsSectionId === section.id ? deepLinkedCommentId : null
+            }
           />
         ) : (
           <SuggestionView
