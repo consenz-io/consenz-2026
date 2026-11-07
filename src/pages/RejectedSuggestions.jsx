@@ -1,18 +1,17 @@
 import React from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertCircle, Clock } from "lucide-react";
+import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
-import { parseUserDate } from "@/components/utils/dateFormatter";
+import RejectedSuggestionCard from "@/components/rejectedSuggestions/RejectedSuggestionCard";
 
 export default function RejectedSuggestions() {
-  const { t, language, isRTL } = useLanguage();
+  const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
 
@@ -38,27 +37,53 @@ export default function RejectedSuggestions() {
     enabled: !!documentId,
   });
 
-  // Only the creators of these suggestions (was: every profile in the platform)
-  const creatorIds = React.useMemo(
-    () => Array.from(new Set(suggestions.map(s => s.created_by_id).filter(Boolean))).sort(),
-    [suggestions]
-  );
+  // Comments of these suggestions only — not a platform-wide scan
+  const suggestionIds = React.useMemo(() => suggestions.map(s => s.id), [suggestions]);
 
-  const { data: creatorProfiles = [] } = useQuery({
-    queryKey: ['creatorProfiles', creatorIds.join(',')],
-    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: creatorIds } }),
-    enabled: creatorIds.length > 0,
+  const { data: comments = [] } = useQuery({
+    queryKey: ['rejectedSuggestionComments', suggestionIds.join(',')],
+    queryFn: () => base44.entities.Comment.filter(
+      { rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } },
+      '-created_date'
+    ),
+    enabled: suggestionIds.length > 0,
+    staleTime: 60 * 1000,
+  });
+
+  // One profile lookup for both suggestion authors and comment authors
+  const profileIds = React.useMemo(() => Array.from(new Set([
+    ...suggestions.map(s => s.created_by_id),
+    ...comments.map(c => c.created_by_id),
+  ].filter(Boolean))).sort(), [suggestions, comments]);
+
+  const { data: profiles = [] } = useQuery({
+    queryKey: ['rejectedSuggestionProfiles', profileIds.join(',')],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: profileIds } }),
+    enabled: profileIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
-  const creatorNames = React.useMemo(() => {
+  const namesById = React.useMemo(() => {
     const map = new Map();
-    creatorProfiles.forEach(p => { if (p.userId) map.set(p.userId, p.fullName); });
+    profiles.forEach(p => { if (p.userId) map.set(p.userId, p.fullName); });
     return map;
-  }, [creatorProfiles]);
+  }, [profiles]);
+
+  const commentsBySuggestion = React.useMemo(() => {
+    const map = new Map();
+    comments.forEach(comment => {
+      const list = map.get(comment.rootEntityId) || [];
+      list.push({
+        ...comment,
+        authorName: namesById.get(comment.created_by_id) || comment.created_by || '',
+      });
+      map.set(comment.rootEntityId, list);
+    });
+    return map;
+  }, [comments, namesById]);
 
   const getCreatorName = (suggestion) => {
-    return creatorNames.get(suggestion?.created_by_id) || suggestion?.created_by;
+    return namesById.get(suggestion?.created_by_id) || suggestion?.created_by;
   };
 
   if (isLoading) {
@@ -67,7 +92,7 @@ export default function RejectedSuggestions() {
         <div className="max-w-4xl mx-auto space-y-6">
           <Skeleton className="h-12 w-48" />
           <div className="space-y-4">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full" />)}
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 w-full" />)}
           </div>
         </div>
       </div>
@@ -77,7 +102,6 @@ export default function RejectedSuggestions() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex items-center gap-4">
           <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
             <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -95,9 +119,8 @@ export default function RejectedSuggestions() {
           </div>
         </div>
 
-        {/* Content */}
         {suggestions.length === 0 ? (
-          <Card className="bg-white/80 backdrop-blur-sm border-slate-200">
+          <Card className="bg-white border-slate-200">
             <CardContent className="p-12 text-center">
               <AlertCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
               <p className="text-slate-500">
@@ -108,39 +131,15 @@ export default function RejectedSuggestions() {
         ) : (
           <div className="space-y-4">
             {suggestions.map(suggestion => (
-              <Link
+              <RejectedSuggestionCard
                 key={suggestion.id}
-                to={`${createPageUrl("SuggestionDetail")}?id=${suggestion.id}&documentId=${documentId}`}
-              >
-                <Card className="bg-white/80 backdrop-blur-sm border-slate-200 hover:shadow-lg hover:scale-[1.01] transition-all cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-lg line-clamp-2">
-                          {suggestion.title}
-                        </CardTitle>
-                        <p className="text-sm text-slate-500 mt-2">
-                          {language === 'he' ? 'על ידי' : language === 'ar' ? 'من قبل' : 'By'} {getCreatorName(suggestion)}
-                        </p>
-                      </div>
-                      <Badge variant="destructive" className="flex-shrink-0">
-                        {t('rejected')}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                      <Clock className="w-4 h-4" />
-                      {parseUserDate(suggestion.created_date).toLocaleDateString(language === 'he' ? 'he-IL' : language === 'ar' ? 'ar-SA' : 'en-US')}
-                    </div>
-                    {suggestion.explanation && (
-                      <p className="text-slate-600 mt-3 line-clamp-2">
-                        {suggestion.explanation}
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
+                suggestion={suggestion}
+                documentId={documentId}
+                language={language}
+                t={t}
+                creatorName={getCreatorName(suggestion)}
+                comments={commentsBySuggestion.get(suggestion.id) || []}
+              />
             ))}
           </div>
         )}
