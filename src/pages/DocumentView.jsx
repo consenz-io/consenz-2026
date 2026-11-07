@@ -611,7 +611,7 @@ export default function DocumentView() {
                 />
                 <div className="flex items-center gap-2 flex-wrap">
                   {needsTranslationHighlight(document, language) && (
-                    <DocumentTranslateAllButton document={document} topics={topics} sections={sections} />
+                    <DocumentTranslateAllButton document={document} topics={topics} sections={sections} suggestions={suggestions} comments={allComments} />
                   )}
                   <CurrentVersionButton
                     language={language}
