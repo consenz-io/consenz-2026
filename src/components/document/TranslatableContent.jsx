@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Languages, Loader2, Check } from "lucide-react";
@@ -97,7 +96,9 @@ export default function TranslatableContent({
     globalShowTranslated,
   });
 
-  const showTranslated = localShowTranslated || (globalShowTranslated && !!translatedContent);
+  // The hook already syncs this with the global toggle, so the unit's own
+  // button always works — even right after "Translate All".
+  const showTranslated = localShowTranslated;
   const hasTranslation = !!translatedContent;
   const isValidTranslation = translatedContent &&
     translatedContent.length > 1 &&

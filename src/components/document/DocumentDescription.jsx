@@ -75,7 +75,9 @@ const DocumentDescription = React.memo(function DocumentDescription({
   const hasDescription = !!document?.description;
   const showContainer = hasDescription || isAdmin || showDescriptionComments;
   const hasTranslatedDesc = typeof translatedDesc === 'string' && translatedDesc.length > 1;
-  const displayTranslatedDesc = (showTranslatedDescription || globalShowTranslated) && hasTranslatedDesc;
+  // The hook syncs `showTranslatedDescription` with the global toggle, so the
+  // button keeps working after "Translate All".
+  const displayTranslatedDesc = showTranslatedDescription && hasTranslatedDesc;
   const currentDescription = displayTranslatedDesc ? translatedDesc : (document?.description || "");
 
   const scrollToTitle = () => {

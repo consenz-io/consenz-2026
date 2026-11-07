@@ -57,7 +57,9 @@ const DocumentHeader = React.memo(function DocumentHeader({
   });
 
   const hasTranslation = !!translatedTitle;
-  const displayTranslated = (showTranslated || globalShowTranslated) && hasTranslation;
+  // The hook syncs `showTranslated` with the global toggle, so the button keeps
+  // working after "Translate All" (no OR with the global flag).
+  const displayTranslated = showTranslated && hasTranslation;
 
   return (
     <div className={`document-title-area flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>

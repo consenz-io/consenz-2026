@@ -1,6 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -199,6 +197,12 @@ export default function SectionDiff({
     if (hasTranslation || isTranslating) return;
     handleSmartTranslate();
   }, [globalShowTranslated, suggestion?.id, sectionId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Turning "Translate All" off returns this proposal to its source language.
+  // The unit's own button keeps working in both directions afterwards.
+  useEffect(() => {
+    setShowTranslated(globalShowTranslated);
+  }, [globalShowTranslated]);
 
   const handleToggleTranslation = async () => {
     if (!showTranslated && needsTranslation) {

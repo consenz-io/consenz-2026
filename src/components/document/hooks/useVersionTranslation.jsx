@@ -69,12 +69,12 @@ export function useVersionTranslation({
     staleTime: Infinity,
   });
 
-  // Sync with global "Translate All" state — when the global toggle is on,
-  // show translated content for all units that have a cached translation.
+  // Sync with global "Translate All" state — in BOTH directions. The unit's
+  // own button always wins until the global toggle changes again, so the user
+  // can switch a single unit back to the source language even while "Translate
+  // All" is on, and turning "Translate All" off returns every unit to source.
   useEffect(() => {
-    if (globalShowTranslated) {
-      setLocalShowTranslated(true);
-    }
+    setLocalShowTranslated(globalShowTranslated);
   }, [globalShowTranslated]);
 
   const translateMutation = useMutation({
