@@ -46,7 +46,9 @@ export function useBatchTranslateAll({ document, topics, sections, suggestions, 
       if (!unit.content || typeof unit.content !== 'string' || !unit.content.trim()) return;
       const key = `${unit.sourceEntityType}:${unit.sourceEntityId}:${unit.sourceField}`;
       if (seen.has(key)) return;
-      const sourceLanguage = unit.sourceLanguage || detectLanguage(unit.content);
+      // Classify by the content's own characters, not by a stored language field
+      // (those default to 'he' and would hide English text from translation).
+      const sourceLanguage = detectLanguage(unit.content);
       // Only units whose source language differs from the target need translation
       if (sourceLanguage === targetLanguage) return;
       seen.add(key);
@@ -97,15 +99,12 @@ export function useBatchTranslateAll({ document, topics, sections, suggestions, 
 
     // Proposal texts + explanations
     for (const suggestion of suggestions || []) {
-      const suggestionLanguage =
-        suggestion.createdByLanguage || suggestion.originalLanguage || detectLanguage(suggestion.newContent || '');
       add({
         sourceEntityType: 'suggestion',
         sourceEntityId: suggestion.id,
         sourceField: 'newContent',
         content: suggestion.newContent,
         isHtml: true,
-        sourceLanguage: suggestionLanguage,
       });
       add({
         sourceEntityType: 'suggestion',
@@ -113,7 +112,6 @@ export function useBatchTranslateAll({ document, topics, sections, suggestions, 
         sourceField: 'explanation',
         content: suggestion.explanation,
         isHtml: false,
-        sourceLanguage: suggestionLanguage,
       });
     }
 
@@ -125,7 +123,6 @@ export function useBatchTranslateAll({ document, topics, sections, suggestions, 
         sourceField: 'content',
         content: comment.content,
         isHtml: false,
-        sourceLanguage: comment.originalLanguage || detectLanguage(comment.content),
       });
     }
 

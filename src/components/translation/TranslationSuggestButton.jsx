@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Pencil } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTranslationAssist } from "./TranslationAssistContext";
 import TranslationSuggestDialog from "./TranslationSuggestDialog";
 
@@ -23,21 +24,31 @@ export default function TranslationSuggestButton({ target, currentText, language
 
   if (!assistEnabled) return null;
 
+  const label = titles[language] || titles.en;
+
   return (
     <>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpen(true);
-        }}
-        title={titles[language] || titles.en}
-        aria-label={titles[language] || titles.en}
-        className="inline-flex items-center justify-center align-middle w-6 h-6 rounded-full text-blue-600/70 hover:text-blue-700 hover:bg-blue-50 transition-colors flex-shrink-0"
-      >
-        <Pencil className="w-3.5 h-3.5" />
-      </button>
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpen(true);
+              }}
+              aria-label={label}
+              className="inline-flex items-center justify-center align-middle w-6 h-6 rounded-full text-blue-600/70 hover:text-blue-700 hover:bg-blue-50 transition-colors flex-shrink-0"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs font-medium">
+            {label}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <TranslationSuggestDialog
         open={open}
         onOpenChange={setOpen}
