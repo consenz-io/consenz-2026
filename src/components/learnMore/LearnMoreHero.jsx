@@ -6,12 +6,15 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  Compass,
+  LogIn,
   MessageSquare,
   Sparkles,
   ThumbsDown,
   ThumbsUp,
 } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import usePlatformCtas from "./usePlatformCtas";
 
 // Mirrors the real proposal card used inside a document
 // (amber frame, header with proposer/date, proposal wording box,
@@ -103,6 +106,7 @@ function ProposalCard({ c }) {
 
 export default function LearnMoreHero({ c, isRTL }) {
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+  const { user, startTour, signIn } = usePlatformCtas();
 
   return (
     <section className="relative overflow-hidden">
@@ -130,19 +134,20 @@ export default function LearnMoreHero({ c, isRTL }) {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link to={createPageUrl("Home")}>
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                >
-                  {c.primaryCta}
-                </Button>
-              </Link>
-              <Link to={createPageUrl("CreateDocument")}>
-                <Button size="lg" variant="outline">
+              <Button
+                size="lg"
+                onClick={startTour}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              >
+                <Compass className="h-4 w-4" aria-hidden="true" />
+                {c.primaryCta}
+              </Button>
+              {!user && (
+                <Button size="lg" variant="outline" onClick={signIn}>
+                  <LogIn className="h-4 w-4" aria-hidden="true" />
                   {c.secondaryCta}
                 </Button>
-              </Link>
+              )}
             </div>
 
             <p className="mt-5 flex items-start gap-2 text-sm text-slate-600">

@@ -5,8 +5,8 @@ const en = {
     title: "One document. A whole community. Consensus you can measure.",
     subtitle:
       "Consenz is a platform for drafting policy documents, bylaws and decisions together. Anyone can propose a change, every change opens to discussion and a transparent vote, and the document only changes once the community reaches the support threshold it set for itself.",
-    primaryCta: "Browse open documents",
-    secondaryCta: "Start a document",
+    primaryCta: "Tour the platform",
+    secondaryCta: "Sign in",
     note: "Proposals, arguments and votes — all visible, all recorded, all attached to the text.",
     cardLabel: "Example of an open proposal",
     cardTitle: "Amendment to section 2.3 — quarterly reporting",
@@ -181,8 +181,8 @@ const en = {
   cta: {
     title: "Your next agreement starts with one draft",
     subtitle: "Open a document, invite the people it concerns, and let the process do the work.",
-    primary: "Browse open documents",
-    secondary: "Start a document",
+    primary: "Tour the platform",
+    secondary: "Sign in",
   },
 };
 
