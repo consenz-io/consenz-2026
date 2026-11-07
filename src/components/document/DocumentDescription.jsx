@@ -89,9 +89,9 @@ const DocumentDescription = React.memo(function DocumentDescription({
 
   return (
     <div className={`relative ${showContainer ? 'bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4' : ''}`}>
-      {/* Translate button */}
+      {/* Translate button — kept in normal flow (never overlaid on the text) */}
       {!isEditingDescription && needsDescriptionTranslation && (
-        <div className="absolute top-2 left-2 z-10">
+        <div className="flex items-center justify-end mb-1">
           {isTranslatingDescription ? (
             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
           ) : (
