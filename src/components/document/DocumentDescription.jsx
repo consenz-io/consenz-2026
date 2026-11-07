@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Languages, Edit2, Save, X, Loader2 } from "lucide-react";
+import { Edit2, Save, X, Loader2 } from "lucide-react";
 import ReactQuill from "react-quill";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -89,9 +89,10 @@ const DocumentDescription = React.memo(function DocumentDescription({
 
   return (
     <div className={`relative ${showContainer ? 'bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg p-4' : ''}`}>
-      {/* Translate button */}
+      {/* Translate button — sits in its own row at the inline end of the
+          description, so it can never cover the text (LTR or RTL). */}
       {!isEditingDescription && needsDescriptionTranslation && (
-        <div className="absolute top-2 left-2 z-10">
+        <div className="flex justify-end mb-1" dir={isRTL ? 'rtl' : 'ltr'}>
           {isTranslatingDescription ? (
             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
           ) : (
@@ -99,8 +100,13 @@ const DocumentDescription = React.memo(function DocumentDescription({
               onClick={handleToggleDescription}
               className="p-1.5 hover:bg-blue-50 rounded transition-colors"
               title={displayTranslatedDesc ? t('showOriginal') : t('translate')}
+              aria-label={displayTranslatedDesc ? t('showOriginal') : t('translate')}
             >
-              <Languages className={`w-4 h-4 ${displayTranslatedDesc ? 'text-slate-600' : 'text-blue-600'}`} />
+              <img
+                src="https://media.base44.com/images/public/69ef99e5583af6a64ca3772e/02bc69061_generated_84736192.png"
+                alt={displayTranslatedDesc ? t('showOriginal') : t('translate')}
+                className={`w-4 h-4 object-contain rounded-sm ${displayTranslatedDesc ? 'opacity-70' : 'opacity-100'}`}
+              />
             </button>
           )}
         </div>
