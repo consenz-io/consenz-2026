@@ -40,24 +40,29 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    enabled: isOpen,
-    staleTime: 60000,
-  });
+  const sectionIdsForDoc = useMemo(() => sections.map(s => s.id), [sections]);
+  const suggestionIdsForDoc = useMemo(() => suggestions.map(s => s.id), [suggestions]);
 
+  // Document-scoped reads — the modal used to download the entire Vote,
+  // Comment and UserPublicProfile tables every time it opened.
   const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
-    enabled: isOpen && suggestions.length > 0,
+    queryKey: ['suggestionVotes', documentId],
+    queryFn: () => suggestionIdsForDoc.length > 0
+      ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIdsForDoc } })
+      : Promise.resolve([]),
+    enabled: isOpen && suggestionIdsForDoc.length > 0,
     staleTime: 30000,
   });
 
   const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments'],
-    queryFn: () => base44.entities.Comment.list(),
-    enabled: isOpen,
+    queryKey: ['documentAllComments', documentId],
+    queryFn: () => {
+      const query = [{ rootEntityType: 'document', rootEntityId: documentId }];
+      if (sectionIdsForDoc.length > 0) query.push({ rootEntityType: 'section', rootEntityId: { $in: sectionIdsForDoc } });
+      if (suggestionIdsForDoc.length > 0) query.push({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIdsForDoc } });
+      return base44.entities.Comment.filter({ $or: query });
+    },
+    enabled: isOpen && !!documentId,
     staleTime: 30000,
   });
 
@@ -68,8 +73,6 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
     staleTime: 30000,
   });
 
-  const sectionIdsForDoc = useMemo(() => sections.map(s => s.id), [sections]);
-
   const { data: allSectionVotes = [] } = useQuery({
     queryKey: ['sectionVotes', documentId],
     queryFn: () => sectionIdsForDoc.length > 0
@@ -77,6 +80,25 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
       : Promise.resolve([]),
     enabled: isOpen && sectionIdsForDoc.length > 0,
     staleTime: 30000,
+  });
+
+  // Profiles of people who actually appear in this document (tens, not thousands)
+  const participantUserIds = useMemo(() => {
+    const ids = new Set();
+    suggestions.forEach(s => { if (s.created_by_id) ids.add(s.created_by_id); });
+    sections.forEach(s => { if (s.lastEditedBy) ids.add(s.lastEditedBy); });
+    allVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    allComments.forEach(c => { if (c.created_by_id) ids.add(c.created_by_id); });
+    allAgreements.forEach(a => { if (a.userId) ids.add(a.userId); });
+    allSectionVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    return Array.from(ids);
+  }, [suggestions, sections, allVotes, allComments, allAgreements, allSectionVotes]);
+
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ['contributorProfiles', documentId],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: participantUserIds } }),
+    enabled: isOpen && participantUserIds.length > 0,
+    staleTime: 60000,
   });
 
   const { contributors, totalCount, loading } = useMemo(() => {

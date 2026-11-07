@@ -5,66 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
-import { calculateContributorsFromData } from "./calculateContributors";
 
 const VotesNeededCounter = React.memo(function VotesNeededCounter({ suggestion, document, sectionId }) {
   const { t } = useLanguage();
 
-  // Fetch all data needed for dynamic contributor calculation
-  const { data: suggestions = [] } = useQuery({
-    queryKey: ['suggestions', document?.id],
-    queryFn: () => base44.entities.Suggestion.filter({ documentId: document.id }),
-    enabled: !!document?.id,
-    initialData: [],
-  });
-
-  const { data: allVotes = [] } = useQuery({
-    queryKey: ['allVotes'],
-    queryFn: () => base44.entities.Vote.list(),
-    initialData: [],
-  });
-
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['allUsers'],
-    queryFn: () => base44.entities.User.list(),
-    initialData: [],
-  });
-
-  const { data: allArguments = [] } = useQuery({
-    queryKey: ['allArguments'],
-    queryFn: () => base44.entities.Argument.list(),
-    initialData: [],
-  });
-
-  const { data: allComments = [] } = useQuery({
-    queryKey: ['allComments'],
-    queryFn: () => base44.entities.Comment.list(),
-    initialData: [],
-  });
-
-  const { data: sections = [] } = useQuery({
-    queryKey: ['sections', document?.id],
-    queryFn: () => base44.entities.Section.filter({ documentId: document.id }),
-    enabled: !!document?.id,
-    initialData: [],
-  });
-
-  // חישוב דינמי של מספר המשתתפים - בדיוק כמו ב-UnderstandingConsensus
-  const totalUsers = React.useMemo(() => {
-    if (!document) return 1;
-    const count = calculateContributorsFromData({
-      document,
-      suggestions,
-      allVotes,
-      allUsers,
-      allArguments,
-      allComments,
-      sections
-    });
-    return count > 0 ? count : 1;
-  }, [document, suggestions, allVotes, allUsers, allArguments, allComments, sections]);
+  // The participants count used by this badge comes from the document's stored
+  // threshold (document.threshold), which is refreshed server-side whenever a
+  // suggestion is accepted. No platform-wide voting/profile data is needed here —
+  // it used to be loaded once per suggestion card, once per render.
 
   // חישוב כמה הצבעות נדרשות
   const calculateVotesNeeded = () => {

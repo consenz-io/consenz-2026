@@ -39,10 +39,21 @@ export default function Messages() {
     refetchInterval: 20000,
   });
 
+  // Profiles of the people in this user's conversations only (was: every profile
+  // in the platform, refetched every minute)
+  const conversationUserIds = React.useMemo(() => {
+    const ids = new Set();
+    conversations.forEach((c) => (c.participants || []).forEach((id) => { if (id) ids.add(id); }));
+    return Array.from(ids);
+  }, [conversations]);
+
   const { data: profiles = [] } = useQuery({
-    queryKey: ["allProfiles"],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    staleTime: 60 * 1000,
+    queryKey: ["profilesForConversations", conversationUserIds.slice().sort().join(",")],
+    queryFn: () => conversationUserIds.length > 0
+      ? base44.entities.UserPublicProfile.filter({ userId: { $in: conversationUserIds } })
+      : Promise.resolve([]),
+    enabled: conversationUserIds.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: unreadMessages = [] } = useQuery({

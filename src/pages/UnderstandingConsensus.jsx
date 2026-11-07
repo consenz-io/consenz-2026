@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/LanguageContext";
 import PageHeader from "../components/PageHeader";
 import ConsensusGaugeAnimation from "@/components/document/ConsensusGaugeAnimation";
 import AcceptedSuggestionsConsensusList from "@/components/document/AcceptedSuggestionsConsensusList";
+import { calculateDocumentContributors } from "@/components/document/calculateContributors";
 import TranslatablePlatformText from "@/components/translation/TranslatablePlatformText";
 
 export default function UnderstandingConsensus() {
@@ -43,45 +44,15 @@ export default function UnderstandingConsensus() {
     staleTime: 30 * 1000
   });
 
-  // Reuse contributorsCount from DocumentView cache (same query key), fallback to fresh fetch
+  // Document-scoped participant count. calculateDocumentContributors fetches only
+  // this document's suggestions/sections/votes/comments/agreements and the profiles
+  // that appear in them — it used to download the entire Vote, Comment and
+  // UserPublicProfile tables and then scan them per vote.
   const { data: contributorsCount } = useQuery({
     queryKey: ['contributorsCount', documentId],
-    queryFn: async () => {
-      const [docSuggestions, docSections, allVotesRaw, publicProfilesRaw, allCommentsRaw, allAgreementsRaw] = await Promise.all([
-      base44.entities.Suggestion.filter({ documentId }),
-      base44.entities.Section.filter({ documentId }),
-      base44.entities.Vote.list(),
-      base44.entities.UserPublicProfile.list(),
-      base44.entities.Comment.list(),
-      base44.entities.DocumentAgreement.filter({ documentId })]
-      );
-      const contributorEmails = new Set();
-      const suggestionIds = new Set(docSuggestions.map((s) => s.id));
-      const sectionIds = new Set(docSections.map((s) => s.id));
-      allVotesRaw.forEach((v) => {
-        if (suggestionIds.has(v.suggestionId)) {
-          if (v.created_by) contributorEmails.add(v.created_by);
-          const profile = publicProfilesRaw.find((p) => p.userId === v.userId);
-          if (profile?.email) contributorEmails.add(profile.email);
-        }
-      });
-      allCommentsRaw.forEach((c) => {
-        if (!c.created_by) return;
-        if (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
-        if (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) contributorEmails.add(c.created_by);
-        if (c.rootEntityType === 'document' && c.rootEntityId === documentId) contributorEmails.add(c.created_by);
-      });
-      allAgreementsRaw.forEach((a) => {if (a.userEmail) contributorEmails.add(a.userEmail);});
-      const contributorsMap = new Map();
-      publicProfilesRaw.forEach((profile) => {
-        if (contributorEmails.has(profile.email) && profile.userId) {
-          contributorsMap.set(profile.userId, true);
-        }
-      });
-      return contributorsMap.size;
-    },
+    queryFn: () => calculateDocumentContributors(documentId),
     enabled: !!documentId,
-    staleTime: Infinity
+    staleTime: 5 * 60 * 1000
   });
 
   const consensuses = document?.consensuses || [];
