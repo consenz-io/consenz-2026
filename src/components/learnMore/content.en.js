@@ -157,8 +157,6 @@ const en = {
   points: {
     title: "Points: an incentive for quality, not a barrier",
     subtitle: "An optional system enabled per document. It rewards contributions the community supports and filters out hasty proposals.",
-    subtitleDetail:
-      "How it works: every new participant joins with 1,000 points. Publishing a proposal — a new section, an edit to an existing section or a topic rename — deducts its cost once, at the moment of publishing, and voting itself is always free and costs nothing. A proposal a document admin rejects returns its cost to the author, and what you spend comes back through contributions the community supports. These are participation points only — not money, and not a balance you can withdraw.",
     costsTitle: "Costs",
     costs: [
       { label: "Opening a new document", value: "1,001" },

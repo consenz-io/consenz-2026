@@ -44,14 +44,9 @@ function PointList({ title, items, tone, note, sign }) {
 export default function PointsEconomy({ c }) {
   return (
     <section className="mx-auto max-w-7xl px-6 py-14 md:py-16">
-      <div className="max-w-3xl">
+      <div className="max-w-2xl">
         <h2 className="text-3xl font-bold text-slate-900">{c.title}</h2>
         <p className="mt-2 text-slate-600">{c.subtitle}</p>
-        {c.subtitleDetail && (
-          <p className="mt-3 text-sm leading-relaxed text-slate-600 md:text-base">
-            {c.subtitleDetail}
-          </p>
-        )}
       </div>
 
       <div className="mt-8 grid gap-5 md:grid-cols-2">
