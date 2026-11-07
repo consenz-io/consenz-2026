@@ -10,6 +10,10 @@ const en = {
     note: "Proposals, arguments and votes — all visible, all recorded, all attached to the text.",
     cardLabel: "Example of an open proposal",
     cardTitle: "Amendment to section 2.3 — quarterly reporting",
+    cardDate: "04.05.2026",
+    cardTime: "15:05",
+    cardBody:
+      "The quarterly report will be submitted within 15 days of the quarter's end, published to all participants, and opened for discussion before approval.",
     cardPro: "For",
     cardCon: "Against",
     cardThreshold: "Support threshold",
