@@ -16,10 +16,10 @@ const LABELS = {
     rejected: "נדחתה ב",
     votingEnded: "ההצבעה הסתיימה ב",
     viewDetails: "לפרטי ההצעה",
-    newSection: "סעיף חדש",
-    editSection: "עריכת סעיף",
-    deleteSection: "מחיקת סעיף",
-    editSuggestion: "עריכת הצעה",
+    new_section: "הצעה לסעיף חדש",
+    edit_section: "הצעה לעריכת סעיף",
+    delete_section: "הצעה למחיקת סעיף",
+    edit_suggestion: "הצעה לעריכת הצעה",
     by: "על ידי",
   },
   ar: {
@@ -28,10 +28,10 @@ const LABELS = {
     rejected: "رُفض في",
     votingEnded: "انتهى التصويت في",
     viewDetails: "تفاصيل الاقتراح",
-    newSection: "قسم جديد",
-    editSection: "تعديل قسم",
-    deleteSection: "حذف قسم",
-    editSuggestion: "تعديل اقتراح",
+    new_section: "اقتراح قسم جديد",
+    edit_section: "اقتراح تعديل قسم",
+    delete_section: "اقتراح حذف قسم",
+    edit_suggestion: "اقتراح تعديل اقتراح",
     by: "بواسطة",
   },
   en: {
@@ -40,10 +40,10 @@ const LABELS = {
     rejected: "Rejected",
     votingEnded: "Voting ended",
     viewDetails: "View proposal details",
-    newSection: "New section",
-    editSection: "Edit section",
-    deleteSection: "Delete section",
-    editSuggestion: "Edit proposal",
+    new_section: "New section proposal",
+    edit_section: "Section edit proposal",
+    delete_section: "Section deletion proposal",
+    edit_suggestion: "Proposal edit",
     by: "by",
   },
 };
@@ -55,7 +55,7 @@ export default function RejectedSuggestionCard({ suggestion, documentId, documen
   const isRTL = language === 'he' || language === 'ar';
   const ForwardArrow = isRTL ? ArrowLeft : ArrowRight;
   const formatDate = (value) => (value ? parseUserDate(value).toLocaleDateString(LOCALES[language] || "en-US") : "");
-  const typeLabel = labels[suggestion.type] || suggestion.type;
+  const typeLabel = labels[suggestion.type] || (language === "he" ? "הצעה" : language === "ar" ? "اقتراح" : "Proposal");
   const detailUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}&documentId=${documentId}`;
 
   return (
