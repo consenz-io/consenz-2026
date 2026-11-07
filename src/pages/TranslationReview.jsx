@@ -10,6 +10,9 @@ import { Check, X, Loader2, Languages, ExternalLink } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import { toast } from "sonner";
 import moment from "moment";
+import { stripHtmlText } from "@/components/translation/stripHtmlText";
+import { useTranslationSuggestionContext, contextKey } from "@/components/translation/useTranslationSuggestionContext";
+import TranslationContextBlock from "@/components/translation/TranslationContextBlock";
 
 const LANGUAGE_LABELS = { en: "English", he: "עברית", ar: "العربية" };
 
@@ -109,6 +112,8 @@ export default function TranslationReview() {
     enabled: user?.role === "admin",
   });
 
+  const contextMap = useTranslationSuggestionContext(suggestions);
+
   const reviewMutation = useMutation({
     mutationFn: ({ id, action }) =>
       base44.functions.invoke("reviewTranslationSuggestion", { id, action }),
@@ -196,13 +201,23 @@ export default function TranslationReview() {
                     <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
                       {LANGUAGE_LABELS[item.targetLanguage] || item.targetLanguage}
                     </Badge>
-                    {item.sourceEntityType && item.scope === "content" && (
-                      <span className="text-xs text-slate-500">{item.sourceEntityType}</span>
-                    )}
                     <span className="text-xs text-slate-400 ms-auto">
                       {moment(item.created_date).format("DD/MM/YYYY HH:mm")}
                     </span>
                   </div>
+
+                  {item.scope === "content" && (
+                    <TranslationContextBlock
+                      context={
+                        contextMap[contextKey(item)] || {
+                          source: "content",
+                          targetKind: item.sourceEntityType,
+                          title: null,
+                        }
+                      }
+                      language={language}
+                    />
+                  )}
 
                   <div>
                     <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mb-1">
@@ -212,7 +227,7 @@ export default function TranslationReview() {
                       className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3 whitespace-pre-wrap line-through decoration-slate-300"
                       dir={item.targetLanguage === "en" ? "ltr" : "rtl"}
                     >
-                      {item.currentText}
+                      {stripHtmlText(item.currentText)}
                     </p>
                   </div>
 
@@ -224,7 +239,7 @@ export default function TranslationReview() {
                       className="text-sm text-slate-900 bg-emerald-50 border border-emerald-200 rounded-lg p-3 whitespace-pre-wrap"
                       dir={item.targetLanguage === "en" ? "ltr" : "rtl"}
                     >
-                      {item.proposedText}
+                      {stripHtmlText(item.proposedText)}
                     </p>
                   </div>
 
