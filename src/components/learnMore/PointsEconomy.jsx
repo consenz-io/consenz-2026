@@ -41,6 +41,36 @@ function PointList({ title, items, tone, note, sign }) {
   );
 }
 
+function PointsLogic({ c }) {
+  if (!c.principles) return null;
+
+  return (
+    <div className="mt-8 rounded-xl border border-blue-200 bg-blue-50/60 p-6 md:p-8">
+      <h3 className="text-lg font-semibold text-slate-900">{c.logicTitle}</h3>
+      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-700 md:text-base">
+        {c.logicIntro}
+      </p>
+
+      <ul className="mt-5 grid gap-4 md:grid-cols-3">
+        {c.principles.map((principle, index) => (
+          <li
+            key={principle.title}
+            className="rounded-lg border border-blue-200 bg-white p-4 shadow-sm"
+          >
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-indigo-500 text-xs font-bold text-white">
+              {index + 1}
+            </span>
+            <h4 className="mt-2.5 text-sm font-semibold text-slate-900">{principle.title}</h4>
+            <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{principle.text}</p>
+          </li>
+        ))}
+      </ul>
+
+      <p className="mt-5 text-sm font-medium leading-relaxed text-blue-900">{c.logicClosing}</p>
+    </div>
+  );
+}
+
 export default function PointsEconomy({ c }) {
   return (
     <section className="mx-auto max-w-7xl px-6 py-14 md:py-16">
@@ -49,7 +79,9 @@ export default function PointsEconomy({ c }) {
         <p className="mt-2 text-slate-600">{c.subtitle}</p>
       </div>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2">
+      <PointsLogic c={c} />
+
+      <div className="mt-6 grid gap-5 md:grid-cols-2">
         <PointList
           title={c.costsTitle}
           items={c.costs}

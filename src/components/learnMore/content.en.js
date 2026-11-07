@@ -157,6 +157,23 @@ const en = {
   points: {
     title: "Points: an incentive for quality, not a barrier",
     subtitle: "An optional system enabled per document. It rewards contributions the community supports and filters out hasty proposals.",
+    logicTitle: "The logic behind the numbers",
+    logicIntro: "Points are not a penalty. They put a small price on every action that asks to change the wording, and a reward on every action that moves the community toward agreement — so the community's attention goes where it advances the document.",
+    principles: [
+      {
+        title: "A small cost filters haste",
+        text: "Every proposal costs something, so a participant thinks twice before opening a third proposal on the same sentence. It blocks no one — the 1,000 starting points cover real participation — but it makes flooding expensive.",
+      },
+      {
+        title: "Noise is paid for by whoever makes it",
+        text: "In an open forum every message is free, so discussion fills with duplicates and abandoned proposals. When the cost sits with the proposer, a line appears between flooding and precision, and the community gets fewer proposals that are far more relevant.",
+      },
+      {
+        title: "Rewards follow those who build agreement",
+        text: "Points come back for support a proposal received, for a proposal that passes and for a vote that decided it; a comment that earns likes pays too. Whoever invests in wording and persuasion earns — not whoever simply writes the most.",
+      },
+    ],
+    logicClosing: "In short: fewer proposals, more support behind each one, and a discussion that moves toward agreed wording instead of circling itself.",
     costsTitle: "Costs",
     costs: [
       { label: "Opening a new document", value: "1,001" },
