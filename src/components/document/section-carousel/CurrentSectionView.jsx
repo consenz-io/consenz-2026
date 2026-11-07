@@ -139,6 +139,7 @@ const CurrentSectionView = React.memo(function CurrentSectionView({
             entityType={activeCommentEntity.entityType}
             entityId={activeCommentEntity.entityId}
             user={user}
+            documentId={document?.id}
             scrollToCommentId={conCommentScrollId}
           />
         </div>

@@ -267,6 +267,7 @@ const DeleteSectionSuggestionCard = React.memo(function DeleteSectionSuggestionC
               entityType="suggestion"
               entityId={suggestion.id}
               user={currentUser}
+              documentId={document?.id || suggestion.documentId}
             />
           </motion.div>
         )}

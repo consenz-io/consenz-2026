@@ -400,6 +400,7 @@ export default function SectionVersionCarousel({
         <SectionCommentsFooter
           group={group}
           sectionId={sectionId}
+          documentId={documentId}
           sectionComments={sectionComments}
           showSectionComments={showSectionComments}
           setShowSectionComments={setShowSectionComments}

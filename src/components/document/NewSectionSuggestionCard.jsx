@@ -455,7 +455,8 @@ const NewSectionSuggestionCard = React.memo(function NewSectionSuggestionCard({
           <CommentsSection
           entityType="suggestion"
           entityId={currentVersion.id}
-          user={user} />
+          user={user}
+          documentId={doc?.id || currentVersion.documentId} />
         
         </div>
       }

@@ -8,6 +8,7 @@ import CommentsSection from "./CommentsSection";
 export default function SectionCommentsFooter({
   group,
   sectionId,
+  documentId,
   sectionComments,
   showSectionComments,
   setShowSectionComments,
@@ -37,6 +38,7 @@ export default function SectionCommentsFooter({
             entityType="section"
             entityId={sectionId}
             user={user}
+            documentId={documentId}
           />
         </div>
       )}
