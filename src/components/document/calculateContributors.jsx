@@ -5,8 +5,12 @@ import { base44 } from "@/api/base44Client";
  * Uses userId as the primary dedup key (always present on Vote/SectionVote records).
  * Falls back to email for records that only have created_by (comments, suggestion creators).
  */
-export async function calculateDocumentContributors(documentId, options = {}) {
-  const { includeSectionVotes = true, includeAgreements = true } = options;
+/**
+ * The single source of truth for "who participates in this document".
+ * Returns both the count and the roster, from document-scoped queries only.
+ */
+export async function getDocumentParticipants(documentId, options = {}) {
+  const { includeSectionVotes = true, includeAgreements = true, language = 'en' } = options;
   try {
     // Stage 1: fetch document-specific suggestions, sections, and agreements
     const [suggestions, sections, documentAgreements] = await Promise.all([
@@ -33,7 +37,7 @@ export async function calculateDocumentContributors(documentId, options = {}) {
         ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIdArr } })
         : Promise.resolve([]),
       base44.entities.Comment.filter({ $or: commentQuery }),
-      sectionIdArr.length > 0
+      includeSectionVotes && sectionIdArr.length > 0
         ? base44.entities.SectionVote.filter({ sectionId: { $in: sectionIdArr } })
         : Promise.resolve([]),
     ]);
@@ -112,11 +116,47 @@ export async function calculateDocumentContributors(documentId, options = {}) {
       else if (s.created_by) addByEmail(s.created_by);
     });
 
-    return Math.max(1, uniqueParticipants.size);
+    // Collapse: drop the email key of anyone already counted by userId
+    publicProfiles.forEach(p => {
+      if (p.userId && p.email && uniqueParticipants.has(p.userId)) {
+        uniqueParticipants.delete(p.email);
+      }
+    });
+
+    const profileByUserId = new Map();
+    const profileByEmail = new Map();
+    publicProfiles.forEach(p => {
+      if (p.userId) profileByUserId.set(p.userId, p);
+      if (p.email) profileByEmail.set(p.email, p);
+    });
+
+    let placeholder = 0;
+    const participants = Array.from(uniqueParticipants).map(key => {
+      const profile = profileByUserId.get(key) || profileByEmail.get(key);
+      if (profile) {
+        return { id: profile.userId || key, email: profile.email || '', full_name: profile.fullName || 'User' };
+      }
+      if (typeof key === 'string' && key.includes('@')) {
+        return { id: key, email: key, full_name: key.split('@')[0] };
+      }
+      placeholder += 1;
+      return {
+        id: key,
+        email: '',
+        full_name: language === 'he' ? `משתתף ${placeholder}` : language === 'ar' ? `مشارك ${placeholder}` : `Participant ${placeholder}`,
+      };
+    });
+
+    return { count: Math.max(1, uniqueParticipants.size), participants };
   } catch (error) {
     console.error('[CALCULATE CONTRIBUTORS ERROR]', error);
-    return 1;
+    return { count: 1, participants: [] };
   }
+}
+
+export async function calculateDocumentContributors(documentId, options = {}) {
+  const { count } = await getDocumentParticipants(documentId, options);
+  return count;
 }
 
 /**
@@ -205,4 +245,75 @@ export function calculateContributorsFromData({
   });
 
   return Math.max(1, uniqueParticipants.size);
+}
+
+/**
+ * One pass over already-loaded data → Map<documentId, contributorCount>.
+ *
+ * Calling calculateContributorsFromData per document card re-scans every vote,
+ * comment and profile for each card (O(documents × records)). This builds the
+ * matching maps once and does a single pass, so a list of N documents costs O(N).
+ * Same participant rules as calculateContributorsFromData.
+ */
+export function calculateContributorsByDocument({
+  documents = [],
+  suggestions = [],
+  votes = [],
+  comments = [],
+  sections = [],
+  sectionVotes = [],
+  profiles = [],
+} = {}) {
+  const emailToUserId = new Map();
+  const emailByUserId = new Map();
+  profiles.forEach(p => {
+    if (!p.userId) return;
+    if (p.email) {
+      emailToUserId.set(p.email, p.userId);
+      emailByUserId.set(p.userId, p.email);
+    }
+  });
+
+  const docIdBySuggestion = new Map();
+  suggestions.forEach(s => { if (s.id && s.documentId) docIdBySuggestion.set(s.id, s.documentId); });
+
+  const docIdBySection = new Map();
+  sections.forEach(s => { if (s.id && s.documentId) docIdBySection.set(s.id, s.documentId); });
+
+  const keysByDoc = new Map();
+  const addKey = (docId, key) => {
+    if (!docId || !key) return;
+    let set = keysByDoc.get(docId);
+    if (!set) { set = new Set(); keysByDoc.set(docId, set); }
+    set.add(key);
+  };
+  const resolveKey = (userId, email) =>
+    userId || (email ? (emailToUserId.get(email) || email) : null);
+
+  suggestions.forEach(s => addKey(s.documentId, resolveKey(s.created_by_id, s.created_by)));
+
+  votes.forEach(v => addKey(docIdBySuggestion.get(v.suggestionId), resolveKey(v.userId, v.created_by)));
+
+  comments.forEach(c => {
+    const docId =
+      c.rootEntityType === 'document' ? c.rootEntityId :
+      c.rootEntityType === 'suggestion' ? docIdBySuggestion.get(c.rootEntityId) :
+      c.rootEntityType === 'section' ? docIdBySection.get(c.rootEntityId) :
+      null;
+    addKey(docId, resolveKey(c.created_by_id, c.created_by));
+  });
+
+  sectionVotes.forEach(v => addKey(docIdBySection.get(v.sectionId), resolveKey(v.userId, v.created_by)));
+
+  const result = new Map();
+  documents.forEach(doc => {
+    const set = keysByDoc.get(doc.id);
+    if (!set) { result.set(doc.id, 1); return; }
+    for (const key of Array.from(set)) {
+      const email = emailByUserId.get(key);
+      if (email && set.has(email)) set.delete(email);
+    }
+    result.set(doc.id, Math.max(1, set.size));
+  });
+  return result;
 }

@@ -11,9 +11,8 @@ import MyDocumentCard from "@/components/myDocuments/MyDocumentCard";
 export default function MyDocuments() {
   const { t, language } = useLanguage();
   const {
-    user, myDocuments, suggestions, allSuggestions, allVotes,
-    allUsers, allComments, allSections, allSectionVotes, isLoading, getUnvotedCount,
-    myVotesCountByDoc,
+    user, myDocuments, suggestions, isLoading, getUnvotedCount,
+    myVotesCountByDoc, contributorsByDoc,
   } = useMyDocumentsData();
 
   if (!user) {
@@ -69,12 +68,7 @@ export default function MyDocuments() {
                 mySuggestionsCount={suggestions.filter(s => s.documentId === doc.id).length}
                 myVotesCount={myVotesCountByDoc.get(doc.id) ?? 0}
                 unvotedCount={getUnvotedCount(doc.id)}
-                allSuggestions={allSuggestions}
-                allVotes={allVotes}
-                allUsers={allUsers}
-                allComments={allComments}
-                allSections={allSections}
-                allSectionVotes={allSectionVotes}
+                contributorsCount={contributorsByDoc.get(doc.id) ?? 1}
               />
             ))}
           </div>

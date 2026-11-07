@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
-import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { getDocumentParticipants } from "./calculateContributors";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import {
@@ -18,180 +18,17 @@ export default function ContributorsModal({ isOpen, onClose, documentId }) {
   const { t, isRTL, language } = useLanguage();
   const [searchQuery, setSearchQuery] = React.useState("");
 
-  // Fetch all data in parallel with caching
-  const { data: document } = useQuery({
-    queryKey: ['document', documentId],
-    queryFn: () => base44.entities.Document.filter({ id: documentId }).then(d => d[0]),
+  // One document-scoped call returns both the count and the roster — the modal
+  // used to run seven queries and rebuild the participant list itself.
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ['documentParticipants', documentId, language],
+    queryFn: () => getDocumentParticipants(documentId, { language }),
     enabled: isOpen && !!documentId,
-    staleTime: 30000,
-  });
-
-  const { data: suggestions = [] } = useQuery({
-    queryKey: ['suggestions', documentId],
-    queryFn: () => base44.entities.Suggestion.filter({ documentId }),
-    enabled: isOpen && !!documentId,
-    staleTime: 30000,
-  });
-
-  const { data: sections = [] } = useQuery({
-    queryKey: ['sections', documentId],
-    queryFn: () => base44.entities.Section.filter({ documentId }),
-    enabled: isOpen && !!documentId,
-    staleTime: 30000,
-  });
-
-  const sectionIdsForDoc = useMemo(() => sections.map(s => s.id), [sections]);
-  const suggestionIdsForDoc = useMemo(() => suggestions.map(s => s.id), [suggestions]);
-
-  // Document-scoped reads — the modal used to download the entire Vote,
-  // Comment and UserPublicProfile tables every time it opened.
-  const { data: allVotes = [] } = useQuery({
-    queryKey: ['suggestionVotes', documentId],
-    queryFn: () => suggestionIdsForDoc.length > 0
-      ? base44.entities.Vote.filter({ suggestionId: { $in: suggestionIdsForDoc } })
-      : Promise.resolve([]),
-    enabled: isOpen && suggestionIdsForDoc.length > 0,
-    staleTime: 30000,
-  });
-
-  const { data: allComments = [] } = useQuery({
-    queryKey: ['documentAllComments', documentId],
-    queryFn: () => {
-      const query = [{ rootEntityType: 'document', rootEntityId: documentId }];
-      if (sectionIdsForDoc.length > 0) query.push({ rootEntityType: 'section', rootEntityId: { $in: sectionIdsForDoc } });
-      if (suggestionIdsForDoc.length > 0) query.push({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIdsForDoc } });
-      return base44.entities.Comment.filter({ $or: query });
-    },
-    enabled: isOpen && !!documentId,
-    staleTime: 30000,
-  });
-
-  const { data: allAgreements = [] } = useQuery({
-    queryKey: ['documentAgreements', documentId],
-    queryFn: () => base44.entities.DocumentAgreement.filter({ documentId }),
-    enabled: isOpen && !!documentId,
-    staleTime: 30000,
-  });
-
-  const { data: allSectionVotes = [] } = useQuery({
-    queryKey: ['sectionVotes', documentId],
-    queryFn: () => sectionIdsForDoc.length > 0
-      ? base44.entities.SectionVote.filter({ sectionId: { $in: sectionIdsForDoc } })
-      : Promise.resolve([]),
-    enabled: isOpen && sectionIdsForDoc.length > 0,
-    staleTime: 30000,
-  });
-
-  // Profiles of people who actually appear in this document (tens, not thousands)
-  const participantUserIds = useMemo(() => {
-    const ids = new Set();
-    suggestions.forEach(s => { if (s.created_by_id) ids.add(s.created_by_id); });
-    sections.forEach(s => { if (s.lastEditedBy) ids.add(s.lastEditedBy); });
-    allVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
-    allComments.forEach(c => { if (c.created_by_id) ids.add(c.created_by_id); });
-    allAgreements.forEach(a => { if (a.userId) ids.add(a.userId); });
-    allSectionVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
-    return Array.from(ids);
-  }, [suggestions, sections, allVotes, allComments, allAgreements, allSectionVotes]);
-
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['contributorProfiles', documentId],
-    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: participantUserIds } }),
-    enabled: isOpen && participantUserIds.length > 0,
     staleTime: 60000,
   });
 
-  const { contributors, totalCount, loading } = useMemo(() => {
-    if (!document) {
-      return { contributors: [], totalCount: 0, loading: true };
-    }
-
-    // Use userId as primary dedup key (same fix as DocumentView / calculateContributorsFromData).
-    // This ensures users without a UserPublicProfile are still counted.
-    const emailToUserId = new Map();
-    publicProfiles.forEach(p => { if (p.email && p.userId) emailToUserId.set(p.email, p.userId); });
-
-    const uniqueParticipants = new Set(); // userIds (primary) + unresolved emails
-    const addByKey = (userId, email) => {
-      if (userId) uniqueParticipants.add(userId);
-      else if (email) { const uid = emailToUserId.get(email); uniqueParticipants.add(uid || email); }
-    };
-
-    const suggestionIds = new Set(suggestions.map(s => s.id));
-    const sectionIds = new Set(sections.map(s => s.id));
-
-    // 1. Voters on suggestions
-    allVotes.forEach(v => {
-      if (suggestionIds.has(v.suggestionId)) {
-        addByKey(v.userId, v.created_by);
-      }
-    });
-
-    // 2-4. Commenters on suggestions, sections, and document
-    allComments.forEach(c => {
-      if (!c.created_by) return;
-      if (
-        (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
-        (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
-        (c.rootEntityType === 'document' && c.rootEntityId === documentId)
-      ) {
-        addByKey(c.created_by_id, c.created_by);
-      }
-    });
-
-    // 5. Signers
-    allAgreements.forEach(a => { addByKey(a.userId, a.userEmail); });
-
-    // 6. Voters on sections
-    allSectionVotes.forEach(v => { addByKey(v.userId, v.created_by); });
-
-    // 7. Suggestion creators
-    suggestions.forEach(s => { addByKey(s.created_by_id, s.created_by); });
-
-    // Collapse: if a user's userId is already counted, remove their email key too
-    // (prevents double-count when email-only records didn't resolve to userId)
-    publicProfiles.forEach(p => {
-      if (p.userId && p.email && uniqueParticipants.has(p.userId)) {
-        uniqueParticipants.delete(p.email);
-      }
-    });
-
-    // Build contributors list — include ALL participants so list count == counter count.
-    // Users without a profile get a fallback display name.
-    const profileByUserId = new Map();
-    publicProfiles.forEach(p => { if (p.userId) profileByUserId.set(p.userId, p); });
-    const profileByEmail = new Map();
-    publicProfiles.forEach(p => { if (p.email) profileByEmail.set(p.email, p); });
-
-    const contributorsMap = new Map();
-    let idx = 0;
-    for (const key of uniqueParticipants) {
-      const profile = profileByUserId.get(key) || profileByEmail.get(key);
-      if (profile) {
-        contributorsMap.set(profile.userId, {
-          id: profile.userId,
-          email: profile.email,
-          full_name: profile.fullName || 'User',
-        });
-      } else if (typeof key === 'string' && key.includes('@')) {
-        contributorsMap.set(key, {
-          id: key,
-          email: key,
-          full_name: key.split('@')[0],
-        });
-      } else {
-        // User with only a userId and no profile — show generic placeholder
-        idx += 1;
-        contributorsMap.set(key, {
-          id: key,
-          email: '',
-          full_name: language === 'he' ? `משתתף ${idx}` : language === 'ar' ? `مشارك ${idx}` : `Participant ${idx}`,
-        });
-      }
-    }
-
-    return { contributors: Array.from(contributorsMap.values()), totalCount: uniqueParticipants.size, loading: false };
-  }, [document, suggestions, sections, publicProfiles, allVotes, allComments, allAgreements, allSectionVotes, documentId, language]);
+  const contributors = data?.participants || [];
+  const totalCount = data?.count || 0;
 
   const filteredContributors = useMemo(() => {
     if (!searchQuery || !contributors) return contributors || [];

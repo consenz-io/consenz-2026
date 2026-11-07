@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { calculateContributorsByDocument } from "@/components/document/calculateContributors";
 
 export function useMyDocumentsData() {
   const { data: user } = useQuery({
@@ -82,13 +83,6 @@ export function useMyDocumentsData() {
     staleTime: 2 * 60 * 1000,
   });
 
-  const { data: allUsers = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000,
-  });
-
   const { data: allSections = [] } = useQuery({
     queryKey: ['allSections', myDocumentIdsKey],
     queryFn: () => myDocumentIds.length > 0
@@ -125,6 +119,25 @@ export function useMyDocumentsData() {
     },
     enabled: !!user?.id && myDocumentIds.length > 0,
     staleTime: 2 * 60 * 1000,
+  });
+
+  // Only profiles of people who appear in these documents (was every profile
+  // in the platform, re-scanned by every card on the page).
+  const profileUserIds = useMemo(() => {
+    const ids = new Set();
+    allSuggestions.forEach(s => { if (s.created_by_id) ids.add(s.created_by_id); });
+    allVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    allComments.forEach(c => { if (c.created_by_id) ids.add(c.created_by_id); });
+    allSections.forEach(s => { if (s.lastEditedBy) ids.add(s.lastEditedBy); });
+    allSectionVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    return Array.from(ids).sort();
+  }, [allSuggestions, allVotes, allComments, allSections, allSectionVotes]);
+
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['myDocsProfiles', profileUserIds.join(',')],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: profileUserIds } }),
+    enabled: !!user?.id && profileUserIds.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Derive the full set of my documents — myDocumentIds already includes voted doc IDs
@@ -168,9 +181,21 @@ export function useMyDocumentsData() {
 
   const getUnvotedCount = useCallback((docId) => unvotedByDoc.get(docId) ?? 0, [unvotedByDoc]);
 
+  // One pass for every card — was calculateContributorsFromData per document card.
+  const contributorsByDoc = useMemo(() => calculateContributorsByDocument({
+    documents: myDocuments,
+    suggestions: allSuggestions,
+    votes: allVotes,
+    comments: allComments,
+    sections: allSections,
+    sectionVotes: allSectionVotes,
+    profiles: allUsers,
+  }), [myDocuments, allSuggestions, allVotes, allComments, allSections, allSectionVotes, allUsers]);
+
   return {
     user,
     myDocuments,
+    contributorsByDoc,
     suggestions,
     allSuggestions,
     allVotes,

@@ -5,11 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Users, TrendingUp, Languages, Loader2, Bell } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
-import { calculateContributorsFromData } from "@/components/document/calculateContributors";
 import { base44 } from "@/api/base44Client";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 
-export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, unvotedCount, allSuggestions, allVotes, allUsers, allComments, allSections, allSectionVotes }) {
+export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, unvotedCount, contributorsCount = 1 }) {
   const { t, language } = useLanguage();
   const [translatedTitle, setTranslatedTitle] = useState(null);
   const [translating, setTranslating] = useState(false);
@@ -34,22 +33,6 @@ export default function MyDocumentCard({ doc, mySuggestionsCount, myVotesCount, 
       setTranslating(false);
     }
   };
-
-  const docSuggestions = useMemo(() => allSuggestions.filter(s => s.documentId === doc.id), [allSuggestions, doc.id]);
-  const docSections = useMemo(() => allSections.filter(s => s.documentId === doc.id), [allSections, doc.id]);
-
-  const docSectionIds = useMemo(() => new Set(docSections.map(s => s.id)), [docSections]);
-  const docSectionVotes = useMemo(() => allSectionVotes.filter(v => docSectionIds.has(v.sectionId)), [allSectionVotes, docSectionIds]);
-
-  const contributorsCount = useMemo(() => calculateContributorsFromData({
-    document: doc,
-    suggestions: docSuggestions,
-    allVotes,
-    allUsers,
-    allComments,
-    sections: docSections,
-    allSectionVotes: docSectionVotes,
-  }), [doc, docSuggestions, allVotes, allUsers, allComments, docSections, docSectionVotes]);
 
   const consensusDisplay = useMemo(() => {
     const consensuses = doc.consensuses || [];

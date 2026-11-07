@@ -1,6 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { notifySuggestionStatusChange } from "../notifications/createNotification";
-import { calculateContributorsFromData } from "./calculateContributors";
+import { calculateDocumentContributors } from "./calculateContributors";
 
 const detectLanguage = (text) => {
   const hebrewPattern = /[\u0590-\u05FF]/;
@@ -27,25 +27,13 @@ export async function checkSuggestionConsensus(suggestion, document) {
   const conVotes = suggestion.conVotes || 0;
   
   // חישוב דינמי של מספר המשתתפים
-  const [suggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
-    base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
-    base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
-    base44.entities.Section.filter({ documentId: document.id })
-  ]);
-  
-  const totalUsers = calculateContributorsFromData({
-    document,
-    suggestions,
-    allVotes,
-    allUsers: publicProfiles,
-    allArguments,
-    allComments,
-    sections
+  // Document-scoped participant count — used to be every vote, comment, argument
+  // and profile in the whole platform for a single number.
+  const totalUsers = await calculateDocumentContributors(document.id, {
+    includeSectionVotes: false,
+    includeAgreements: false,
   }) || 1;
-  
+
   console.log('[CONSENSUS CHECK] Vote counts:');
   console.log('[CONSENSUS CHECK] - Pro votes:', proVotes);
   console.log('[CONSENSUS CHECK] - Con votes:', conVotes);
@@ -165,25 +153,12 @@ async function _disabled_autoAcceptSuggestion(suggestion, userId, document) {
   console.log('[AUTO-ACCEPT] - Consensus (delta):', consensus);
   
   // חישוב דינמי של מספר המשתתפים
-  const [allSuggestions, allVotes, publicProfiles, allArguments, allComments, allSections] = await Promise.all([
-    base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
-    base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
-    base44.entities.Section.filter({ documentId: document.id })
-  ]);
-  
-  const totalUsers = calculateContributorsFromData({
-    document,
-    suggestions: allSuggestions,
-    allVotes,
-    allUsers: publicProfiles,
-    allArguments,
-    allComments,
-    sections: allSections
+  // Document-scoped participant count (see checkSuggestionConsensus)
+  const totalUsers = await calculateDocumentContributors(document.id, {
+    includeSectionVotes: false,
+    includeAgreements: false,
   }) || 1;
-  
+
   console.log('[AUTO-ACCEPT] Calculated totalUsers:', totalUsers);
   
   // עדכון מד הקונצנזוס עבור כל סוגי ההצעות (edit_section, new_section, delete_section)
@@ -1034,25 +1009,12 @@ export async function checkTopicEditConsensus(suggestion, document) {
   const conVotes = suggestion.conVotes || 0;
   
   // חישוב דינמי של מספר המשתתפים
-  const [suggestions, allVotes, publicProfiles, allArguments, allComments, sections] = await Promise.all([
-    base44.entities.Suggestion.filter({ documentId: document.id }),
-    base44.entities.Vote.list(),
-    base44.entities.UserPublicProfile.list(),
-    base44.entities.Argument.list(),
-    base44.entities.Comment.list(),
-    base44.entities.Section.filter({ documentId: document.id })
-  ]);
-  
-  const totalUsers = calculateContributorsFromData({
-    document,
-    suggestions,
-    allVotes,
-    allUsers: publicProfiles,
-    allArguments,
-    allComments,
-    sections
+  // Document-scoped participant count (see checkSuggestionConsensus)
+  const totalUsers = await calculateDocumentContributors(document.id, {
+    includeSectionVotes: false,
+    includeAgreements: false,
   }) || 1;
-  
+
   // חישוב threshold דינמי על בסיס consensuses של המסמך - זהה לחישוב של הצעות סעיפים
   let threshold;
   const consensuses = document.consensuses || [];
