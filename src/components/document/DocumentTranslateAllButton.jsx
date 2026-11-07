@@ -7,8 +7,8 @@ import { useBatchTranslateAll } from "./hooks/useBatchTranslateAll";
  * Must be rendered inside a TranslationProvider so useBatchTranslateAll
  * can access setGlobalShowTranslated / setIsTranslatingAll from context.
  */
-export default function DocumentTranslateAllButton({ document, topics, sections, suggestions, comments, className }) {
-  const handleTranslateAll = useBatchTranslateAll({ document, topics, sections, suggestions, comments });
+export default function DocumentTranslateAllButton({ document, topics, sections, className }) {
+  const handleTranslateAll = useBatchTranslateAll({ document, topics, sections });
   return (
     <TranslateAllButton
       document={document}

@@ -12,9 +12,7 @@ const detectLanguage = (text) => {
   return 'en';
 };
 
-// Must match MAX_UNITS in batchTranslateVersions — a larger chunk is rejected
-// with 400 and no unit gets translated.
-const MAX_UNITS_PER_BATCH = 20;
+const MAX_UNITS_PER_BATCH = 100;
 
 /**
  * Builds a handler that pre-populates React Query translation cache for ALL
@@ -32,7 +30,7 @@ const MAX_UNITS_PER_BATCH = 20;
  * @param {array}  params.sections  - Section records (needs id, content, originalLanguage)
  * @returns {function} async handler — call when "Translate All" is activated
  */
-export function useBatchTranslateAll({ document, topics, sections, suggestions, comments }) {
+export function useBatchTranslateAll({ document, topics, sections }) {
   const { language: targetLanguage } = useLanguage();
   const queryClient = useQueryClient();
   const { setGlobalShowTranslated, setIsTranslatingAll } = useDocumentTranslation();
@@ -101,59 +99,8 @@ export function useBatchTranslateAll({ document, topics, sections, suggestions, 
       }
     }
 
-    // Suggestion cards (DraggableSuggestionCard / NewSectionSuggestionCard /
-    // SuggestionSidebar): proposed content and explanation.
-    for (const s of suggestions || []) {
-      if (s.status && s.status !== 'pending' && s.status !== 'discussion') continue;
-      // Mirrors TranslatableContent's source-language resolution
-      const suggestionLanguage =
-        s.createdByLanguage || s.originalLanguage || detectLanguage(s.newContent || s.explanation || '');
-      if (s.newContent) {
-        units.push({
-          sourceEntityType: 'suggestion',
-          sourceEntityId: s.id,
-          sourceField: 'newContent',
-          content: s.newContent,
-          isHtml: true,
-          sourceLanguage: suggestionLanguage,
-        });
-      }
-      if (s.explanation && typeof s.explanation === 'string') {
-        units.push({
-          sourceEntityType: 'suggestion',
-          sourceEntityId: s.id,
-          sourceField: 'explanation',
-          content: s.explanation,
-          isHtml: true,
-          sourceLanguage: suggestionLanguage,
-        });
-      }
-    }
-
-    // Comments (suggestion sidebar + document discussion thread)
-    for (const c of comments || []) {
-      if (!c.content) continue;
-      units.push({
-        sourceEntityType: 'comment',
-        sourceEntityId: c.id,
-        sourceField: 'content',
-        content: c.content,
-        isHtml: true,
-        sourceLanguage: c.originalLanguage || detectLanguage(c.content),
-      });
-    }
-
-    // Deduplicate — the same unit can appear in more than one rendered place
-    const seen = new Set();
-    const uniqueUnits = units.filter(u => {
-      const key = `${u.sourceEntityType}:${u.sourceEntityId}:${u.sourceField}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
     // Only units whose source language differs from the target need translation
-    const translatable = uniqueUnits.filter(u => u.sourceLanguage !== targetLanguage);
+    const translatable = units.filter(u => u.sourceLanguage !== targetLanguage);
 
     if (translatable.length === 0) {
       setGlobalShowTranslated(true);
@@ -163,22 +110,17 @@ export function useBatchTranslateAll({ document, topics, sections, suggestions, 
     setIsTranslatingAll(true);
 
     try {
-      // Chunk to respect the backend MAX_UNITS limit
+      // Chunk to respect the backend MAX_UNITS limit (100)
       const allResults = [];
       for (let i = 0; i < translatable.length; i += MAX_UNITS_PER_BATCH) {
         const chunk = translatable.slice(i, i + MAX_UNITS_PER_BATCH);
-        try {
-          const result = await base44.functions.invoke('batchTranslateVersions', {
-            documentId: document.id,
-            targetLanguage,
-            units: chunk,
-          });
-          allResults.push(...(result.data?.results || []));
-        } catch (chunkErr) {
-          // One failed chunk (e.g. rate limit) must not abort the rest —
-          // the per-unit hooks translate anything left out of the cache.
-          console.error('Batch translation chunk failed:', chunkErr);
-        }
+        const result = await base44.functions.invoke('batchTranslateVersions', {
+          documentId: document.id,
+          targetLanguage,
+          units: chunk,
+        });
+        const chunkResults = result.data?.results || [];
+        allResults.push(...chunkResults);
       }
 
       // Build a lookup from the original units so we can hash the content
@@ -215,5 +157,5 @@ export function useBatchTranslateAll({ document, topics, sections, suggestions, 
     } finally {
       setIsTranslatingAll(false);
     }
-  }, [document, topics, sections, suggestions, comments, targetLanguage, queryClient, setGlobalShowTranslated, setIsTranslatingAll]);
+  }, [document, topics, sections, targetLanguage, queryClient, setGlobalShowTranslated, setIsTranslatingAll]);
 }

@@ -16,26 +16,31 @@ const MAX_CONTENT_LENGTH = 20000;
 const MAX_UNITS = 20;
 
 // Per-user rate limiter — prevents unmetered LLM credit consumption via batch.
-// Counted in UNITS, not calls: a large document needs several sequential
-// chunks (MAX_UNITS each) to translate every visible unit, and a call-based
-// cap would throttle that halfway through. 200 units/minute still bounds cost.
+// 2 batch calls per minute per user (each batch can translate up to 20 units).
+// Caps at 40 translations/minute — fast for real use, far less abusable.
 const batchRateLimiter = new Map();
-const BATCH_UNIT_LIMIT = 200;
+const BATCH_RATE_LIMIT = 2;
 const BATCH_WINDOW_MS = 60000;
 
-function checkBatchRateLimit(userId: string, unitCount: number) {
+function checkBatchRateLimit(userId: string) {
   const now = Date.now();
   const userKey = `batchTranslate-${userId}`;
-  const record = batchRateLimiter.get(userKey);
-  if (!record || now >= record.resetAt) {
-    batchRateLimiter.set(userKey, { units: unitCount, resetAt: now + BATCH_WINDOW_MS });
+  if (!batchRateLimiter.has(userKey)) {
+    batchRateLimiter.set(userKey, { count: 1, resetAt: now + BATCH_WINDOW_MS });
     return { allowed: true };
   }
-  if (record.units + unitCount > BATCH_UNIT_LIMIT) {
+  const record = batchRateLimiter.get(userKey);
+  if (now >= record.resetAt) {
+    record.count = 1;
+    record.resetAt = now + BATCH_WINDOW_MS;
+    batchRateLimiter.set(userKey, record);
+    return { allowed: true };
+  }
+  record.count++;
+  batchRateLimiter.set(userKey, record);
+  if (record.count > BATCH_RATE_LIMIT) {
     return { allowed: false, remainingSeconds: Math.ceil((record.resetAt - now) / 1000) };
   }
-  record.units += unitCount;
-  batchRateLimiter.set(userKey, record);
   return { allowed: true };
 }
 
@@ -61,6 +66,14 @@ export default async function (req: Request): Promise<Response> {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
+    const rateLimitCheck = checkBatchRateLimit(user.id);
+    if (!rateLimitCheck.allowed) {
+      return Response.json(
+        { error: "Rate limit exceeded", remainingSeconds: rateLimitCheck.remainingSeconds },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const { documentId, targetLanguage, units } = body;
 
@@ -72,14 +85,6 @@ export default async function (req: Request): Promise<Response> {
       return Response.json({ error: "Missing or empty units array" }, { status: 400 });
     if (units.length > MAX_UNITS)
       return Response.json({ error: `Too many units (max ${MAX_UNITS} per batch)` }, { status: 400 });
-
-    const rateLimitCheck = checkBatchRateLimit(user.id, units.length);
-    if (!rateLimitCheck.allowed) {
-      return Response.json(
-        { error: "Rate limit exceeded", remainingSeconds: rateLimitCheck.remainingSeconds },
-        { status: 429 }
-      );
-    }
 
     // Verify document exists
     const document = await base44.asServiceRole.entities.Document.filter({
