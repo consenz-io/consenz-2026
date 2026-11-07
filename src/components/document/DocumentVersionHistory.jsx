@@ -114,7 +114,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
             entityType="suggestion"
             entityId={suggestionId}
             user={user}
-            documentId={documentId}
+            documentId={suggestion.documentId}
           />
         </div>
       )}
