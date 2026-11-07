@@ -2,35 +2,25 @@ import { learnMoreIcon } from "./iconMap";
 
 export default function ValuePillars({ c }) {
   return (
-    <section className="mx-auto max-w-6xl px-5 py-14 md:px-8 md:py-20">
+    <section className="mx-auto max-w-7xl px-6 py-14 md:py-16">
       <div className="max-w-2xl">
-        <h2
-          className="text-2xl font-bold tracking-tight text-foreground md:text-4xl"
-          style={{ fontFamily: "var(--font-display)" }}
-        >
-          {c.title}
-        </h2>
-        <p className="mt-3 text-base leading-relaxed text-muted-foreground">{c.subtitle}</p>
+        <h2 className="text-3xl font-bold text-slate-900">{c.title}</h2>
+        <p className="mt-2 text-slate-600">{c.subtitle}</p>
       </div>
 
-      <div className="mt-9 grid gap-5 md:grid-cols-3">
-        {c.items.map((item, index) => {
+      <div className="mt-8 grid gap-5 md:grid-cols-3">
+        {c.items.map((item) => {
           const Icon = learnMoreIcon[item.icon];
           return (
             <div
               key={item.title}
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-lg"
+              className="rounded-xl border border-slate-200 bg-white/80 p-6 shadow-sm backdrop-blur-sm transition-all hover:border-blue-300 hover:shadow-md"
             >
-              <span className="absolute end-5 top-4 text-5xl font-bold text-slate-100 transition-colors group-hover:text-blue-50">
-                {index + 1}
-              </span>
-              <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-100">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 text-white">
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </div>
-              <h3 className="relative mt-5 text-lg font-semibold text-foreground">{item.title}</h3>
-              <p className="relative mt-2 text-sm leading-relaxed text-muted-foreground">
-                {item.text}
-              </p>
+              <h3 className="mt-4 text-lg font-semibold text-slate-900">{item.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.text}</p>
             </div>
           );
         })}

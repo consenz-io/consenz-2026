@@ -28,7 +28,10 @@ export default function LearnMore() {
   }, [location.hash]);
 
   return (
-    <div className="min-h-screen bg-background" dir={isRTL ? "rtl" : "ltr"}>
+    <div
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
+      dir={isRTL ? "rtl" : "ltr"}
+    >
       <LearnMoreHero c={content.hero} isRTL={isRTL} />
       <ValuePillars c={content.pillars} />
       <HowItWorksSteps c={content.how} />
