@@ -9,11 +9,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/LanguageContext";
 import { needsTranslationHighlight, TRANSLATE_HIGHLIGHT_CLASS } from "@/components/document/translateHighlight";
-import ChangeBlockDiffView from "@/components/document/ChangeBlockDiffView";
 import { HistoryTranslatableContent, HistoryTranslatableDiff } from "@/components/document/HistoryTranslatableContent";
 import DocumentTitleHeading from "@/components/document/DocumentTitleHeading";
 import VersionNavigation from "@/components/document/VersionNavigation";
-import DocumentSnapshot from "@/components/document/DocumentSnapshot";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { useDocumentVersions } from "@/components/document/hooks/useDocumentVersions";
 
@@ -768,7 +766,7 @@ export default function DocumentCleanView() {
             return (
               <div key={topic.id} className="space-y-4 md:space-y-6 break-inside-avoid">
                   {/* Topic Title */}
-                  <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6">
+                  <div className="border-b border-slate-300 pb-2 mb-4 md:mb-6 group">
                     <h2 className="text-xl md:text-2xl text-slate-800 leading-tight font-display font-normal" style={{ fontFamily: "var(--font-display)" }}>
                       {topicIndex + 1}. {(topic.originalLanguage || detectLanguage(topic.title)) !== language && showTranslatedTopics[topic.id] ?
                       translatedTopics[topic.id] || getTopicTitleAtVersion(topic.id, currentVersionIndex) :
@@ -784,7 +782,7 @@ export default function DocumentCleanView() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-xs text-blue-600 hover:text-blue-700 mt-1 print:hidden"
+                    className="mt-1 text-xs text-blue-600 hover:text-blue-700 print:hidden opacity-0 group-hover:opacity-100 transition-opacity"
                     disabled={translateVersionMutation.isPending}
                     onClick={async () => {
                       if (!translatedTopics[topic.id]) {
@@ -796,7 +794,7 @@ export default function DocumentCleanView() {
                     }}>
                     
                         <Globe className="w-3 h-3 mr-1" />
-                        {showTranslatedTopics[topic.id] ? 'הצג מקור' : t('translateSection')}
+                        {showTranslatedTopics[topic.id] ? t('showOriginal') : t('translateSection')}
                       </Button>
                   }
                   </div>
