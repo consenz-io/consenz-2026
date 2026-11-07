@@ -4,14 +4,14 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
 import RejectedSuggestionCard from "@/components/rejectedSuggestions/RejectedSuggestionCard";
 
 export default function RejectedSuggestions() {
-  const { t, language } = useLanguage();
+  const { t, language, isRTL } = useLanguage();
   const [searchParams] = useSearchParams();
   const documentId = searchParams.get('id');
 
@@ -105,7 +105,7 @@ export default function RejectedSuggestions() {
         <div className="flex items-center gap-4">
           <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
             <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
+              {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               {language === 'he' ? 'חזור' : language === 'ar' ? 'رجوع' : 'Back'}
             </Button>
           </Link>
@@ -135,6 +135,7 @@ export default function RejectedSuggestions() {
                 key={suggestion.id}
                 suggestion={suggestion}
                 documentId={documentId}
+                document={document}
                 language={language}
                 t={t}
                 creatorName={getCreatorName(suggestion)}

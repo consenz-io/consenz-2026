@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ThumbsUp, ThumbsDown, ArrowRight, Clock, CalendarX } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, CalendarX } from "lucide-react";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { parseUserDate } from "@/components/utils/dateFormatter";
 import RejectedSuggestionComments from "./RejectedSuggestionComments";
+import RejectedSuggestionThreshold from "./RejectedSuggestionThreshold";
 
 const LABELS = {
   he: {
@@ -49,8 +50,10 @@ const LABELS = {
 
 const LOCALES = { he: "he-IL", ar: "ar-SA", en: "en-US" };
 
-export default function RejectedSuggestionCard({ suggestion, documentId, language, creatorName, comments }) {
+export default function RejectedSuggestionCard({ suggestion, documentId, document, language, creatorName, comments }) {
   const labels = LABELS[language] || LABELS.en;
+  const isRTL = language === 'he' || language === 'ar';
+  const ForwardArrow = isRTL ? ArrowLeft : ArrowRight;
   const formatDate = (value) => (value ? parseUserDate(value).toLocaleDateString(LOCALES[language] || "en-US") : "");
   const typeLabel = labels[suggestion.type] || suggestion.type;
   const detailUrl = `${createPageUrl("SuggestionDetail")}?id=${suggestion.id}&documentId=${documentId}`;
@@ -69,7 +72,7 @@ export default function RejectedSuggestionCard({ suggestion, documentId, languag
               </div>
               <CardTitle className="text-lg">{suggestion.title}</CardTitle>
             </div>
-            <ArrowRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+            <ForwardArrow className="w-5 h-5 text-slate-400 flex-shrink-0" />
           </div>
         </CardHeader>
 
@@ -89,16 +92,11 @@ export default function RejectedSuggestionCard({ suggestion, documentId, languag
               <p className="text-sm text-slate-600 line-clamp-2">{suggestion.explanation}</p>
             )}
 
-            <div className="flex flex-wrap gap-4 text-sm items-center">
-              <div className="flex items-center gap-2 text-green-600">
-                <ThumbsUp className="w-4 h-4" />
-                <span className="font-medium">{suggestion.proVotes || 0}</span>
-              </div>
-              <div className="flex items-center gap-2 text-red-600">
-                <ThumbsDown className="w-4 h-4" />
-                <span className="font-medium">{suggestion.conVotes || 0}</span>
-              </div>
-            </div>
+            <RejectedSuggestionThreshold
+              suggestion={suggestion}
+              document={document}
+              language={language}
+            />
 
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-400">
               <span className="flex items-center gap-1">
@@ -123,7 +121,7 @@ export default function RejectedSuggestionCard({ suggestion, documentId, languag
 
             <span className="inline-flex items-center gap-1 text-sm font-medium text-blue-600">
               {labels.viewDetails}
-              <ArrowRight className="w-4 h-4" />
+              <ForwardArrow className="w-4 h-4" />
             </span>
           </div>
         </CardContent>
