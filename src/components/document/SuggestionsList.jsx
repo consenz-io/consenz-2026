@@ -15,35 +15,37 @@ import SuggestionCountdown from "./SuggestionCountdown";
 
 export default function SuggestionsList({ suggestions, document, user, isAdmin }) {
   const { t, isRTL, language } = useLanguage();
-  const { data: publicProfiles } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
+  // Only the creators of the listed suggestions (was every profile in the platform)
+  const creatorIds = React.useMemo(
+    () => Array.from(new Set((suggestions || []).map(s => s.created_by_id).filter(Boolean))).sort(),
+    [suggestions]
+  );
+
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ['suggestionCreatorProfiles', creatorIds.join(',')],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: creatorIds } }),
+    enabled: creatorIds.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const { data: users } = useQuery({
+  // User entity is admin-only — don't even call it for regular viewers.
+  const { data: users = [] } = useQuery({
     queryKey: ['users'],
-    queryFn: async () => {
-      try {
-        return await base44.entities.User.list();
-      } catch (error) {
-        // Expected for non-admins
-        return [];
-      }
-    },
+    queryFn: () => base44.entities.User.list(),
+    enabled: !!isAdmin,
     initialData: [],
     retry: false,
   });
 
-  const getUserName = (email) => {
-    // Try public profile first (accessible to everyone)
-    const profile = publicProfiles?.find(p => p.email === email);
+  const getUserName = (suggestion) => {
+    // Public profile by userId (accessible to everyone)
+    const profile = publicProfiles.find(p => p.userId === suggestion?.created_by_id);
     if (profile?.fullName) return profile.fullName;
-    
+
     // Fallback to User entity (admins only)
-    const user = users?.find(u => u.email === email);
+    const user = users.find(u => u.email === suggestion?.created_by);
     if (user?.full_name) return user.full_name;
-    
+
     // Last resort
     return 'User';
   };
@@ -138,7 +140,7 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
                   </div>
 
                   <div className="text-xs text-slate-400">
-                    {t('created')} {parseUserDate(suggestion.created_date).toLocaleDateString()} {t('by')} {getUserName(suggestion.created_by)}
+                    {t('created')} {parseUserDate(suggestion.created_date).toLocaleDateString()} {t('by')} {getUserName(suggestion)}
                   </div>
                 </div>
               </CardContent>

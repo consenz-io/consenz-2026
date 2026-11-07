@@ -165,12 +165,6 @@ export default function SectionVersionCarousel({
   const [restoreTarget, setRestoreTarget] = useState(null);
   const [error, setError] = useState(null);
 
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ["publicProfiles"],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    staleTime: 60000,
-  });
-
   const { data: section } = useQuery({
     queryKey: ["section", sectionId],
     queryFn: async () => {
@@ -192,6 +186,20 @@ export default function SectionVersionCarousel({
     initialData: [],
     enabled: !!sectionId && !!documentId,
     staleTime: 0,
+  });
+
+  // Profiles of this section's version authors only (was UserPublicProfile.list()).
+  // Skipped entirely when the parent already passes a name resolver.
+  const versionAuthorIds = React.useMemo(
+    () => Array.from(new Set(versions.map(v => v.created_by_id).filter(Boolean))).sort(),
+    [versions]
+  );
+
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ["versionAuthorProfiles", versionAuthorIds.join(",")],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: versionAuthorIds } }),
+    enabled: !getUserName && versionAuthorIds.length > 0,
+    staleTime: 60000,
   });
 
   // Section comments — only used for direct_edit / section_created versions

@@ -32,9 +32,16 @@ export default function JoinGroupDialog({ isOpen, onClose, groupId, groupName: g
     enabled: !!groupId,
   });
 
+  // Only the group admins' profiles are needed here (to email them) — was a full list().
+  const adminIds = React.useMemo(
+    () => groupMembers.filter(m => m.role === 'admin').map(m => m.userId).filter(Boolean).sort(),
+    [groupMembers]
+  );
+
   const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
+    queryKey: ['groupAdminProfiles', groupId, adminIds.join(',')],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: adminIds } }),
+    enabled: adminIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 

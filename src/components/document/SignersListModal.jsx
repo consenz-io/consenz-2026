@@ -38,11 +38,17 @@ export default function SignersListModal({
   const { language, isRTL } = useLanguage();
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
-  // Fetch public profiles for displaying names
-  const { data: publicProfiles } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    initialData: [],
+  // Profiles of these signers only (was the whole platform's profile list)
+  const signerIds = React.useMemo(
+    () => Array.from(new Set((signers || []).map(s => s.userId).filter(Boolean))).sort(),
+    [signers]
+  );
+
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ['signerProfiles', signerIds.join(',')],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: signerIds } }),
+    enabled: isOpen && signerIds.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
 
   const content = {

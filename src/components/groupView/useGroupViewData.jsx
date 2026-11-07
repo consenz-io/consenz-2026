@@ -39,14 +39,6 @@ export function useGroupViewData(groupId) {
     staleTime: 10 * 60 * 1000,
   });
 
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    staleTime: 30 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
-    retry: 1,
-  });
-
   const docIds = useMemo(() => documents.map(d => d.id), [documents]);
   const docIdsSorted = useMemo(() => [...docIds].sort().join(','), [docIds]);
 
@@ -146,6 +138,31 @@ export function useGroupViewData(groupId) {
     enabled: docIds.length > 0,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+  });
+
+  // Profiles of the people who actually appear in this group (members + activity in
+  // its documents) — was UserPublicProfile.list(), i.e. every profile in the platform.
+  const groupProfileUserIds = useMemo(() => {
+    const ids = new Set();
+    groupMembers.forEach(m => { if (m.userId) ids.add(m.userId); });
+    allDocSuggestions.forEach(s => { if (s.created_by_id) ids.add(s.created_by_id); });
+    allDocVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    allDocSections.forEach(s => { if (s.lastEditedBy) ids.add(s.lastEditedBy); });
+    allDocSectionVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    allDocComments.forEach(c => { if (c.created_by_id) ids.add(c.created_by_id); });
+    allDocAgreements.forEach(a => { if (a.userId) ids.add(a.userId); });
+    return Array.from(ids).sort();
+  }, [groupMembers, allDocSuggestions, allDocVotes, allDocSections, allDocSectionVotes, allDocComments, allDocAgreements]);
+
+  const groupProfileIdsKey = groupProfileUserIds.join(',');
+
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ['groupProfiles', groupId, groupProfileIdsKey],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: groupProfileUserIds } }),
+    enabled: groupProfileUserIds.length > 0,
+    staleTime: 30 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
   });
 
   // Auto-add suggestion creators as formal group members if not already members

@@ -50,11 +50,6 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     staleTime: 0,
   });
 
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-  });
-
   // Fetch group documents to find additional participants (suggestion creators)
   const { data: groupDocuments = [] } = useQuery({
     queryKey: ['groupDocuments', groupId],
@@ -111,6 +106,25 @@ export default function ManageMembersDialog({ groupId, isOpen, onClose, onGroupD
     queryFn: () => base44.entities.DocumentAgreement.filter({ documentId: { $in: docIds } }, null, 500),
     enabled: docIds.length > 0 && isOpen,
     staleTime: 10 * 60 * 1000,
+  });
+
+  // Profiles of this group's people only — was a full UserPublicProfile.list().
+  const participantUserIds = useMemo(() => {
+    const ids = new Set();
+    groupMembers.forEach(m => { if (m.userId) ids.add(m.userId); });
+    allDocSuggestions.forEach(s => { if (s.created_by_id) ids.add(s.created_by_id); });
+    allDocVotes.forEach(v => { if (v.userId) ids.add(v.userId); });
+    allDocSections.forEach(s => { if (s.lastEditedBy) ids.add(s.lastEditedBy); });
+    allDocComments.forEach(c => { if (c.created_by_id) ids.add(c.created_by_id); });
+    allDocAgreements.forEach(a => { if (a.userId) ids.add(a.userId); });
+    return Array.from(ids).sort();
+  }, [groupMembers, allDocSuggestions, allDocVotes, allDocSections, allDocComments, allDocAgreements]);
+
+  const { data: publicProfiles = [] } = useQuery({
+    queryKey: ['groupProfiles', groupId, participantUserIds.join(',')],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: participantUserIds } }),
+    enabled: isOpen && participantUserIds.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Build the full participant list using the unified calcGroupParticipants

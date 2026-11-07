@@ -310,29 +310,43 @@ export default function DocumentComments() {
   const sectionIdSet = React.useMemo(() => new Set(sections.map((s) => s.id)), [sections]);
   const suggestionIdSet = React.useMemo(() => new Set(suggestions.map((s) => s.id)), [suggestions]);
 
+  // Both queries used to fetch every section/suggestion comment in the platform
+  // and filter them in the browser — now the filter runs on the server.
+  const sectionIdsKey = React.useMemo(() => [...sectionIdSet].sort().join(','), [sectionIdSet]);
+
   const { data: sectionComments = [], isLoading: loadingSC } = useQuery({
-    queryKey: ['allSectionComments', documentId],
-    queryFn: async () => {
-      const all = await base44.entities.Comment.filter({ rootEntityType: 'section' });
-      return all.filter((c) => sectionIdSet.has(c.rootEntityId));
-    },
+    queryKey: ['allSectionComments', documentId, sectionIdsKey],
+    queryFn: () => base44.entities.Comment.filter({
+      rootEntityType: 'section',
+      rootEntityId: { $in: Array.from(sectionIdSet) },
+    }),
     enabled: sectionIdSet.size > 0,
     staleTime: 60 * 1000
   });
 
+  const suggestionIdsKey = React.useMemo(() => [...suggestionIdSet].sort().join(','), [suggestionIdSet]);
+
   const { data: suggestionComments = [], isLoading: loadingSSC } = useQuery({
-    queryKey: ['allSuggestionComments', documentId],
-    queryFn: async () => {
-      const all = await base44.entities.Comment.filter({ rootEntityType: 'suggestion' });
-      return all.filter((c) => suggestionIdSet.has(c.rootEntityId));
-    },
+    queryKey: ['allSuggestionComments', documentId, suggestionIdsKey],
+    queryFn: () => base44.entities.Comment.filter({
+      rootEntityType: 'suggestion',
+      rootEntityId: { $in: Array.from(suggestionIdSet) },
+    }),
     enabled: suggestionIdSet.size > 0,
     staleTime: 60 * 1000
   });
 
+  // Profiles of the people who wrote these comments only.
+  const commenterIds = React.useMemo(() => {
+    const ids = new Set();
+    [...sectionComments, ...suggestionComments].forEach(c => { if (c.created_by_id) ids.add(c.created_by_id); });
+    return Array.from(ids).sort();
+  }, [sectionComments, suggestionComments]);
+
   const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
+    queryKey: ['commenterProfiles', commenterIds.join(',')],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: commenterIds } }),
+    enabled: commenterIds.length > 0,
     staleTime: 10 * 60 * 1000
   });
 

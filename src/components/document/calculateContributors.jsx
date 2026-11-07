@@ -5,13 +5,16 @@ import { base44 } from "@/api/base44Client";
  * Uses userId as the primary dedup key (always present on Vote/SectionVote records).
  * Falls back to email for records that only have created_by (comments, suggestion creators).
  */
-export async function calculateDocumentContributors(documentId) {
+export async function calculateDocumentContributors(documentId, options = {}) {
+  const { includeSectionVotes = true, includeAgreements = true } = options;
   try {
     // Stage 1: fetch document-specific suggestions, sections, and agreements
     const [suggestions, sections, documentAgreements] = await Promise.all([
       base44.entities.Suggestion.filter({ documentId }),
       base44.entities.Section.filter({ documentId }),
-      base44.entities.DocumentAgreement.filter({ documentId }),
+      includeAgreements
+        ? base44.entities.DocumentAgreement.filter({ documentId })
+        : Promise.resolve([]),
     ]);
 
     const suggestionIdArr = suggestions.map(s => s.id);
