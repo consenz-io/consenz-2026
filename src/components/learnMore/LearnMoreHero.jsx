@@ -93,13 +93,13 @@ function ProposalCard({ c }) {
       </div>
 
       <div className="mt-2 flex items-center justify-end">
-        <span className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 hidden">
-          <MessageSquare className="h-4 w-4" aria-hidden="true" />
-          {t("comments")}
-        </span>
+        
+
+
+        
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-500 hidden">{c.cardFootnote}</p>
+      
     </div>);
 
 }
