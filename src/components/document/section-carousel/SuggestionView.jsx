@@ -8,7 +8,6 @@ import DocumentTextContent from "../DocumentTextContent";
 import VotingProgressSection from "../VotingProgressSection";
 import CommentsSection from "../CommentsSection";
 import { base44 } from "@/api/base44Client";
-import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 /**
  * Renders a suggestion view — proposed content (diff or new), voting buttons,
@@ -86,9 +85,14 @@ const SuggestionView = React.memo(function SuggestionView({
               <div className="text-sm font-bold text-red-700 mb-2">
                 {(language || 'he') === 'he' ? 'סעיף שמוצע למחיקה:' : (language || 'he') === 'ar' ? 'القسم المقترح حذفه:' : 'Section to be deleted:'}
               </div>
-              <div
-              className="prose prose-sm max-w-none text-slate-700 line-through opacity-60"
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(suggestion.originalContent) }} />
+              <TranslatableContent
+              content={suggestion.originalContent}
+              entity={section || suggestion}
+              entityType="Section"
+              sourceEntityId={suggestion.sectionId || section?.id}
+              sourceField="content"
+              documentId={document?.id}
+              className="prose prose-sm max-w-none text-slate-700 line-through opacity-60" />
             
             </div>
             {suggestion.explanation &&

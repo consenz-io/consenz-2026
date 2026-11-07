@@ -29,3 +29,30 @@ export const needsTranslationHighlight = (document, language) => {
 };
 
 export const TRANSLATE_HIGHLIGHT_CLASS = 'translate-all-highlight';
+
+/** Language of a user-written text, decided by its own characters. */
+const languageOf = (text) => (typeof text === 'string' ? detectLanguage(text.slice(0, 500)) : null);
+
+/**
+ * True when anything the user reads on the document page — the document's own
+ * title/description, section contents, topic titles, proposal texts and
+ * explanations, or comments — is written in a language other than the UI
+ * language. Used to decide whether to offer "Translate All" at all: a document
+ * whose own language matches the UI can still carry foreign comments.
+ */
+export const pageNeedsTranslation = ({ document, topics, sections, suggestions, comments }, language) => {
+  if (!language) return false;
+  if (needsTranslationHighlight(document, language)) return true;
+
+  const differs = (text) => {
+    if (!text || typeof text !== 'string' || text.trim().length < 3) return false;
+    return languageOf(text) !== language;
+  };
+
+  if ((topics || []).some(tp => differs(tp.title))) return true;
+  if ((sections || []).some(s => differs(s.content))) return true;
+  if ((suggestions || []).some(s => differs(s.newContent) || differs(s.explanation))) return true;
+  if ((comments || []).some(c => differs(c.content))) return true;
+
+  return false;
+};

@@ -25,7 +25,7 @@ import CurrentVersionButton from "../components/document/CurrentVersionButton";
 import DocumentDiscussionButton from "../components/document/DocumentDiscussionButton";
 import CurrentVersionModal from "../components/document/CurrentVersionModal";
 import DocumentTranslateAllButton from "../components/document/DocumentTranslateAllButton";
-import { needsTranslationHighlight } from "../components/document/translateHighlight";
+import { pageNeedsTranslation } from "../components/document/translateHighlight";
 
 // Lazy load heavy modals
 const CreateSuggestionModal = React.lazy(() => import("../components/document/CreateSuggestionModal"));
@@ -136,6 +136,14 @@ export default function DocumentView() {
     }
     return { documentComments: docComments, sectionCommentsCount: sectionComments };
   }, [allComments, documentId, sections]);
+
+  // Offer "Translate All" whenever any content on the page — title, description,
+  // sections, topics, proposals or comments — is in a different language than
+  // the current UI language.
+  const canTranslatePage = React.useMemo(
+    () => pageNeedsTranslation({ document, topics, sections, suggestions, comments: allComments }, language),
+    [document, topics, sections, suggestions, allComments, language]
+  );
 
   const consensusPct = React.useMemo(() => {
     const consensuses = document?.consensuses || [];
@@ -610,8 +618,14 @@ export default function DocumentView() {
                   }}
                 />
                 <div className="flex items-center gap-2 flex-wrap">
-                  {needsTranslationHighlight(document, language) && (
-                    <DocumentTranslateAllButton document={document} topics={topics} sections={sections} />
+                  {canTranslatePage && (
+                    <DocumentTranslateAllButton
+                      document={document}
+                      topics={topics}
+                      sections={sections}
+                      suggestions={suggestions}
+                      comments={allComments}
+                    />
                   )}
                   <CurrentVersionButton
                     language={language}

@@ -17,6 +17,9 @@ const detectLanguage = (text) => {
 import DiffModeSelector, { DIFF_MODES, useDiffMode } from "./DiffModeSelector";
 import ChangeBlockDiffView from "./ChangeBlockDiffView";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { useQueryClient } from "@tanstack/react-query";
+import { useDocumentTranslation } from "./TranslationContext";
+import { buildTranslationCacheKey } from "./utils/translationCache";
 
 const languageLabels = {
   en: "English",
@@ -41,6 +44,10 @@ export default function SectionDiff({
   const [showTranslated, setShowTranslated] = useState(false);
   const [showDiff, setShowDiff] = useState(true);
   const [diffMode, setDiffMode] = useDiffMode();
+  const queryClient = useQueryClient();
+  // Global "Translate All" toggle — the diff follows it like every other
+  // translatable surface on the document page.
+  const { globalShowTranslated } = useDocumentTranslation();
   
   // Reset state when suggestion changes
   useEffect(() => {
@@ -82,6 +89,16 @@ export default function SectionDiff({
     try {
       const translateHtml = async (html, entityType, entityId, entityField, sourceLang, targetLang = language, anchor = null) => {
         if (sourceLang === targetLang) return html;
+
+        // Reuse a translation already pre-populated by "Translate All"
+        // (batch), so switching the whole page doesn't fire a per-card request.
+        if (!anchor && entityType && entityId) {
+          const cached = queryClient.getQueryData(
+            buildTranslationCacheKey(documentId, entityType, entityId, entityField, targetLang, html)
+          );
+          if (cached) return cached;
+        }
+
         const res = await base44.functions.invoke('translateVersion', {
           documentId,
           sourceEntityType: entityType,
@@ -174,6 +191,14 @@ export default function SectionDiff({
       setIsTranslating(false);
     }
   };
+
+  // "Translate All" turns this diff into translated view as well. When the
+  // batch already cached the units this resolves without any backend call.
+  useEffect(() => {
+    if (!globalShowTranslated || !needsTranslation) return;
+    if (hasTranslation || isTranslating) return;
+    handleSmartTranslate();
+  }, [globalShowTranslated, suggestion?.id, sectionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleToggleTranslation = async () => {
     if (!showTranslated && needsTranslation) {

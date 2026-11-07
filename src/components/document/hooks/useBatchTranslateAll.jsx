@@ -12,25 +12,19 @@ const detectLanguage = (text) => {
   return 'en';
 };
 
-const MAX_UNITS_PER_BATCH = 100;
+// Must match MAX_UNITS in base44/functions/batchTranslateVersions.
+const MAX_UNITS_PER_BATCH = 50;
 
 /**
- * Builds a handler that pre-populates React Query translation cache for ALL
- * translatable units in the document via a single `batchTranslateVersions`
- * call, then activates `globalShowTranslated`.
+ * Builds a handler that pre-populates the React Query translation cache for
+ * every translatable unit rendered on the document page — title, description,
+ * topic titles, section contents, proposal texts and explanations, and all
+ * comments — then activates `globalShowTranslated`.
  *
- * This replaces the old flow where each useVersionTranslation instance fired
- * its own `translateVersion` call on `globalShowTranslated` change (N parallel
- * HTTP requests). Now: 1 batch request → populate N cache entries → toggle.
- * The per-unit hooks find cached `translatedContent` and skip their mutation.
- *
- * @param {object} params
- * @param {object} params.document  - Document record (needs id, title, description, originalLanguage)
- * @param {array}  params.topics    - Topic records (needs id, title, originalLanguage)
- * @param {array}  params.sections  - Section records (needs id, content, originalLanguage)
- * @returns {function} async handler — call when "Translate All" is activated
+ * Units whose source language already matches the target language are skipped,
+ * so nothing is sent twice and nothing is translated needlessly.
  */
-export function useBatchTranslateAll({ document, topics, sections }) {
+export function useBatchTranslateAll({ document, topics, sections, suggestions, comments }) {
   const { language: targetLanguage } = useLanguage();
   const queryClient = useQueryClient();
   const { setGlobalShowTranslated, setIsTranslatingAll } = useDocumentTranslation();
@@ -46,63 +40,96 @@ export function useBatchTranslateAll({ document, topics, sections }) {
     // match what the corresponding useVersionTranslation call uses, so the
     // cache key we populate matches the key the hook reads.
     const units = [];
+    const seen = new Set();
 
-    // Document title (DocumentHeader)
+    const add = (unit) => {
+      if (!unit.content || typeof unit.content !== 'string' || !unit.content.trim()) return;
+      const key = `${unit.sourceEntityType}:${unit.sourceEntityId}:${unit.sourceField}`;
+      if (seen.has(key)) return;
+      const sourceLanguage = unit.sourceLanguage || detectLanguage(unit.content);
+      // Only units whose source language differs from the target need translation
+      if (sourceLanguage === targetLanguage) return;
+      seen.add(key);
+      units.push({ ...unit, sourceLanguage });
+    };
+
+    // Document title + description
     if (document.title) {
-      units.push({
+      add({
         sourceEntityType: 'document',
         sourceEntityId: document.id,
         sourceField: 'title',
         content: document.title,
         isHtml: false,
-        sourceLanguage: document.originalLanguage || detectLanguage(document.title),
       });
     }
-
-    // Document description (DocumentDescription)
     if (document.description) {
-      units.push({
+      add({
         sourceEntityType: 'document',
         sourceEntityId: document.id,
         sourceField: 'description',
         content: document.description,
         isHtml: true,
-        sourceLanguage: document.originalLanguage || detectLanguage(document.description),
       });
     }
 
-    // Topic titles (DocumentTopicCard)
+    // Topic titles
     for (const topic of topics || []) {
-      if (topic.title) {
-        units.push({
-          sourceEntityType: 'topic',
-          sourceEntityId: topic.id,
-          sourceField: 'title',
-          content: topic.title,
-          isHtml: false,
-          sourceLanguage: topic.originalLanguage || detectLanguage(topic.title),
-        });
-      }
+      add({
+        sourceEntityType: 'topic',
+        sourceEntityId: topic.id,
+        sourceField: 'title',
+        content: topic.title,
+        isHtml: false,
+      });
     }
 
-    // Section contents (TranslatableContent via TopicSections)
+    // Section contents
     for (const section of sections || []) {
-      if (section.content) {
-        units.push({
-          sourceEntityType: 'section',
-          sourceEntityId: section.id,
-          sourceField: 'content',
-          content: section.content,
-          isHtml: true,
-          sourceLanguage: section.originalLanguage || detectLanguage(section.content),
-        });
-      }
+      add({
+        sourceEntityType: 'section',
+        sourceEntityId: section.id,
+        sourceField: 'content',
+        content: section.content,
+        isHtml: true,
+      });
     }
 
-    // Only units whose source language differs from the target need translation
-    const translatable = units.filter(u => u.sourceLanguage !== targetLanguage);
+    // Proposal texts + explanations
+    for (const suggestion of suggestions || []) {
+      const suggestionLanguage =
+        suggestion.createdByLanguage || suggestion.originalLanguage || detectLanguage(suggestion.newContent || '');
+      add({
+        sourceEntityType: 'suggestion',
+        sourceEntityId: suggestion.id,
+        sourceField: 'newContent',
+        content: suggestion.newContent,
+        isHtml: true,
+        sourceLanguage: suggestionLanguage,
+      });
+      add({
+        sourceEntityType: 'suggestion',
+        sourceEntityId: suggestion.id,
+        sourceField: 'explanation',
+        content: suggestion.explanation,
+        isHtml: false,
+        sourceLanguage: suggestionLanguage,
+      });
+    }
 
-    if (translatable.length === 0) {
+    // Comments (document, section and proposal threads)
+    for (const comment of comments || []) {
+      add({
+        sourceEntityType: 'comment',
+        sourceEntityId: comment.id,
+        sourceField: 'content',
+        content: comment.content,
+        isHtml: false,
+        sourceLanguage: comment.originalLanguage || detectLanguage(comment.content),
+      });
+    }
+
+    if (units.length === 0) {
       setGlobalShowTranslated(true);
       return;
     }
@@ -110,23 +137,28 @@ export function useBatchTranslateAll({ document, topics, sections }) {
     setIsTranslatingAll(true);
 
     try {
-      // Chunk to respect the backend MAX_UNITS limit (100)
+      // Chunk to respect the backend MAX_UNITS limit. A chunk that fails must
+      // not abort the rest — anything left untranslated is picked up by the
+      // per-unit hooks.
       const allResults = [];
-      for (let i = 0; i < translatable.length; i += MAX_UNITS_PER_BATCH) {
-        const chunk = translatable.slice(i, i + MAX_UNITS_PER_BATCH);
-        const result = await base44.functions.invoke('batchTranslateVersions', {
-          documentId: document.id,
-          targetLanguage,
-          units: chunk,
-        });
-        const chunkResults = result.data?.results || [];
-        allResults.push(...chunkResults);
+      for (let i = 0; i < units.length; i += MAX_UNITS_PER_BATCH) {
+        const chunk = units.slice(i, i + MAX_UNITS_PER_BATCH);
+        try {
+          const result = await base44.functions.invoke('batchTranslateVersions', {
+            documentId: document.id,
+            targetLanguage,
+            units: chunk,
+          });
+          allResults.push(...(result.data?.results || []));
+        } catch (err) {
+          console.error('Batch translation chunk failed:', err);
+        }
       }
 
       // Build a lookup from the original units so we can hash the content
       // for each result (the backend result doesn't include the original content).
       const contentLookup = new Map();
-      for (const u of translatable) {
+      for (const u of units) {
         contentLookup.set(`${u.sourceEntityType}:${u.sourceEntityId}:${u.sourceField}`, u.content);
       }
 
@@ -148,14 +180,11 @@ export function useBatchTranslateAll({ document, topics, sections }) {
         );
         queryClient.setQueryData(cacheKey, r.translatedContent);
       }
-
-      setGlobalShowTranslated(true);
-    } catch (err) {
-      // Fallback: activate per-unit translation (the old N-requests path)
-      console.error('Batch translation failed, falling back to per-unit:', err);
-      setGlobalShowTranslated(true);
     } finally {
       setIsTranslatingAll(false);
+      // Always switch the page into translated view, even when some units
+      // failed — the per-unit hooks fill in whatever is still missing.
+      setGlobalShowTranslated(true);
     }
-  }, [document, topics, sections, targetLanguage, queryClient, setGlobalShowTranslated, setIsTranslatingAll]);
+  }, [document, topics, sections, suggestions, comments, targetLanguage, queryClient, setGlobalShowTranslated, setIsTranslatingAll]);
 }

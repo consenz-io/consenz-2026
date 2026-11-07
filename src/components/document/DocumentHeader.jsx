@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import DocumentTitleHeading from "./DocumentTitleHeading";
 import GamificationIndicator from "./GamificationIndicator";
 import { useVersionTranslation } from "./hooks/useVersionTranslation";
+import { useDocumentTranslation } from "./TranslationContext";
 
 const detectLanguage = (text) => {
   if (!text) return 'en';
@@ -34,6 +35,10 @@ const DocumentHeader = React.memo(function DocumentHeader({
   topics,
   sections
 }) {
+  // Follow the global "Translate All" toggle so the title translates together
+  // with the rest of the page.
+  const { globalShowTranslated } = useDocumentTranslation();
+
   const {
     translatedContent: translatedTitle,
     showTranslated,
@@ -48,9 +53,11 @@ const DocumentHeader = React.memo(function DocumentHeader({
     content: document.title,
     isHtml: false,
     sourceLanguage: document.originalLanguage || detectLanguage(document.title),
+    globalShowTranslated,
   });
 
   const hasTranslation = !!translatedTitle;
+  const displayTranslated = (showTranslated || globalShowTranslated) && hasTranslation;
 
   return (
     <div className={`document-title-area flex items-center gap-2 w-full max-w-full ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -63,7 +70,7 @@ const DocumentHeader = React.memo(function DocumentHeader({
       )}
 
       <DocumentTitleHeading id="document-title">
-        {showTranslated && hasTranslation ? translatedTitle : document.title}
+        {displayTranslated ? translatedTitle : document.title}
       </DocumentTitleHeading>
 
       {!isRTL && (
@@ -82,9 +89,9 @@ const DocumentHeader = React.memo(function DocumentHeader({
           type="button"
           onClick={handleToggle}
           className="p-0.5 md:p-1.5 hover:bg-blue-50 rounded transition-colors"
-          aria-label={showTranslated && hasTranslation ? t('showOriginal') : t('translate')}>
+          aria-label={displayTranslated ? t('showOriginal') : t('translate')}>
 
-            <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${showTranslated && hasTranslation ? 'text-slate-600' : 'text-blue-600'}`} aria-hidden="true" />
+            <Languages className={`w-3.5 h-3.5 md:w-5 md:h-5 ${displayTranslated ? 'text-slate-600' : 'text-blue-600'}`} aria-hidden="true" />
           </button> :
         null
         }

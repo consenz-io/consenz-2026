@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import CommentsSection from "./CommentsSection";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { useVersionTranslation } from "./hooks/useVersionTranslation";
+import { useDocumentTranslation } from "./TranslationContext";
 
 const detectLanguage = (text) => {
   if (!text) return 'en';
@@ -48,6 +49,10 @@ const DocumentDescription = React.memo(function DocumentDescription({
     },
   });
 
+  // Follow the global "Translate All" toggle so the description translates
+  // together with the rest of the page.
+  const { globalShowTranslated } = useDocumentTranslation();
+
   // Version-aware translation for the document description.
   // Uses translateVersion — canonical, shared across all users.
   const {
@@ -64,12 +69,14 @@ const DocumentDescription = React.memo(function DocumentDescription({
     content: document?.description || '',
     isHtml: true,
     sourceLanguage: document?.originalLanguage || detectLanguage(document?.description || ''),
+    globalShowTranslated,
   });
 
   const hasDescription = !!document?.description;
   const showContainer = hasDescription || isAdmin || showDescriptionComments;
   const hasTranslatedDesc = typeof translatedDesc === 'string' && translatedDesc.length > 1;
-  const currentDescription = showTranslatedDescription && hasTranslatedDesc ? translatedDesc : (document?.description || "");
+  const displayTranslatedDesc = (showTranslatedDescription || globalShowTranslated) && hasTranslatedDesc;
+  const currentDescription = displayTranslatedDesc ? translatedDesc : (document?.description || "");
 
   const scrollToTitle = () => {
     setTimeout(() => {
@@ -91,9 +98,9 @@ const DocumentDescription = React.memo(function DocumentDescription({
             <button
               onClick={handleToggleDescription}
               className="p-1.5 hover:bg-blue-50 rounded transition-colors"
-              title={showTranslatedDescription && hasTranslatedDesc ? t('showOriginal') : t('translate')}
+              title={displayTranslatedDesc ? t('showOriginal') : t('translate')}
             >
-              <Languages className={`w-4 h-4 ${showTranslatedDescription && hasTranslatedDesc ? 'text-slate-600' : 'text-blue-600'}`} />
+              <Languages className={`w-4 h-4 ${displayTranslatedDesc ? 'text-slate-600' : 'text-blue-600'}`} />
             </button>
           )}
         </div>

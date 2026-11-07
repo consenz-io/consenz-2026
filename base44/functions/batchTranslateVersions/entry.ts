@@ -13,13 +13,15 @@ const VALID_ENTITY_TYPES = new Set([
 ]);
 
 const MAX_CONTENT_LENGTH = 20000;
-const MAX_UNITS = 20;
+const MAX_UNITS = 50;
 
 // Per-user rate limiter — prevents unmetered LLM credit consumption via batch.
-// 2 batch calls per minute per user (each batch can translate up to 20 units).
-// Caps at 40 translations/minute — fast for real use, far less abusable.
+// 4 batch calls per minute per user (each batch can translate up to 50 units).
+// Caps at 200 translations/minute — enough for a full document page ("Translate
+// All" covers title, description, topics, sections, proposals and comments),
+// still far less abusable than unmetered per-unit calls.
 const batchRateLimiter = new Map();
-const BATCH_RATE_LIMIT = 2;
+const BATCH_RATE_LIMIT = 4;
 const BATCH_WINDOW_MS = 60000;
 
 function checkBatchRateLimit(userId: string) {
