@@ -80,10 +80,14 @@ export default function SectionHistory() {
     retry: false,
   });
 
+  // Full user list is only readable by admins; for everyone else this returned
+  // nothing but still cost a platform-wide query on every mount.
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
+    enabled: user?.role === 'admin',
     initialData: [],
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: sectionComments } = useQuery({
@@ -449,10 +453,14 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
   const { t, isRTL } = useLanguage();
   const queryClient = useQueryClient();
   
+  // Full user list is only readable by admins; for everyone else this returned
+  // nothing but still cost a platform-wide query on every mount.
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: () => base44.entities.User.list(),
+    enabled: user?.role === 'admin',
     initialData: [],
+    staleTime: 10 * 60 * 1000,
   });
   
   const { data: suggestion } = useQuery({

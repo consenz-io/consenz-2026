@@ -36,7 +36,8 @@ export default function Messages() {
     queryKey: ["conversations"],
     queryFn: () => base44.entities.Conversation.filter({}, "-lastMessageAt", 50),
     enabled: !!user?.id,
-    refetchInterval: 20000,
+    // Real-time subscriptions already deliver new messages; polling is only a safety net.
+    refetchInterval: 60000,
   });
 
   // Profiles of the people in this user's conversations only (was: every profile
@@ -60,7 +61,7 @@ export default function Messages() {
     queryKey: ["unreadMessages"],
     queryFn: () => base44.entities.Message.filter({ recipientId: user.id, read: false }, "-created_date", 200),
     enabled: !!user?.id,
-    refetchInterval: 15000,
+    refetchInterval: 60000,
   });
 
   // Real-time subscriptions

@@ -38,15 +38,27 @@ export default function RejectedSuggestions() {
     enabled: !!documentId,
   });
 
-  const { data: publicProfiles = [] } = useQuery({
-    queryKey: ['publicProfiles'],
-    queryFn: () => base44.entities.UserPublicProfile.list(),
-    enabled: suggestions.length > 0,
+  // Only the creators of these suggestions (was: every profile in the platform)
+  const creatorIds = React.useMemo(
+    () => Array.from(new Set(suggestions.map(s => s.created_by_id).filter(Boolean))).sort(),
+    [suggestions]
+  );
+
+  const { data: creatorProfiles = [] } = useQuery({
+    queryKey: ['creatorProfiles', creatorIds.join(',')],
+    queryFn: () => base44.entities.UserPublicProfile.filter({ userId: { $in: creatorIds } }),
+    enabled: creatorIds.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
 
-  const getCreatorName = (email) => {
-    const profile = publicProfiles.find(p => p.email === email);
-    return profile?.fullName || email;
+  const creatorNames = React.useMemo(() => {
+    const map = new Map();
+    creatorProfiles.forEach(p => { if (p.userId) map.set(p.userId, p.fullName); });
+    return map;
+  }, [creatorProfiles]);
+
+  const getCreatorName = (suggestion) => {
+    return creatorNames.get(suggestion?.created_by_id) || suggestion?.created_by;
   };
 
   if (isLoading) {
@@ -108,7 +120,7 @@ export default function RejectedSuggestions() {
                           {suggestion.title}
                         </CardTitle>
                         <p className="text-sm text-slate-500 mt-2">
-                          {language === 'he' ? 'על ידי' : language === 'ar' ? 'من قبل' : 'By'} {getCreatorName(suggestion.created_by)}
+                          {language === 'he' ? 'על ידי' : language === 'ar' ? 'من قبل' : 'By'} {getCreatorName(suggestion)}
                         </p>
                       </div>
                       <Badge variant="destructive" className="flex-shrink-0">
