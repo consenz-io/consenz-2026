@@ -11,8 +11,8 @@ import {
   MessageSquare,
   Sparkles,
   ThumbsDown,
-  ThumbsUp,
-} from "lucide-react";
+  ThumbsUp } from
+"lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import usePlatformCtas from "./usePlatformCtas";
 
@@ -27,7 +27,7 @@ function ProposalCard({ c }) {
   const delta = pro - con;
   const votesNeeded = Math.max(0, threshold - delta);
   const passed = delta >= threshold;
-  const progress = Math.min(100, Math.max(0, (delta / threshold) * 100));
+  const progress = Math.min(100, Math.max(0, delta / threshold * 100));
 
   return (
     <div className="rounded-lg border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-3 shadow-sm md:p-6">
@@ -59,8 +59,8 @@ function ProposalCard({ c }) {
         <div className="relative h-2 overflow-hidden rounded-full bg-slate-200">
           <div
             className={`absolute inset-y-0 start-0 rounded-full ${passed ? "bg-green-500" : "bg-blue-400"}`}
-            style={{ width: `${progress}%` }}
-          />
+            style={{ width: `${progress}%` }} />
+          
         </div>
         <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
           <span className="flex items-center gap-1">
@@ -93,15 +93,15 @@ function ProposalCard({ c }) {
       </div>
 
       <div className="mt-2 flex items-center justify-end">
-        <span className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-slate-600">
+        <span className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-slate-600 hidden">
           <MessageSquare className="h-4 w-4" aria-hidden="true" />
           {t("comments")}
         </span>
       </div>
 
-      <p className="mt-2 text-xs leading-relaxed text-slate-500">{c.cardFootnote}</p>
-    </div>
-  );
+      <p className="mt-2 text-xs leading-relaxed text-slate-500 hidden">{c.cardFootnote}</p>
+    </div>);
+
 }
 
 export default function LearnMoreHero({ c, isRTL }) {
@@ -115,8 +115,8 @@ export default function LearnMoreHero({ c, isRTL }) {
       <div className="relative mx-auto max-w-7xl px-6 py-10 md:py-16">
         <Link
           to={createPageUrl("Home")}
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-blue-700"
-        >
+          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-blue-700">
+          
           <BackIcon className="h-4 w-4" aria-hidden="true" />
           {c.back}
         </Link>
@@ -137,17 +137,17 @@ export default function LearnMoreHero({ c, isRTL }) {
               <Button
                 size="lg"
                 onClick={startTour}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-              >
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                
                 <Compass className="h-4 w-4" aria-hidden="true" />
                 {c.primaryCta}
               </Button>
-              {!user && (
-                <Button size="lg" variant="outline" onClick={signIn}>
+              {!user &&
+              <Button size="lg" variant="outline" onClick={signIn}>
                   <LogIn className="h-4 w-4" aria-hidden="true" />
                   {c.secondaryCta}
                 </Button>
-              )}
+              }
             </div>
 
             <p className="mt-5 flex items-start gap-2 text-sm text-slate-600">
@@ -159,6 +159,6 @@ export default function LearnMoreHero({ c, isRTL }) {
           <ProposalCard c={c} />
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }
