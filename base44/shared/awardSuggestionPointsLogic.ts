@@ -10,6 +10,52 @@
  * @param suggestionId
  * @param action - 'suggestion_accepted' | 'topic_edit_accepted'
  */
+
+/**
+ * Recomputes a suggestion's real support from the Vote entity and compares it
+ * to the document's acceptance threshold. Suggestion.status, acceptedAt and the
+ * proVotes/conVotes counters are all client-writable (the creator may update
+ * their own suggestion record), so acceptance must never be taken from the
+ * record — only from the votes actually cast.
+ *
+ * @returns {{ok: boolean, delta: number, threshold: number, reason?: string}}
+ */
+export async function verifySuggestionConsensus(base44, suggestion, document) {
+  const suggestionId = suggestion?.id;
+  if (!suggestionId || !suggestion?.documentId) {
+    return { ok: false, delta: 0, threshold: 0, reason: 'Suggestion or document missing' };
+  }
+
+  let doc = document;
+  if (!doc) {
+    const docs = await base44.entities.Document.filter({ id: suggestion.documentId });
+    doc = docs[0];
+  }
+  if (!doc) return { ok: false, delta: 0, threshold: 0, reason: 'Document not found' };
+
+  const realVotes = await base44.entities.Vote.filter({ suggestionId });
+  // Deduplicate by voter userId — Vote create RLS only requires userId ==
+  // user.id, so a single voter can create multiple rows. Without dedup,
+  // a user could fabricate apparent consensus and farm points.
+  const votesByVoter = new Map();
+  for (const v of realVotes) {
+    if (!v.userId) continue;
+    votesByVoter.set(v.userId, v);
+  }
+  const dedupedVotes = Array.from(votesByVoter.values());
+  const proVotes = dedupedVotes.filter(v => v.vote === 'pro').length;
+  const conVotes = dedupedVotes.filter(v => v.vote === 'con').length;
+  const delta = proVotes - conVotes;
+  const threshold = doc.threshold > 0 ? Math.max(2, doc.threshold) : 2;
+
+  return {
+    ok: delta >= threshold,
+    delta,
+    threshold,
+    reason: delta >= threshold ? undefined : 'Suggestion does not meet consensus threshold'
+  };
+}
+
 export async function awardSuggestionPointsLogic(base44, { suggestionId, action, skipThresholdVerification }) {
   if (!suggestionId) {
     return { success: false, error: 'Missing suggestionId', status: 400 };
@@ -46,22 +92,9 @@ export async function awardSuggestionPointsLogic(base44, { suggestionId, action,
   // processAcceptanceV4 does. processAcceptance V1-V4 pass
   // skipThresholdVerification=true because they already verified server-side.
   if (!skipThresholdVerification) {
-    const realVotes = await base44.entities.Vote.filter({ suggestionId });
-    // Deduplicate by voter userId — Vote create RLS only requires userId ==
-    // user.id, so a single voter can create multiple rows. Without dedup,
-    // a user could fabricate apparent consensus and farm points.
-    const votesByVoter = new Map();
-    for (const v of realVotes) {
-      if (!v.userId) continue;
-      votesByVoter.set(v.userId, v);
-    }
-    const dedupedVotes = Array.from(votesByVoter.values());
-    const realProVotes = dedupedVotes.filter(v => v.vote === 'pro').length;
-    const realConVotes = dedupedVotes.filter(v => v.vote === 'con').length;
-    const verifyDelta = realProVotes - realConVotes;
-    const verifyThreshold = documents[0].threshold > 0 ? Math.max(2, documents[0].threshold) : 2;
-    if (verifyDelta < verifyThreshold) {
-      console.log('[AWARD POINTS] Threshold not met (delta:', verifyDelta, 'threshold:', verifyThreshold, ') — rejecting');
+    const verdict = await verifySuggestionConsensus(base44, suggestion, documents[0]);
+    if (!verdict.ok) {
+      console.log('[AWARD POINTS] Threshold not met (delta:', verdict.delta, 'threshold:', verdict.threshold, ') — rejecting');
       return { success: false, error: 'Suggestion does not meet consensus threshold', status: 403 };
     }
   }

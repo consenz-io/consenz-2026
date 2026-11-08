@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
-import { awardSuggestionPointsLogic } from '../../shared/awardSuggestionPointsLogic.ts';
+import { awardSuggestionPointsLogic, verifySuggestionConsensus } from '../../shared/awardSuggestionPointsLogic.ts';
 import { INTERNAL_AUTOMATION_TOKEN } from '../../shared/internalToken.ts';
 
 /**
@@ -60,10 +60,26 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Admin-approved, skipping' });
     }
 
-    // Delegate to shared logic — has idempotency guard, safe to call multiple times
+    if (!suggestion.acceptedAt) {
+      return Response.json({ success: true, message: 'No server acceptance timestamp, skipping' });
+    }
+
+    // Trust boundary: status/acceptedAt are client-writable on the creator's own
+    // suggestion record (Suggestion update RLS is creator-scoped), so a creator
+    // could flip status to 'accepted' themselves. Verify acceptance against the
+    // votes actually cast before any points move — never against the record.
+    const verdict = await verifySuggestionConsensus(base44.asServiceRole, suggestion);
+    if (!verdict.ok) {
+      console.log('[AWARD ON ACCEPTANCE V2] Consensus not verified — no points:', verdict);
+      return Response.json({ success: true, message: 'Consensus not verified', verdict });
+    }
+
+    // Delegate to shared logic — has idempotency guard, safe to call multiple times.
+    // Consensus was just verified above, so skip the duplicate recount.
     const result = await awardSuggestionPointsLogic(base44.asServiceRole, {
       suggestionId,
-      action: 'suggestion_accepted'
+      action: 'suggestion_accepted',
+      skipThresholdVerification: true
     });
 
     console.log('[AWARD ON ACCEPTANCE V2] Suggestion:', suggestionId, 'Result:', result);
