@@ -73,57 +73,36 @@ export function useTopicVoteMutation({ document, user, topicEditSuggestions, que
         const thresholdForAcceptance = Math.max(2, document.threshold || 2);
 
         if (delta >= thresholdForAcceptance && topicSuggestion) {
-          // Optimistic cache update
-          queryClient.setQueryData(['topics', document.id], (old) =>
-            old?.map(t => t.id === topicSuggestion.topicId ? { ...t, title: topicSuggestion.newTitle } : t)
-          );
-          queryClient.setQueryData(['topicEditSuggestions', document.id], (old) =>
-            old?.map(s => s.id === suggestionId ? { ...s, status: 'accepted' } : s)
-          );
+          // The acceptance itself is decided and applied server-side, from the
+          // actual vote records — never from these denormalized counters.
+          const { data } = await base44.functions.invoke('processTopicEditAcceptance', {
+            suggestionId,
+          });
 
-          await Promise.all([
-            base44.entities.Topic.update(topicSuggestion.topicId, { title: topicSuggestion.newTitle }),
-            base44.entities.TopicEditSuggestion.update(suggestionId, { status: 'accepted' }),
-          ]);
+          if (data?.accepted) {
+            // Optimistic cache update
+            queryClient.setQueryData(['topics', document.id], (old) =>
+              old?.map(t => t.id === topicSuggestion.topicId ? { ...t, title: topicSuggestion.newTitle } : t)
+            );
+            queryClient.setQueryData(['topicEditSuggestions', document.id], (old) =>
+              old?.map(s => s.id === suggestionId ? { ...s, status: 'accepted' } : s)
+            );
 
-          // Create version record
-          try {
-            // Fetch only the latest version (sorted desc, limit 1) instead of loading
-            // ALL version records — O(1) network instead of O(N) for large documents
-            const latestVersions = await base44.entities.DocumentVersion.filter({ documentId: document.id }, '-version', 1);
-            const nextVersion = latestVersions.length > 0 ? (latestVersions[0].version || 0) + 1 : 1;
-            const topicSections = await base44.entities.Section.filter({ topicId: topicSuggestion.topicId });
-            const firstSectionId = topicSections[0]?.id;
-            if (firstSectionId) {
-              await base44.entities.DocumentVersion.create({
-                documentId: document.id,
-                sectionId: firstSectionId,
-                content: `topic_title_change:${topicSuggestion.topicId}:${topicSuggestion.originalTitle}:${topicSuggestion.newTitle}`,
-                changeDescription: `כותרת נושא עודכנה: ${topicSuggestion.originalTitle} → ${topicSuggestion.newTitle}`,
-                version: nextVersion,
-                changeType: 'suggestion_accepted',
-                suggestionId: topicSuggestion.id,
-                originalLanguage: 'he',
-              });
+            if (document.gamificationEnabled) {
+              base44.functions.invoke('awardTopicEditPoints', {
+                suggestionId, awardType: 'suggestion_accepted',
+              }).catch(() => {});
             }
-          } catch (versionErr) {
-            console.error('[TOPIC VOTE] Error creating version record:', versionErr);
+
+            toast.success('🎉 ההצעה לעריכת כותרת התקבלה!', { description: 'הכותרת עודכנה במסמך', duration: 4000 });
+
+            await Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
+              queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+              queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
+              queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] }),
+            ]);
           }
-
-          if (document.gamificationEnabled) {
-            base44.functions.invoke('awardTopicEditPoints', {
-              suggestionId, awardType: 'suggestion_accepted',
-            }).catch(() => {});
-          }
-
-          toast.success('🎉 ההצעה לעריכת כותרת התקבלה!', { description: 'הכותרת עודכנה במסמך', duration: 4000 });
-
-          await Promise.all([
-            queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
-            queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
-            queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
-            queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] }),
-          ]);
         }
       } finally {
         topicVotingInProgressRef.current.delete(suggestionId);

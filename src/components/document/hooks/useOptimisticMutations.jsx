@@ -9,7 +9,13 @@ export function useUpdateSuggestionStatus(documentId) {
 
   return useMutation({
     mutationFn: async ({ suggestionId, status }) => {
-      await base44.entities.Suggestion.update(suggestionId, { status });
+      // Status transitions are owned by the server (transitionSuggestion) —
+      // never written straight from the browser.
+      const response = await base44.functions.invoke('transitionSuggestion', {
+        suggestionId,
+        action: status === 'accepted' ? 'accept' : status === 'rejected' ? 'reject' : 'reopen',
+      });
+      if (!response?.data?.success) throw new Error(response?.data?.error || 'Status transition failed');
     },
     onMutate: async ({ suggestionId, status }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.suggestions(documentId) });

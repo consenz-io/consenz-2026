@@ -173,15 +173,16 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, message: 'Already processed' });
     }
 
-    // forceAccept bypasses the threshold check (admin override). Only an authenticated
-    // admin may bypass it; internal chain calls only pass forceAccept after the parent
-    // already meets the threshold, so degrading to the threshold check here is safe.
-    const canForceAccept = !!forceAccept && _gateUser?.role === 'admin';
+    const isInternalCall = !!body.internalToken && body.internalToken === INTERNAL_AUTOMATION_TOKEN;
+    // forceAccept bypasses the threshold check (admin override). Allowed for a
+    // system admin session, or for an internal caller that holds the automation
+    // token and has already verified document-level authorization itself
+    // (transitionSuggestion does exactly that before delegating here).
+    const canForceAccept = !!forceAccept && (_gateUser?.role === 'admin' || isInternalCall);
     // forceReleaseLock bypasses the stale-lock age check and forcibly clears the
     // acceptance CAS lock. Restrict it to admins and internal chain calls (which
     // pass INTERNAL_AUTOMATION_TOKEN) — any signed-in user could otherwise wipe
     // another caller's lock and cause duplicate section/version creation.
-    const isInternalCall = !!body.internalToken && body.internalToken === INTERNAL_AUTOMATION_TOKEN;
     const canForceRelease = !!forceReleaseLock && (_gateUser?.role === 'admin' || isInternalCall);
     if (!canForceAccept) {
       // Recount the real vote delta from the Vote entity instead of trusting

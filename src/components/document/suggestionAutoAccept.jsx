@@ -1048,7 +1048,15 @@ export async function checkTopicEditConsensus(suggestion, document) {
 /**
  * אישור אוטומטי של הצעת עריכת כותרת נושא
  */
-export async function autoAcceptTopicEditSuggestion(suggestion, userId, document) {
+export async function autoAcceptTopicEditSuggestion() {
+  // Moved server-side: processTopicEditAcceptance recounts the votes and owns
+  // the status transition. The implementation below is unreachable and must
+  // not be re-enabled — it trusted client-updatable proVotes/conVotes counters.
+  console.warn('[TOPIC AUTO-ACCEPT] Client-side acceptance removed; use processTopicEditAcceptance.');
+  return false;
+}
+
+async function _disabled_autoAcceptTopicEditSuggestion(suggestion, userId, document) {
   // שלב 1: קריאת המצב העדכני ביותר מהשרת - source of truth
   const freshSuggestions = await base44.entities.TopicEditSuggestion.filter({ id: suggestion.id });
   const freshSuggestion = freshSuggestions[0];

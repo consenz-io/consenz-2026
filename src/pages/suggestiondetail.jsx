@@ -335,100 +335,23 @@ function SuggestionDetail() {
     mutationFn: async (status) => {
       if (!isAdmin) throw new Error(t('adminAccessRequired'));
 
-      // If restoring to pending, set a new timer based on document's default lifetime
-      let updateData = { status };
-      if (status === 'pending') {
-        // If defaultSuggestionLifetimeHours is null, no time limit (timerEndsAt = null)
-        const timerEndsAt = document?.defaultSuggestionLifetimeHours === null ?
-        null :
-        new Date(Date.now() + (document?.defaultSuggestionLifetimeHours || 72) * 60 * 60 * 1000).toISOString();
-        updateData.timerEndsAt = timerEndsAt;
-        updateData.rejectedByAdmin = false; // Clear the rejected flag
-        // Clear stale acceptance fields so the reopened suggestion starts clean.
-        // The required support threshold is always read live from document.threshold,
-        // so clearing these prevents any frozen/stale consensus snapshot from
-        // lingering after a reopen.
-        updateData.thresholdAtRejection = null; // Clear frozen threshold — live document.threshold takes over
-        updateData.acceptanceLock = false;
-        updateData.approvedByAdmin = false;
-        updateData.acceptedAt = null;
-        updateData.participantsAtAcceptance = null;
-        updateData.suggestionConsensus = null;
-
-        // Re-sync proVotes/conVotes from the actual Vote records so that all
-        // past votes are preserved accurately even if the denormalized counts
-        // drifted out of sync during the expired period.
-        try {
-          const existingVotes = await retryWithBackoff(() =>
-            base44.entities.Vote.filter({ suggestionId })
-          );
-          updateData.proVotes = existingVotes.filter(v => v.vote === 'pro').length;
-          updateData.conVotes = existingVotes.filter(v => v.vote === 'con').length;
-        } catch (syncErr) {
-          console.error('Failed to re-sync votes on reopen:', syncErr);
-          // Keep existing proVotes/conVotes if re-sync fails — do NOT zero them.
-        }
-      } else if (status === 'rejected') {
-        updateData.rejectedByAdmin = true; // Mark as rejected by admin
-        updateData.thresholdAtRejection = document?.threshold || 2; // Freeze threshold at rejection time
-      } else if (status === 'accepted') {
-        updateData.approvedByAdmin = true; // Mark as approved by admin
+      // All transitions are performed server-side by transitionSuggestion:
+      // document-level authorization, a CAS on the status the admin saw, and
+      // (for acceptance) the same engine community votes use — no browser-side
+      // writes to status, timers, thresholds or the acceptance lock.
+      const response = await base44.functions.invoke('transitionSuggestion', {
+        suggestionId,
+        action: status === 'accepted' ? 'accept' : status === 'rejected' ? 'reject' : 'reopen',
+      });
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.error || 'שגיאה בעיבוד ההצעה');
       }
-
-      if (status === 'accepted' && suggestion.type === 'edit_section' && section) {
-        const versions = await retryWithBackoff(() => base44.entities.DocumentVersion.filter({ sectionId: section.id }));
-        const nextVersion = versions.length > 0 ? Math.max(...versions.map((v) => v.version)) + 1 : 1;
-        await retryWithBackoff(() => base44.entities.DocumentVersion.create({
-          documentId: suggestion.documentId, sectionId: section.id, content: section.content,
-          changeDescription: `לפני: ${suggestion.title}`, version: nextVersion, changeType: 'suggestion_accepted', suggestionId: suggestion.id
-        }));
-        await new Promise((r) => setTimeout(r, 300));
-        await retryWithBackoff(() => base44.entities.Section.update(section.id, { content: suggestion.newContent, lastEditedBy: user.id, originalLanguage: suggestion.originalLanguage || 'he' }));
-        await new Promise((r) => setTimeout(r, 300));
-        await retryWithBackoff(() => base44.entities.DocumentVersion.create({
-          documentId: suggestion.documentId, sectionId: section.id, content: suggestion.newContent,
-          changeDescription: suggestion.title, version: nextVersion + 1, changeType: 'suggestion_accepted', suggestionId: suggestion.id
-        }));
-      } else if (status === 'accepted' && suggestion.type === 'new_section') {
-        const existingSections = await retryWithBackoff(() =>
-        base44.entities.Section.filter({ documentId: suggestion.documentId, topicId: suggestion.topicId }, 'order')
-        );
-        let newOrder;
-        if (suggestion.insertPosition !== undefined && suggestion.insertPosition !== null) {
-          for (const sec of existingSections.filter((s) => s.order >= suggestion.insertPosition)) {
-            await retryWithBackoff(() => base44.entities.Section.update(sec.id, { order: sec.order + 1 }));
-            await new Promise((r) => setTimeout(r, 200));
-          }
-          newOrder = suggestion.insertPosition;
-        } else {
-          newOrder = existingSections.length > 0 ? Math.max(...existingSections.map((s) => s.order)) + 1 : 0;
-        }
-        const newSection = await retryWithBackoff(() => base44.entities.Section.create({
-          documentId: suggestion.documentId, topicId: suggestion.topicId,
-          content: suggestion.newContent, order: newOrder, lastEditedBy: user.id,
-          originalLanguage: suggestion.originalLanguage || 'he'
-        }));
-        await new Promise((r) => setTimeout(r, 300));
-        await retryWithBackoff(() => base44.entities.DocumentVersion.create({
-          documentId: suggestion.documentId, sectionId: newSection.id, content: suggestion.newContent,
-          changeDescription: suggestion.title, version: 1, changeType: 'section_created', suggestionId: suggestion.id
-        }));
-        // Update suggestion with sectionId so SectionCarousel can link it
-        updateData.sectionId = newSection.id;
-        updateData.type = 'edit_section';
-        updateData.originalContent = suggestion.newContent;
-      }
-
-      await new Promise((r) => setTimeout(r, 300));
-      await retryWithBackoff(() => base44.entities.Suggestion.update(suggestionId, updateData));
 
       const updatedSuggestions = await retryWithBackoff(() => base44.entities.Suggestion.filter({ id: suggestionId }));
       const updatedSuggestion = updatedSuggestions[0] || { ...suggestion, status };
 
-      await new Promise((r) => setTimeout(r, 300));
-      // For reopen (status → 'pending'), notify ALL document participants via a
-      // dedicated backend function with a distinct `suggestion_reopened` type.
-      // For accept/reject, notify only the creator via the frontend helper.
+      // For reopen (status → 'pending') notify ALL document participants via a
+      // dedicated backend function; for accept/reject notify only the creator.
       if (status === 'pending') {
         try {
           await base44.functions.invoke('notifySuggestionReopened', { suggestionId });

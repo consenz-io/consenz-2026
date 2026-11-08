@@ -237,26 +237,15 @@ export default function SuggestionSidebar({
     mutationFn: async (status) => {
       if (!isAdmin) throw new Error(t('adminAccessRequired'));
       
-      if (status === 'accepted') {
-        // Delegate to processAcceptance backend which handles all types correctly,
-        // creates version records, updates sections, and awards points/notifications.
-        const response = await base44.functions.invoke('processAcceptance', {
-          suggestionId: suggestion.id,
-          documentId: suggestion.documentId,
-          voterId: user.id,
-          wasNewVote: false,
-          forceAccept: true
-        });
-        if (!response?.data?.success) {
-          throw new Error(response?.data?.error || 'שגיאה בעיבוד ההצעה');
-        }
-        // Mark as approved by admin (processAcceptance already sets status=accepted)
-        await base44.entities.Suggestion.update(suggestionId, { approvedByAdmin: true });
-      } else {
-        await base44.entities.Suggestion.update(suggestionId, { 
-          status,
-          ...(status === 'rejected' ? { rejectedByAdmin: true, thresholdAtRejection: (document || parentDocument)?.threshold || 2 } : {})
-        });
+      // Every admin transition is owned by the server: authorization is checked
+      // against non-client-writable data, the status write is a CAS, and
+      // acceptance runs through the same acceptance engine as community votes.
+      const response = await base44.functions.invoke('transitionSuggestion', {
+        suggestionId: suggestion.id,
+        action: status === 'accepted' ? 'accept' : status === 'rejected' ? 'reject' : 'reopen',
+      });
+      if (!response?.data?.success) {
+        throw new Error(response?.data?.error || 'שגיאה בעיבוד ההצעה');
       }
 
       // אם גיימיפיקציה מופעלת ואדמין דחה — החזר נקודות ליוצר (server-side, atomic)

@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/LanguageContext";
 import { cleanDisplayName } from "@/lib/displayName";
-import { autoAcceptTopicEditSuggestion, checkTopicEditConsensus } from "@/components/document/suggestionAutoAccept";
 import { useVoteMutation } from "@/components/document/hooks/useVoteMutation";
 import { useTopicVoteMutation } from "@/components/document/hooks/useTopicVoteMutation";
 import { useSuggestionReorder } from "@/components/document/hooks/useSuggestionReorder";
@@ -226,35 +225,36 @@ export function useDocumentContentData({
     }
   }, [newlyCreatedSuggestion, onClearNewlyCreated, suggestions, topics]);
 
-  // Auto-accept for section suggestions is handled entirely by the backend (voteOnSuggestion → processAcceptance).
-  // Frontend only handles topic-edit suggestions auto-accept (no backend equivalent for those).
+  // Topic-edit suggestions are decided server-side (processTopicEditAcceptance):
+  // this effect only asks the server to re-check a pending suggestion that looks
+  // like it reached the threshold, and never writes a status itself.
   useEffect(() => {
     if (!document || !topicEditSuggestions || topicEditSuggestions.length === 0) return;
 
     const checkTopicSuggestions = async () => {
+      const threshold = Math.max(2, document.threshold || 2);
       for (const topicSuggestion of topicEditSuggestions) {
         if (topicSuggestion.status !== 'pending') continue;
+        if ((topicSuggestion.proVotes || 0) - (topicSuggestion.conVotes || 0) < threshold) continue;
 
-        const checkKey = `topic-${topicSuggestion.id}-${topicSuggestion.proVotes}-${topicSuggestion.conVotes}`;
+        const checkKey = `topic-${topicSuggestion.id}`;
         if (hasCheckedRef.current.has(checkKey)) continue;
         hasCheckedRef.current.add(checkKey);
 
         try {
-          const { shouldAccept } = await checkTopicEditConsensus(topicSuggestion, document);
-          if (shouldAccept) {
-            console.log('[AUTO-ACCEPT TOPIC] Auto-accepting topic suggestion:', topicSuggestion.id);
-            const acceptingUserId = user?.id || topicSuggestion.created_by;
-            const accepted = await autoAcceptTopicEditSuggestion(topicSuggestion, acceptingUserId, document);
-            if (accepted) {
-              Promise.all([
-                queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
-                queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
-                queryClient.invalidateQueries({ queryKey: ['document', document.id] })
-              ]);
-            }
+          const { data } = await base44.functions.invoke('processTopicEditAcceptance', {
+            suggestionId: topicSuggestion.id,
+          });
+          if (data?.accepted) {
+            Promise.all([
+              queryClient.invalidateQueries({ queryKey: ['topics', document.id] }),
+              queryClient.invalidateQueries({ queryKey: ['topicEditSuggestions', document.id] }),
+              queryClient.invalidateQueries({ queryKey: ['document', document.id] }),
+              queryClient.invalidateQueries({ queryKey: ['allVersions', document.id] }),
+            ]);
           }
         } catch (err) {
-          console.error('[AUTO-ACCEPT TOPIC] Error:', err);
+          console.error('[TOPIC ACCEPTANCE] Error:', err);
           hasCheckedRef.current.delete(checkKey);
         }
       }
@@ -265,7 +265,7 @@ export function useDocumentContentData({
     };
 
     checkTopicSuggestions();
-  }, [topicEditSuggestions, document, user, queryClient]);
+  }, [topicEditSuggestions, document, queryClient]);
 
   // Comment counts — reuse the same reactive aggregatedData query (defined above).
   const allDocumentComments = aggregatedData?.comments || [];
