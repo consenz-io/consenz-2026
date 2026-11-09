@@ -504,6 +504,15 @@ function SuggestionDetail() {
     return profile?.fullName || '';
   };
 
+  // Opens the edit-section flow for the live section this suggestion belongs to.
+  const handleEditSectionClick = () => {
+    if (!user) {
+      base44.auth.redirectToLogin(window.location.href);
+      return;
+    }
+    setShowEditSectionModal(true);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':return 'bg-amber-100 text-amber-800 border-amber-200';
@@ -701,6 +710,15 @@ function SuggestionDetail() {
               }
                 </div> :
             null
+            }
+
+            {section && sections?.length > 0 && suggestion.type !== 'delete_section' &&
+            <div>
+                <Button variant="outline" onClick={handleEditSectionClick} className="w-full">
+                  <Edit2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                  {t('editSection')}
+                </Button>
+              </div>
             }
 
             {suggestion.type === 'new_section' && suggestion.status === 'pending' &&
