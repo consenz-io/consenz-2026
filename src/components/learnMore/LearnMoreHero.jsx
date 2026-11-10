@@ -20,7 +20,7 @@ import usePlatformCtas from "./usePlatformCtas";
 // (amber frame, header with proposer/date, proposal wording box,
 // threshold progress bar and vote buttons).
 function ProposalCard({ c }) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const pro = 3;
   const con = 0;
   const threshold = 17;
@@ -91,20 +91,6 @@ function ProposalCard({ c }) {
           <span className="truncate">{t("voteCon")}</span>
         </div>
       </div>
-
-      {/* Suggestion navigation strip — mirrors the arrows and dot indicators
-          used to move between proposals in the real carousel */}
-      <img
-        src="https://media.base44.com/images/public/69ef99e5583af6a64ca3772e/241a2aa7e_generated_28bcf7da.png"
-        alt={
-        language === 'he' ?
-        'המחשת כפתורי הדפדוף בין ההצעות וסימוני המיקום' :
-        language === 'ar' ?
-        'رسم توضيحي لأزرار التنقل بين الاقتراحات ومؤشرات الموضع' :
-        'Illustration of the arrows for moving between proposals and the position dots'
-        }
-        className="mt-3 w-full select-none rounded-lg"
-        loading="lazy" />
 
       <div className="mt-2 flex items-center justify-end">
         
