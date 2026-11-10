@@ -142,7 +142,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
                 </motion.div>
               }
             </div>
-            <Button asChild size="lg" variant="outline" className="hidden md:inline-flex">
+            <Button asChild size="lg" variant="outline" className="w-full md:w-auto">
               <Link to={createPageUrl("LearnMore")}>{t('learnMore')}</Link>
             </Button>
           </div>
