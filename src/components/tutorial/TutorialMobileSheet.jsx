@@ -4,6 +4,7 @@ import { CheckCircle, X, UserPlus, PartyPopper, ChevronDown, ChevronUp, Compass 
 import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Mobile-optimised tutorial sheet.
@@ -27,6 +28,7 @@ export default function TutorialMobileSheet({
   onRequestSkip
 }) {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const heading = tTutorial(step.heading, language);
   const body = tTutorial(step.body, language);
   const learnMoreText = step.id === 'points-ranking-explain' ? tTutorial('points.ranking.explain.learnMore', language) : null;
@@ -107,6 +109,15 @@ export default function TutorialMobileSheet({
           </div>
           <h3 className="font-bold text-slate-900 text-base leading-snug">{heading}</h3>
           <p className="text-sm text-slate-600 leading-relaxed">{body}</p>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            {tTutorial('tour.summary.learnMoreInvite', language)}{' '}
+            <button
+              type="button"
+              onClick={() => { onSkip(); navigate('/LearnMore'); }}
+              className="font-semibold text-blue-700 underline underline-offset-2">
+              {tTutorial('tour.summary.learnMoreCta', language)}
+            </button>
+          </p>
           <ProgressDots />
           <div className="flex gap-2 w-full">
             <Button variant="ghost" size="sm" onClick={onBack} className="flex-1 text-slate-500">

@@ -6,6 +6,7 @@ import { tTutorial } from './tutorialSteps';
 import { useLanguage } from '@/components/LanguageContext';
 import { base44 } from '@/api/base44Client';
 import { scrollBubbleIntoView } from './scrollBubbleIntoView';
+import { useNavigate } from 'react-router-dom';
 
 const TOOLTIP_WIDTH = 320;
 const TOOLTIP_HEIGHT = 200; // fallback estimate before the bubble is measured
@@ -188,9 +189,16 @@ export default function TutorialTooltip({
   onRequestSkip
 }) {
   const { language } = useLanguage();
+  const navigate = useNavigate();
   const heading = tTutorial(step.heading, language);
   const body = tTutorial(step.body, language);
   const successMessage = tTutorial(step.successMessage, language);
+
+  // Close the tour, then open the Learn More page
+  const goToLearnMore = () => {
+    onSkip();
+    navigate('/LearnMore');
+  };
 
   const [pos, setPos] = useState(null);
   const [resolvedPosition, setResolvedPosition] = useState('bottom');
@@ -404,6 +412,16 @@ export default function TutorialTooltip({
           </div>
           <h3 className="font-bold text-slate-900 text-lg leading-snug">{heading}</h3>
           <p className="text-sm text-slate-600 leading-relaxed">{body}</p>
+
+          <p className="text-xs text-slate-500 leading-relaxed">
+            {tTutorial('tour.summary.learnMoreInvite', language)}{' '}
+            <button
+              type="button"
+              onClick={goToLearnMore}
+              className="font-semibold text-blue-700 underline underline-offset-2 hover:text-blue-900">
+              {tTutorial('tour.summary.learnMoreCta', language)}
+            </button>
+          </p>
 
           {/* Progress dots */}
           <div className="flex items-center gap-1.5 justify-center mt-1">
