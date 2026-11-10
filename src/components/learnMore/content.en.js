@@ -164,7 +164,7 @@ const en = {
     title: "How the points system keeps the discussion focused",
     subtitle: "Every action in a document has a small price in points, set in advance and known to everyone. That is what filters out unnecessary proposals and leaves what really matters.",
     logicTitle: "In short, how it works",
-    logicIntro: "Instead of a system admin censoring proposals, deleting them or approving them, every action in a document has a price in points. The amount is fixed, the same for every participant, and published in advance. Every new participant starts with 1,000 points, and every vote in favour of a proposal pays points back to the person who proposed it.",
+    logicIntro: "Instead of a system admin censoring proposals, deleting them or approving them, every action in a document has a price in points. The amount is fixed, the same for every participant, and published in advance. Every new participant starts with 1,000 points, and every vote in favour of a proposal pays points back to the person who proposed it. Participants who prove a positive contribution to the process, by earning support from the community, grow their reach and influence, while the reach of those who create noise that does not help the document move toward consensus shrinks.",
     stepsTitle: "Four steps, with an example for each",
     steps: [
       {
