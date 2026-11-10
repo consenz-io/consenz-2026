@@ -188,7 +188,11 @@ export default function LearnMoreHero({ c, isRTL }) {
             </p>
           </div>
 
-          <ProposalCard c={c} isRTL={isRTL} />
+          <div className="mx-auto w-full min-w-0 max-w-[560px]">
+            <div className="proposal-preview">
+              <ProposalCard c={c} isRTL={isRTL} />
+            </div>
+          </div>
         </div>
       </div>
     </section>);

@@ -265,6 +265,19 @@ button:focus-visible {
   animation: tutorial-bubble-glow 2.5s ease-in-out infinite;
 }
 
+/* Learn More: the example proposal card is a small preview of the real card,
+   not the real card's size. Zoom shrinks it proportionally and also shrinks
+   the space it takes in the layout, so nothing overflows the column. */
+.proposal-preview {
+  zoom: 1;
+}
+
+@media (min-width: 768px) {
+  .proposal-preview {
+    zoom: 0.66;
+  }
+}
+
 /* Marquee scrolling text (carousel navigation label) */
 @keyframes marquee-scroll-ltr {
   0% { transform: translateX(0); }
