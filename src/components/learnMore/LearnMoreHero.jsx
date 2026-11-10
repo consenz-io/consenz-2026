@@ -12,6 +12,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Compass,
+  FileText,
   LogIn,
   MessageSquare } from
 "lucide-react";
@@ -81,7 +82,22 @@ function ProposalCard({ c, isRTL }) {
       </div>
 
       {/* Proposed wording — the real change-block diff */}
-      <div className="rounded-lg border border-slate-300 bg-white p-3">
+      {/* The section's current wording — the baseline every proposal changes */}
+      <div className="mt-3 rounded-lg border border-slate-300 bg-white p-3">
+        <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {t("currentVersion")}
+        </p>
+        <div
+          className="text-sm leading-relaxed text-slate-700 [&_p]:m-0"
+          dangerouslySetInnerHTML={{ __html: c.cardOriginal }} />
+        
+      </div>
+
+      <div className="mt-2 rounded-lg border border-slate-300 bg-white p-3">
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+          {t("proposedChanges")}
+        </p>
         <ChangeBlockDiffView originalContent={c.cardOriginal} newContent={view.proposed} />
       </div>
 
