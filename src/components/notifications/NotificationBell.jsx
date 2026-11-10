@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/components/LanguageContext";
 import VirtualizedNotificationsList from "./VirtualizedNotificationsList";
+import { filterDeletedSuggestionNotifications } from "./filterDeletedSuggestionNotifications";
 import { formatRelativeTime } from "@/components/utils/dateFormatter";
 
 // Validate actionUrl before navigation — same-origin relative paths only.
@@ -39,7 +40,8 @@ export default function NotificationBell({ user }) {
     queryKey: ['notifications', user?.id],
     queryFn: async () => {
       const notifs = await base44.entities.Notification.filter({ userId: user.id }, '-created_date', 50);
-      return notifs;
+      // Hide notifications whose linked suggestion was deleted
+      return await filterDeletedSuggestionNotifications(notifs);
     },
     enabled: !!user?.id,
     staleTime: Infinity, // Real-time via subscription
@@ -73,6 +75,26 @@ export default function NotificationBell({ user }) {
 
     return () => {
       unsubscribe();
+    };
+  }, [user?.id, queryClient]);
+
+  // When a suggestion is deleted, its notifications stay stored but must drop
+  // out of the feed — refresh so the deletion is reflected immediately.
+  React.useEffect(() => {
+    if (!user?.id) return;
+
+    let deleteTimer;
+    const unsubscribe = base44.entities.Suggestion.subscribe((event) => {
+      if (event?.type !== 'delete') return;
+      clearTimeout(deleteTimer);
+      deleteTimer = setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
+      }, 300);
+    });
+
+    return () => {
+      unsubscribe();
+      clearTimeout(deleteTimer);
     };
   }, [user?.id, queryClient]);
 

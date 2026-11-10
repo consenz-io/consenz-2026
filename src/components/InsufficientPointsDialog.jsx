@@ -95,17 +95,16 @@ export default function InsufficientPointsDialog({
         </div>
 
         <DialogFooter className="flex-col gap-2">
-          <a
-            href={`${createPageUrl("LearnMore")}#gamification`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full"
-          >
-            <Button variant="outline" className="w-full gap-2">
+          <Button asChild variant="outline" className="w-full gap-2">
+            <a
+              href={`${createPageUrl("LearnMore")}#gamification`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {t('learnMore')}
               <ExternalLink className="w-4 h-4" />
-            </Button>
-          </a>
+            </a>
+          </Button>
           <Button onClick={onClose} className="w-full">
             הבנתי
           </Button>

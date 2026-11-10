@@ -103,12 +103,12 @@ export default function RejectedSuggestions() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="flex items-center gap-4">
-          <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <Button asChild variant="outline" size="sm" className="flex items-center gap-2">
+            <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
               {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
               {language === 'he' ? 'חזור' : language === 'ar' ? 'رجوع' : 'Back'}
-            </Button>
-          </Link>
+            </Link>
+          </Button>
           <div>
             <h1 className="text-3xl font-bold text-slate-900">
               {language === 'he' ? 'הצעות שנדחו' : language === 'ar' ? 'المقترحات المرفوضة' : 'Rejected Suggestions'}

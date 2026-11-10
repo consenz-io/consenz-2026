@@ -193,11 +193,11 @@ export default function GroupView() {
                     <FileText className="w-5 h-5" />{language === 'he' ? 'מסמכי הקבוצה' : language === 'ar' ? 'مستندات المجموعة' : 'Group Documents'}
                   </CardTitle>
                   {isMember && (
-                    <Link to={`${createPageUrl("CreateDocument")}?groupId=${groupId}`}>
-                      <Button size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600">
+                    <Button asChild size="sm" className="bg-gradient-to-r from-blue-600 to-indigo-600">
+                      <Link to={`${createPageUrl("CreateDocument")}?groupId=${groupId}`}>
                         <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />{language === 'he' ? 'מסמך חדש' : language === 'ar' ? 'مستند جديد' : 'New Document'}
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </CardHeader>

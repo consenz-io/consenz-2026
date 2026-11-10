@@ -202,9 +202,9 @@ export default function SectionHistory() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
         <div className="max-w-5xl mx-auto text-center py-12 md:py-20">
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 px-4">{t('sectionNotFound')}</h1>
-          <Link to={createPageUrl("Home")}>
-            <Button className="mt-4">{t('goHome')}</Button>
-          </Link>
+          <Button asChild className="mt-4">
+            <Link to={createPageUrl("Home")}>{t('goHome')}</Link>
+          </Button>
         </div>
       </div>
     );
@@ -249,12 +249,12 @@ export default function SectionHistory() {
               {' > '}
               {topic.title}
             </p>
-            <Link to={`${createPageUrl("DocumentView")}?id=${document.id}&scrollTo=${sectionId}`}>
-              <Button variant="ghost" size="sm">
+            <Button asChild variant="ghost" size="sm">
+              <Link to={`${createPageUrl("DocumentView")}?id=${document.id}&scrollTo=${sectionId}`}>
                 <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {t('viewInDocument')}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         )}
 

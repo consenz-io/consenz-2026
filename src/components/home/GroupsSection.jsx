@@ -91,9 +91,9 @@ export default function GroupsSection({ groups, groupsLoading, groupMembers, doc
             <h3 className="text-xl font-semibold text-slate-900 mb-2">{noGroupsTitle[language] || noGroupsTitle.en}</h3>
             <p className="text-slate-600 mb-4">{noGroupsSub[language] || noGroupsSub.en}</p>
             {user && (
-              <Link to={createPageUrl("CreateGroup")}>
-                <Button>{createLabel[language] || createLabel.en}</Button>
-              </Link>
+              <Button asChild>
+                <Link to={createPageUrl("CreateGroup")}>{createLabel[language] || createLabel.en}</Link>
+              </Button>
             )}
           </CardContent>
         </Card>
@@ -118,11 +118,11 @@ export default function GroupsSection({ groups, groupsLoading, groupMembers, doc
 
       {user && visibleGroups.length > 0 && (
         <div className="flex justify-center mt-12">
-          <Link to={createPageUrl("CreateGroup")}>
-            <Button variant="outline" size="lg" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+          <Button asChild variant="outline" size="lg" className="border-blue-300 text-blue-700 hover:bg-blue-50">
+            <Link to={createPageUrl("CreateGroup")}>
               {createNewLabel[language] || createNewLabel.en}
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       )}
     </section>

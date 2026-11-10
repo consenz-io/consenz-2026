@@ -506,9 +506,9 @@ export default function DocumentView() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
         <div className="max-w-6xl mx-auto text-center py-12 md:py-20">
           <h1 className="text-xl md:text-2xl font-bold text-slate-900 px-4">{t('documentNotFound')}</h1>
-          <Link to={createPageUrl("Home")}>
-            <Button className="mt-4">{t('goHome')}</Button>
-          </Link>
+          <Button asChild className="mt-4">
+            <Link to={createPageUrl("Home")}>{t('goHome')}</Link>
+          </Button>
         </div>
       </div>
     );
@@ -537,11 +537,11 @@ export default function DocumentView() {
                 {t('signIn')}
               </Button>
             )}
-            <Link to={createPageUrl("Groups")}>
-              <Button variant="outline" className="w-full">
+            <Button asChild variant="outline" className="w-full">
+              <Link to={createPageUrl("Groups")}>
                 {language === 'he' ? 'לעמוד הקבוצות' : language === 'ar' ? 'إلى المجموعات' : 'Go to Groups'}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

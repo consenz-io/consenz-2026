@@ -589,9 +589,9 @@ export default function DocumentCleanView() {
       <div className="min-h-screen bg-white p-8">
         <div className="max-w-4xl mx-auto text-center py-20">
           <h1 className="text-2xl font-bold text-slate-900">{t('documentNotFound')}</h1>
-          <Link to={createPageUrl("Home")}>
-            <Button className="mt-4">{t('goHome')}</Button>
-          </Link>
+          <Button asChild className="mt-4">
+            <Link to={createPageUrl("Home")}>{t('goHome')}</Link>
+          </Button>
         </div>
       </div>);
 
@@ -617,11 +617,11 @@ export default function DocumentCleanView() {
       <div className="bg-slate-50 border-b border-slate-200 p-3 md:p-4 print:hidden sticky top-0 z-10">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-4">
-            <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
-              <Button variant="outline" size="icon" className="shrink-0">
+            <Button asChild variant="outline" size="icon" className="shrink-0">
+              <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
                 {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <DocumentTitleHeading>
               {(document.originalLanguage || detectLanguage(document.title)) !== language && showTranslatedDoc ?
               translatedDocTitle || document.title :

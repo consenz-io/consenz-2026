@@ -527,7 +527,7 @@ export default function DocumentComments() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
         <div className="max-w-3xl mx-auto text-center py-12">
           <p className="text-slate-500">{t('documentNotFound')}</p>
-          <Link to={createPageUrl("Home")}><Button className="mt-4">{t('goHome')}</Button></Link>
+          <Button asChild className="mt-4"><Link to={createPageUrl("Home")}>{t('goHome')}</Link></Button>
         </div>
       </div>);
 
@@ -539,11 +539,11 @@ export default function DocumentComments() {
       <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
-              <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0 shrink-0">
+            <Button asChild variant="outline" size="icon" className="h-9 w-9 flex-shrink-0 shrink-0">
+              <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
                 {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <div className="flex-1 min-w-0" style={{ textAlign: 'start' }}>
               <h1 className="text-base md:text-lg font-bold text-slate-900 leading-tight">
                 {language === 'he' ? 'כל התגובות' : language === 'ar' ? 'جميع التعليقات' : 'All Comments'}
@@ -573,11 +573,11 @@ export default function DocumentComments() {
             <p className="text-slate-400 text-sm">
               {language === 'he' ? 'היה הראשון להגיב על סעיפי המסמך' : language === 'ar' ? 'كن أول من يعلق على مقاطع الوثيقة' : 'Be the first to comment on document sections'}
             </p>
-            <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`} className="inline-block mt-4">
-              <Button variant="outline" size="sm">
+            <Button asChild variant="outline" size="sm" className="mt-4">
+              <Link to={`${createPageUrl("DocumentView")}?id=${documentId}`}>
                 {language === 'he' ? 'חזור למסמך' : language === 'ar' ? 'العودة إلى المستند' : 'Back to document'}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         }
 

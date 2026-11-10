@@ -236,12 +236,12 @@ export default function DocumentVersionHistory({
     <div className="space-y-4">
       <div className={`flex items-center justify-between ${isRTL ? 'flex-row-reverse' : ''}`}>
         <h2 className={`text-xl font-bold text-slate-900 ${isRTL ? 'text-right' : 'text-left'}`}>{sectionName}</h2>
-        <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${sectionId}`}>
-          <Button variant="ghost" size="sm">
+        <Button asChild variant="ghost" size="sm">
+          <Link to={`${createPageUrl("DocumentView")}?id=${documentId}&scrollTo=${sectionId}`}>
             <ExternalLink className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
             {t('viewInDocument')}
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
 
       {versionGroups.filter(g => g.version && g.version.changeType).map((group, groupIndex) => {
@@ -270,12 +270,12 @@ export default function DocumentVersionHistory({
                     {getChangeTypeLabel(currentVer.changeType)}
                   </Badge>
                   {group.suggestionId && (
-                    <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-7">
+                    <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-7">
+                      <Link to={`${createPageUrl("SuggestionDetail")}?id=${group.suggestionId}`}>
                         <MessageSquare className={`w-3 h-3 ${isRTL ? 'ml-1' : 'mr-1'}`} />
                         {t('viewFullDiscussion')}
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                 </div>
               </div>

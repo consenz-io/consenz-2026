@@ -30,12 +30,12 @@ export default function Groups() {
             backUrl={createPageUrl("Home")}
           />
           {currentUser && (
-            <Link to={createPageUrl("CreateGroup")}>
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600">
+            <Button asChild className="bg-gradient-to-r from-blue-600 to-indigo-600">
+              <Link to={createPageUrl("CreateGroup")}>
                 <Plus className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
                 {language === 'he' ? 'קבוצה חדשה' : language === 'ar' ? 'مجموعة جديدة' : 'New Group'}
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           )}
         </div>
 

@@ -434,11 +434,11 @@ export default function SuggestionSidebar({
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <TranslateAllButton document={document || parentDocument} />
-            <Link to={`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionId}`}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <Link to={`${createPageUrl(PAGE_NAMES.SUGGESTION_DETAIL)}?id=${suggestionId}`}>
                 <ExternalLink className="w-4 h-4" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
             <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
               <X className="w-5 h-5" />
             </Button>
