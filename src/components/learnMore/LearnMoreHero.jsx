@@ -188,13 +188,7 @@ export default function LearnMoreHero({ c, isRTL }) {
             </p>
           </div>
 
-          {/* Shrunk to ~65% of a real document card so it stays a compact
-              illustration instead of taking over the page. `zoom` scales the
-              whole card (and its layout box), the width compensates so it still
-              fills the column cleanly. */}
-          <div className="w-full" style={{ zoom: 0.65, width: "153.85%" }}>
-            <ProposalCard c={c} isRTL={isRTL} />
-          </div>
+          <ProposalCard c={c} isRTL={isRTL} />
         </div>
       </div>
     </section>);
