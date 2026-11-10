@@ -293,7 +293,9 @@ export default function DocumentView() {
     if (typeof window === 'undefined' || !window.document) return;
     const findEl = () => {
       let element = window.document.getElementById(
-        scrollToSectionId.startsWith('section-') || scrollToSectionId.startsWith('new-suggestion-')
+        scrollToSectionId.startsWith('section-') ||
+        scrollToSectionId.startsWith('new-suggestion-') ||
+        scrollToSectionId.startsWith('topic-')
           ? scrollToSectionId
           : `section-${scrollToSectionId}`
       );

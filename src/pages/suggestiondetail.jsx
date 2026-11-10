@@ -591,7 +591,12 @@ function SuggestionDetail() {
             {/* Row 1: metadata (left) + back button & countdown/admin badges (right) */}
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
-                <BackToDocumentButton suggestion={suggestion} suggestionId={suggestionId} isRTL={isRTL} />
+                <BackToDocumentButton
+                  suggestion={suggestion}
+                  suggestionId={suggestionId}
+                  isRTL={isRTL}
+                  sectionExists={!!section}
+                  topicId={topic?.id || suggestion.topicId} />
                 {suggestion.timerEndsAt &&
                 <SuggestionCountdown timerEndsAt={suggestion.timerEndsAt} size="sm" status={suggestion.status} />
                 }

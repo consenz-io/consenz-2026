@@ -7,14 +7,15 @@ import { useLanguage } from "@/components/LanguageContext";
 
 /**
  * "Back to document" button for the suggestion detail page.
- * Navigates to the document and scrolls to the relevant position:
- * - Pending suggestion → scrolls to the suggestion card (via targetSuggestion param,
- *   which also auto-navigates the SectionCarousel to it and force-mounts its section)
- * - Accepted suggestion with sectionId → scrolls to the section (via scrollTo param,
- *   which force-mounts the section and scrolls with retries)
- * - Rejected / accepted-without-section (e.g. delete_section) → just opens the document
+ * Navigates to the document and always lands on the relevant place:
+ * - Pending suggestion → scrolls to the proposal card itself (targetSuggestion),
+ *   and the SectionCarousel navigates to it. Works for proposals whose section
+ *   was deleted too — their card is shown at the section's original position.
+ * - Closed suggestion whose section still exists → scrolls to that section.
+ * - Closed suggestion whose section was deleted → scrolls to the topic the
+ *   section belonged to, so the reader still lands in the right place.
  */
-export default function BackToDocumentButton({ suggestion, suggestionId, isRTL }) {
+export default function BackToDocumentButton({ suggestion, suggestionId, isRTL, sectionExists, topicId }) {
   const { t } = useLanguage();
   const navigate = useNavigate();
 
@@ -24,8 +25,10 @@ export default function BackToDocumentButton({ suggestion, suggestionId, isRTL }
 
     if (suggestion.status === 'pending') {
       url += `&targetSuggestion=${suggestionId}`;
-    } else if (suggestion.status === 'accepted' && suggestion.sectionId) {
+    } else if (suggestion.sectionId && sectionExists) {
       url += `&scrollTo=section-${suggestion.sectionId}`;
+    } else if (topicId) {
+      url += `&scrollTo=topic-${topicId}`;
     }
 
     navigate(url);

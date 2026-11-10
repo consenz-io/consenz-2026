@@ -61,7 +61,7 @@ const DocumentTopicCardInner = function DocumentTopicCard({ topic, topicIndex, t
   const topicNewSectionSuggestions = getNewSectionSuggestionsForTopic(topic.id);
 
   return (
-    <Card className="document-topic-card bg-white border-slate-200 w-full overflow-hidden">
+    <Card id={`topic-${topic.id}`} className="document-topic-card bg-white border-slate-200 w-full overflow-hidden scroll-mt-24">
       <CardHeader className="border-b border-slate-100 md:p-6 px-4">
         <div className={`flex items-start gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
           {/* Drag handle - only for admin */}
