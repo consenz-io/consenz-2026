@@ -36,8 +36,8 @@ export default function LearnMore() {
       <ValuePillars c={content.pillars} />
       <HowItWorksSteps c={content.how} />
       <ConsensusExplainer c={content.consensus} />
-      <CapabilitiesGrid c={content.capabilities} />
       <PointsEconomy c={content.points} />
+      <CapabilitiesGrid c={content.capabilities} />
       <LearnMoreAudiences c={content.audiences} />
       <LearnMoreCta c={content.cta} />
     </div>
