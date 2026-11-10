@@ -162,24 +162,36 @@ const en = {
   },
   points: {
     title: "How points work",
-    subtitle: "The points system can be turned on for each document: a new proposal costs points, and support for a proposal earns them back.",
-    logicTitle: "Why points exist",
-    logicIntro: "A proposal asks the community to stop and read. Points put a small, fixed price on that request, so every proposal is written with care. Anyone whose proposal moves the wording forward earns points back.",
-    principles: [
+    subtitle: "A simple mechanism with rules everyone knows in advance: it filters noise, keeps the discussion focused, and lets the community regulate itself without censorship.",
+    logicTitle: "What the points system is for",
+    logicIntro: "Every open discussion has noise: duplicate proposals, tiny changes, requests that lead nowhere. No one has to delete them or approve them. Instead, each action has a small, fixed price that is set in advance and visible to everyone. The discussion stays on what matters, and the community regulates itself without anyone deciding what may be said.",
+    stepsTitle: "How it works, step by step",
+    steps: [
       {
-        title: "Each proposal is written with care",
-        text: "Someone who spends points on a proposal first decides exactly what to change and how to phrase it. That means fewer small proposals, and more that are well worded.",
+        title: "You propose a change and pay for it in points",
+        text: "Anyone who opens a proposal pays an amount of points known in advance. It is small, every participant starts with 1,000, but it is enough to make you think twice before opening a proposal.",
       },
       {
-        title: "Fewer duplicates, more support",
-        text: "Twenty proposals on the same section split the support, and none of them reaches the threshold. A small price on a proposal cuts duplicates, so each one gets more supporters.",
+        title: "The community votes and the proposal gathers support",
+        text: "Every vote for a proposal gives points back to the person who proposed it, even if the proposal does not pass. Good wording earns back what it cost.",
       },
       {
-        title: "Points follow what builds agreement",
-        text: "Points come back for every vote a proposal receives, for a proposal that is accepted, and for the vote that decided it. A comment that earns likes pays too.",
+        title: "The proposal passes and the reward grows",
+        text: "When a proposal reaches the threshold and is accepted into the document, its author gets 500 points, and whoever's vote decided it gets 50.",
+      },
+      {
+        title: "What does not move forward closes on its own",
+        text: "A proposal that gathers no support closes when its voting time ends. Nothing is deleted, nothing is blocked, and no one decides who is right.",
       },
     ],
-    logicClosing: "In short: a proposal costs a little, agreement pays back a lot, and the discussion stays on what is still open.",
+    uniqueTitle: "What makes it different",
+    uniquePoints: [
+      "No censorship: no one decides which proposals get in and which are deleted. The rule is the same for everyone, known in advance, and applies equally to all.",
+      "The limit is decentralised: it is not set by a person but by a price, so every participant decides for themselves whether their proposal is worth the points.",
+      "Reward follows positive contribution: points come back for support, for a proposal that is accepted, and for a comment that earns likes, meaning for what moves the document forward.",
+    ],
+    impactTitle: "How it changes the way people use it",
+    impactText: "In practice fewer proposals arrive, but each one is worded better and gathers more support. The discussion does not scatter across twenty versions of the same change, and every participant can see the whole picture: who proposed what, what happened to it, and what it cost.",
     costsTitle: "What costs points",
     costs: [
       { label: "Opening a new document", value: "1,001" },
@@ -187,7 +199,7 @@ const en = {
       { label: "Editing an existing section", value: "200" },
       { label: "Renaming a topic", value: "100" },
     ],
-    costsNote: "System admins and group admins open a document at no cost.",
+    costsNote: "Opening a document is free for system admins and group admins.",
     rewardsTitle: "What earns points",
     rewards: [
       { label: "Each vote for your proposal", value: "+10" },
@@ -195,7 +207,8 @@ const en = {
       { label: "Your vote decided the proposal", value: "+50" },
       { label: "A like on your comment", value: "+5" },
     ],
-    rewardsNote: "Every new participant starts with 1,000 points. In a document without points, every proposal is open to everyone for free.",
+    rewardsNote: "Every new participant starts with 1,000 points. In a document without the points system, every proposal is open to everyone for free.",
+    closing: "And the result: a document that reflects broad agreement, because every section in it passed a real community vote. Participation stays open to everyone — you can vote, comment and influence for free, even without opening a proposal.",
   },
   audiences: {
     title: "Built for anywhere one wording has to speak for many",
