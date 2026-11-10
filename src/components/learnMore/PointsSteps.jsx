@@ -8,6 +8,11 @@ function StepCard({ step, index }) {
       </span>
       <h4 className="mt-2.5 text-sm font-semibold text-slate-900">{step.title}</h4>
       <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{step.text}</p>
+      {step.example && (
+        <p className="mt-2 rounded-md bg-blue-100/70 px-3 py-2 text-sm font-medium leading-relaxed text-blue-900">
+          {step.example}
+        </p>
+      )}
     </li>
   );
 }
