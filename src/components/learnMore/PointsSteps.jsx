@@ -1,4 +1,5 @@
 import { ShieldCheck, Sparkles, Users } from "lucide-react";
+import PointsBalanceScale from "@/components/learnMore/PointsBalanceScale";
 
 function StepCard({ step, index }) {
   return (
@@ -58,6 +59,8 @@ export default function PointsSteps({ c }) {
           <p className="mt-3 text-sm leading-relaxed text-slate-700">{c.impactText}</p>
         </div>
       </div>
+
+      <PointsBalanceScale s={c.spectrum} />
     </div>
   );
 }

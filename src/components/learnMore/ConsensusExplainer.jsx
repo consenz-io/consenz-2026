@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowUpRight, Equal, Activity, Scale } from "lucide-react";
+import ConsensusStabilityScale from "@/components/learnMore/ConsensusStabilityScale";
 
 export default function ConsensusExplainer({ c }) {
   return (
@@ -82,6 +83,8 @@ export default function ConsensusExplainer({ c }) {
             <p className="mt-1 text-sm leading-relaxed text-slate-700">{c.balanceText}</p>
           </div>
         </div>
+
+        <ConsensusStabilityScale s={c.spectrum} />
       </div>
     </section>
   );

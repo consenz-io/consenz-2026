@@ -133,6 +133,18 @@ const en = {
     balanceTitle: "A balance between flexible and fixed",
     balanceText:
       "The consensus meter also sets how open the wording is to change: when agreement runs high the threshold rises and the community protects agreed wording from churn; when it runs low the threshold falls and the text opens up again to debate and correction. The result is a balance between wording that can evolve and wording that holds.",
+    spectrum: {
+      title: "The spectrum: from dynamism to stability",
+      levelLabel: "Consensus level",
+      dynamicPole: "Dynamism — easy to change",
+      stablePole: "Stability — built to last",
+      hint: "Drag the marker: the higher the consensus, the higher the threshold, and the more stable the wording becomes.",
+      states: [
+        "Low consensus: the threshold drops, the wording stays open to frequent changes and gets rebuilt again and again.",
+        "Medium consensus: the wording evolves without flipping over — every change has to persuade, but it can happen.",
+        "High consensus: the threshold rises and the agreed wording is protected from changes. Only what is really needed gets changed.",
+      ],
+    },
     link: "Read the full consensus explainer",
   },
   capabilities: {
@@ -223,6 +235,22 @@ const en = {
     ],
     impactTitle: "How it looks in practice",
     impactText: "Fewer proposals arrive, but each one is worded better and gathers more support. Instead of twenty versions of the same change, there is one proposal that brings everyone around it.",
+    spectrum: {
+      title: "The spectrum: between noise and freedom of expression",
+      noisePole: "Noise",
+      freedomPole: "Freedom of expression",
+      hint: "The points place the document in the middle: open to everyone's proposals, without being flooded by them.",
+      markers: [
+        {
+          label: "Without points",
+          text: "Every proposal goes in immediately. Support scatters across versions of the same change, and the document struggles to move forward.",
+        },
+        {
+          label: "With points",
+          text: "Every participant can still propose, but each proposal has a price, so people propose what really matters and spend their attention voting on the rest.",
+        },
+      ],
+    },
     costsTitle: "What each action costs",
     costs: [
       { label: "Opening a new document", value: "1,001" },
