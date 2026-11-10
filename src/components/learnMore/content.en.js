@@ -161,7 +161,7 @@ const en = {
     ],
   },
   points: {
-    title: "How points work",
+    title: "How the discussion stays focused",
     subtitle: "A simple mechanism with rules everyone knows in advance: it filters noise, keeps the discussion focused, and lets the community regulate itself without censorship.",
     logicTitle: "What the points system is for",
     logicIntro: "Every open discussion has noise: duplicate proposals, tiny changes, requests that lead nowhere. No one has to delete them or approve them. Instead, each action has a small, fixed price that is set in advance and visible to everyone. The discussion stays on what matters, and the community regulates itself without anyone deciding what may be said.",
