@@ -19,6 +19,7 @@ const en = {
     cardThreshold: "Support threshold",
     cardResult: "The proposal passes the threshold",
     cardFootnote: "The gap between for and against reaches the document threshold",
+    navAuthors: ["Noa L.", "Itai B.", "Maya K."],
   },
   pillars: {
     title: "The principle behind every screen",

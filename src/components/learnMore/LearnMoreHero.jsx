@@ -1,5 +1,7 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { CarouselNavigationArrows } from "@/components/document/section-carousel/CarouselNavigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,8 +21,9 @@ import usePlatformCtas from "./usePlatformCtas";
 // Mirrors the real proposal card used inside a document
 // (amber frame, header with proposer/date, proposal wording box,
 // threshold progress bar and vote buttons).
-function ProposalCard({ c }) {
-  const { t } = useLanguage();
+function ProposalCard({ c, isRTL }) {
+  const { t, language } = useLanguage();
+  const [navIndex, setNavIndex] = useState(0);
   const pro = 3;
   const con = 0;
   const threshold = 17;
@@ -28,6 +31,25 @@ function ProposalCard({ c }) {
   const votesNeeded = Math.max(0, threshold - delta);
   const passed = delta >= threshold;
   const progress = Math.min(100, Math.max(0, delta / threshold * 100));
+
+  // The real paging strip from the suggestions carousel, fed with example views
+  // (current wording + three community proposals) so it looks and behaves
+  // exactly like it does inside a document.
+  const navViews = useMemo(
+    () => [
+      { id: "example-current", type: "current", data: {} },
+      ...c.navAuthors.map((_, i) => ({
+        id: `example-suggestion-${i}`,
+        type: "suggestion",
+        data: { type: "edit_section", created_by_id: `example-author-${i}` },
+      })),
+    ],
+    [c]
+  );
+
+  const getUserName = (id) => c.navAuthors[Number(String(id).split("-").pop())] || "";
+
+  const goTo = (index) => setNavIndex((index + navViews.length) % navViews.length);
 
   return (
     <div className="rounded-lg border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-3 shadow-sm md:p-6">
@@ -92,14 +114,20 @@ function ProposalCard({ c }) {
         </div>
       </div>
 
-      <div className="mt-2 flex items-center justify-end">
-        
-
-
-        
-      </div>
-
-      
+      {/* Paging between proposals — the real carousel navigation strip */}
+      <CarouselNavigationArrows
+        currentView={navViews[navIndex]}
+        allViews={navViews}
+        currentIndex={navIndex}
+        isRTL={isRTL}
+        language={language}
+        onPrev={() => goTo(navIndex - 1)}
+        onNext={() => goTo(navIndex + 1)}
+        onSelectView={(id) => setNavIndex(navViews.findIndex((v) => v.id === id))}
+        onReturnToCurrent={() => setNavIndex(0)}
+        isOnCurrentView={navIndex === 0}
+        getUserName={getUserName}
+        t={t} />
     </div>);
 
 }
@@ -156,7 +184,7 @@ export default function LearnMoreHero({ c, isRTL }) {
             </p>
           </div>
 
-          <ProposalCard c={c} />
+          <ProposalCard c={c} isRTL={isRTL} />
         </div>
       </div>
     </section>);

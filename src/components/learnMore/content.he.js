@@ -19,6 +19,7 @@ const he = {
     cardThreshold: "רף התמיכה",
     cardResult: "ההצעה עוברת את הרף",
     cardFootnote: "הפער בין בעד לנגד עומד ברף התמיכה של המסמך",
+    navAuthors: ["נועה ל.", "איתי ב.", "מאיה ק."],
   },
   pillars: {
     title: "העיקרון שמאחורי כל מסך",
