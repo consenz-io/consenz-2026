@@ -3,7 +3,7 @@ import PointsTable from "@/components/learnMore/PointsTable";
 
 export default function PointsEconomy({ c }) {
   return (
-    <section className="mx-auto max-w-7xl px-6 py-14 md:py-16">
+    <section id="gamification" className="mx-auto max-w-7xl px-6 py-14 md:py-16 scroll-mt-24">
       <div className="max-w-2xl">
         <h2 className="text-3xl font-bold text-slate-900">{c.title}</h2>
         <p className="mt-2 text-slate-600">{c.subtitle}</p>

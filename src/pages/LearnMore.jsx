@@ -16,16 +16,18 @@ export default function LearnMore() {
   const location = useLocation();
   const content = getLearnMoreContent(language);
 
-  // Deep link from the home page stats to the consensus explanation
+  // Deep links into a specific section — e.g. the home stats link to the
+  // consensus explanation, the document's points badge links to the points section.
+  const targetId = location.hash.replace("#", "");
   useEffect(() => {
-    if (location.hash !== "#consensus-calculation") return;
+    if (!targetId) return;
     const timer = setTimeout(() => {
       document
-        .getElementById("consensus-calculation")
+        .getElementById(targetId)
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 120);
     return () => clearTimeout(timer);
-  }, [location.hash]);
+  }, [targetId]);
 
   return (
     <div
