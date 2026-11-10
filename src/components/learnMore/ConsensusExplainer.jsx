@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { ArrowUpRight, Equal } from "lucide-react";
+import { ArrowUpRight, Equal, Activity } from "lucide-react";
 
 export default function ConsensusExplainer({ c }) {
   return (
@@ -60,6 +60,16 @@ export default function ConsensusExplainer({ c }) {
           <div>
             <p className="text-base leading-relaxed text-slate-700 md:text-lg">{c.exampleText}</p>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">{c.exampleNote}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-3 rounded-lg border-2 border-blue-300 bg-white p-4 shadow-sm">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+            <Activity className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-blue-900">{c.dynamicTitle}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-slate-700">{c.dynamicText}</p>
           </div>
         </div>
       </div>

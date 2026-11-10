@@ -101,6 +101,9 @@ const en = {
       "A document has 20 participants and a consensus meter of 50%. The support threshold is 10 — a proposal passes only when the gap between for and against reaches 10 or more.",
     exampleNote:
       "Proposals that keep broad agreement raise the bar for what comes next; divisive decisions lower it. The community decides for itself how hard it is to change the wording.",
+    dynamicTitle: "The bar moves with you",
+    dynamicText:
+      "The consensus meter is not a fixed value but a live measurement: every accepted proposal enters the calculation, raises or lowers the average, and instantly updates the support threshold for the proposals that follow. The process calibrates itself to the level of agreement the community actually reaches, instead of being stuck on a bar set once at the start.",
     link: "Read the full consensus explainer",
   },
   capabilities: {
