@@ -158,7 +158,7 @@ export default function LearnMoreHero({ c, isRTL }) {
             <Badge className="border border-blue-200 bg-blue-100 px-4 py-2 text-blue-700">
               {c.badge}
             </Badge>
-            <h1 className="mt-5 font-bold leading-tight text-slate-900 text-2xl md:text-2xl">
+            <h1 className="mt-5 font-bold leading-tight text-slate-900 text-4xl md:text-4xl">
               {c.title}
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 md:text-lg">
