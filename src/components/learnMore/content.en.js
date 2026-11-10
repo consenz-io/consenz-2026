@@ -218,6 +218,7 @@ const en = {
     uniquePoints: [
       "No censorship: no person decides which proposal gets in and which is deleted. The rule is the same for everyone and known in advance.",
       "The price does the filtering: every participant decides for themselves whether their proposal is worth the points.",
+      "New content adds noise, a vote does not: every proposal, an edit proposal for instance, adds more wording to read and compare. A vote adds no words at all, it only makes clear what the community wants. That is why the points system rewards voting: voting is free, and whoever's vote decides a proposal earns points for it.",
       "Good contribution pays off: points come back for support you receive, for a proposal that is accepted, and for a comment people liked.",
     ],
     impactTitle: "How it looks in practice",
