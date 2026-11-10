@@ -9,17 +9,54 @@ const en = {
     secondaryCta: "Sign in",
     note: "Proposals, arguments and votes — all visible, all recorded, all attached to the text.",
     cardLabel: "Example of an open proposal",
-    cardTitle: "Amendment to section 2.3 — quarterly reporting",
-    cardDate: "04.05.2026",
-    cardTime: "15:05",
-    cardBody:
-      "The quarterly report will be submitted within 15 days of the quarter's end, published to all participants, and opened for discussion before approval.",
+    cardCurrentLabel: "The current wording of the section",
     cardPro: "For",
     cardCon: "Against",
     cardThreshold: "Support threshold",
     cardResult: "The proposal passes the threshold",
     cardFootnote: "The gap between for and against reaches the document threshold",
-    navAuthors: ["Noa L.", "Itai B.", "Maya K."],
+    cardViews: [
+      {
+        author: "Drafting committee",
+        date: "01.05.2026",
+        time: "09:20",
+        pro: 14,
+        con: 1,
+        title: "Section 2.3 — reporting duty",
+        body:
+          "The document shall be submitted once a year, within 30 days of the end of the activity year, and brought to the general assembly for approval.",
+      },
+      {
+        author: "Noa L.",
+        date: "04.05.2026",
+        time: "15:05",
+        pro: 3,
+        con: 0,
+        title: "Amendment to section 2.3 — quarterly reporting",
+        body:
+          "The quarterly report will be submitted within 15 days of the quarter's end, published to all participants, and opened for discussion before approval.",
+      },
+      {
+        author: "Itai B.",
+        date: "05.05.2026",
+        time: "11:40",
+        pro: 6,
+        con: 2,
+        title: "A shorter monthly update",
+        body:
+          "A short monthly update will be published on the participants dashboard, with a full quarterly report detailing expenses and decisions.",
+      },
+      {
+        author: "Maya K.",
+        date: "06.05.2026",
+        time: "18:12",
+        pro: 9,
+        con: 3,
+        title: "Report only when spending exceeds budget",
+        body:
+          "A report will be submitted only when spending exceeds the approved budget by more than 10%, or at the request of five participants.",
+      },
+    ],
   },
   pillars: {
     title: "The principle behind every screen",

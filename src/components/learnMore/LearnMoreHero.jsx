@@ -24,56 +24,62 @@ import usePlatformCtas from "./usePlatformCtas";
 function ProposalCard({ c, isRTL }) {
   const { t, language } = useLanguage();
   const [navIndex, setNavIndex] = useState(0);
-  const pro = 3;
-  const con = 0;
+
+  // One entry per paging step: index 0 is the section's current wording,
+  // the rest are the community's proposals.
+  const views = c.cardViews;
+  const view = views[navIndex] || views[0];
   const threshold = 17;
-  const delta = pro - con;
+  const delta = view.pro - view.con;
   const votesNeeded = Math.max(0, threshold - delta);
   const passed = delta >= threshold;
   const progress = Math.min(100, Math.max(0, delta / threshold * 100));
 
-  // The real paging strip from the suggestions carousel, fed with example views
-  // (current wording + three community proposals) so it looks and behaves
-  // exactly like it does inside a document.
+  // The real paging strip from the suggestions carousel, fed with the same
+  // views so it looks and behaves exactly like it does inside a document.
   const navViews = useMemo(
-    () => [
-      { id: "example-current", type: "current", data: {} },
-      ...c.navAuthors.map((_, i) => ({
-        id: `example-suggestion-${i}`,
-        type: "suggestion",
-        data: { type: "edit_section", created_by_id: `example-author-${i}` },
-      })),
-    ],
-    [c]
+    () =>
+    views.map((_, i) => ({
+      id: i === 0 ? "example-current" : `example-suggestion-${i}`,
+      type: i === 0 ? "current" : "suggestion",
+      data: { type: "edit_section", created_by_id: `example-author-${i}` },
+    })),
+    [views]
   );
 
-  const getUserName = (id) => c.navAuthors[Number(String(id).split("-").pop())] || "";
+  const getUserName = (id) => {
+    const index = Number(String(id).split("-").pop());
+    return views[index]?.author || "";
+  };
 
   const goTo = (index) => setNavIndex((index + navViews.length) % navViews.length);
 
   return (
-    <div className="rounded-lg border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-3 shadow-sm md:p-6">
+    <div className="w-full min-w-0 overflow-hidden rounded-lg border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-3 shadow-sm md:p-6">
       <div className="mb-3 flex items-center justify-between gap-2 border-b border-amber-200 pb-3">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-          {c.cardLabel}
+        <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+          <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span className="truncate">{navIndex === 0 ? c.cardCurrentLabel : c.cardLabel}</span>
         </span>
         <span className="flex shrink-0 flex-col items-end text-[10px] leading-tight text-slate-400">
-          <span>{c.cardDate}</span>
-          <span>{c.cardTime}</span>
+          <span>{view.date}</span>
+          <span>{view.time}</span>
         </span>
       </div>
 
-      <p className="text-sm font-bold text-slate-800">{c.cardTitle}</p>
+      <p className="min-w-0 truncate text-sm font-bold text-slate-800">{view.title}</p>
+      <p className="mt-0.5 min-w-0 truncate text-[11px] font-medium text-amber-700/80">
+        {view.author}
+      </p>
 
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className="text-xs text-slate-500">{t("proposedChanges")}</span>
-        <Badge variant="outline" className="border-amber-300 text-[10px] text-amber-700">
-          1 / 4
+        <Badge variant="outline" className="shrink-0 border-amber-300 text-[10px] text-amber-700">
+          {navIndex + 1} / {views.length}
         </Badge>
       </div>
-      <div className="mt-1 rounded border border-amber-200 bg-white/80 p-3 text-sm leading-relaxed text-slate-800">
-        {c.cardBody}
+      <div className="mt-1 flex min-h-[5.25rem] items-start rounded border border-amber-200 bg-white/80 p-3 text-sm leading-relaxed text-slate-800">
+        <span className="min-w-0">{view.body}</span>
       </div>
 
       {/* Support threshold progress — same layout as the real card */}
@@ -87,13 +93,13 @@ function ProposalCard({ c, isRTL }) {
         <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
           <span className="flex items-center gap-1">
             <ThumbsUp className="h-3 w-3" aria-hidden="true" />
-            {pro}
+            {view.pro}
           </span>
           <span className="font-medium">
             {c.cardThreshold}: {threshold}
           </span>
           <span className="flex items-center gap-1">
-            {con}
+            {view.con}
             <ThumbsDown className="h-3 w-3" aria-hidden="true" />
           </span>
         </div>
@@ -106,7 +112,7 @@ function ProposalCard({ c, isRTL }) {
         <div className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-green-200 px-2 text-sm font-semibold text-green-700">
           <ThumbsUp className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span className="truncate">{t("votePro")}</span>
-          <span className="text-xs opacity-80">({pro})</span>
+          <span className="text-xs opacity-80">({view.pro})</span>
         </div>
         <div className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-red-200 px-2 text-sm font-semibold text-red-700">
           <ThumbsDown className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -150,7 +156,7 @@ export default function LearnMoreHero({ c, isRTL }) {
         </Link>
 
         <div className="mt-8 grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14">
-          <div>
+          <div className="min-w-0">
             <Badge className="border border-blue-200 bg-blue-100 px-4 py-2 text-blue-700">
               {c.badge}
             </Badge>
