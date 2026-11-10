@@ -39,8 +39,8 @@ function ProposalCard({ c, isRTL }) {
       data: {
         type: "edit_section",
         created_by_id: `example-author-${i}`,
-        created_date: item.createdDate
-      }
+        created_date: item.createdDate,
+      },
     })),
     [views]
   );
@@ -56,7 +56,7 @@ function ProposalCard({ c, isRTL }) {
     proVotes: view.proVotes,
     conVotes: view.conVotes,
     created_by_id: currentView.data.created_by_id,
-    created_date: view.createdDate
+    created_date: view.createdDate,
   };
 
   return (
@@ -158,7 +158,7 @@ export default function LearnMoreHero({ c, isRTL }) {
             <Badge className="border border-blue-200 bg-blue-100 px-4 py-2 text-blue-700">
               {c.badge}
             </Badge>
-            <h1 className="mt-5 font-bold leading-tight text-slate-900 text-4xl md:text-4xl">
+            <h1 className="mt-5 text-3xl font-bold leading-tight text-slate-900 md:text-5xl">
               {c.title}
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 md:text-lg">
