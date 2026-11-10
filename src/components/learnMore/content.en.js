@@ -2,7 +2,7 @@ const en = {
   hero: {
     back: "Back to home",
     badge: "How Consenz works",
-    title: "Building shared consensus together - with transparency, efficiency and joy",
+    title: "One document. A whole community. Consensus you can measure.",
     subtitle:
       "Consenz is a platform for drafting policy documents, bylaws and decisions together. Anyone can propose a change, every change opens to discussion and a transparent vote, and the document only changes once the community reaches the support threshold it set for itself.",
     primaryCta: "Tour the platform",
