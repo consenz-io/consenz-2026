@@ -104,6 +104,9 @@ const en = {
     dynamicTitle: "The bar moves with you",
     dynamicText:
       "The consensus meter is not a fixed value but a live measurement: every accepted proposal enters the calculation, raises or lowers the average, and instantly updates the support threshold for the proposals that follow. The process calibrates itself to the level of agreement the community actually reaches, instead of being stuck on a bar set once at the start.",
+    balanceTitle: "A balance between flexible and fixed",
+    balanceText:
+      "The consensus meter also sets how open the wording is to change: when agreement runs high the threshold rises and the community protects agreed wording from churn; when it runs low the threshold falls and the text opens up again to debate and correction. The result is a balance between wording that can evolve and wording that holds.",
     link: "Read the full consensus explainer",
   },
   capabilities: {
