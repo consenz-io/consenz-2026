@@ -2,6 +2,9 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { CarouselNavigationArrows } from "@/components/document/section-carousel/CarouselNavigation";
+import CarouselTitleInline from "@/components/document/section-carousel/CarouselTitleInline";
+import ChangeBlockDiffView from "@/components/document/ChangeBlockDiffView";
+import VotingProgressSection from "@/components/document/VotingProgressSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,119 +13,113 @@ import {
   CheckCircle2,
   Compass,
   LogIn,
-  MessageSquare,
-  Sparkles,
-  ThumbsDown,
-  ThumbsUp } from
+  MessageSquare } from
 "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
 import usePlatformCtas from "./usePlatformCtas";
 
-// Mirrors the real proposal card used inside a document
-// (amber frame, header with proposer/date, proposal wording box,
-// threshold progress bar and vote buttons).
+// The sample card is assembled from the real building blocks of a document's
+// suggestion carousel — header line, change-block diff, voting progress and the
+// paging strip — so it shows exactly what an edit-suggestion looks like in the app.
+const THRESHOLD = 17;
+
 function ProposalCard({ c, isRTL }) {
   const { t, language } = useLanguage();
   const [navIndex, setNavIndex] = useState(0);
 
-  // One entry per paging step: index 0 is the section's current wording,
-  // the rest are the community's proposals.
+  // Each paging step is a different proposal to change the same section.
   const views = c.cardViews;
   const view = views[navIndex] || views[0];
-  const threshold = 17;
-  const delta = view.pro - view.con;
-  const votesNeeded = Math.max(0, threshold - delta);
-  const passed = delta >= threshold;
-  const progress = Math.min(100, Math.max(0, delta / threshold * 100));
 
-  // The real paging strip from the suggestions carousel, fed with the same
-  // views so it looks and behaves exactly like it does inside a document.
   const navViews = useMemo(
     () =>
-    views.map((_, i) => ({
-      id: i === 0 ? "example-current" : `example-suggestion-${i}`,
-      type: i === 0 ? "current" : "suggestion",
-      data: { type: "edit_section", created_by_id: `example-author-${i}` },
+    views.map((item, i) => ({
+      id: `example-suggestion-${i}`,
+      type: "suggestion",
+      data: {
+        type: "edit_section",
+        created_by_id: `example-author-${i}`,
+        created_date: item.createdDate,
+      },
     })),
     [views]
   );
 
-  const getUserName = (id) => {
-    const index = Number(String(id).split("-").pop());
-    return views[index]?.author || "";
-  };
-
+  const currentView = navViews[navIndex];
+  const getUserName = (id) => views[Number(String(id).split("-").pop())]?.author || "";
   const goTo = (index) => setNavIndex((index + navViews.length) % navViews.length);
 
+  const suggestion = {
+    id: currentView.id,
+    type: "edit_section",
+    status: "pending",
+    proVotes: view.proVotes,
+    conVotes: view.conVotes,
+    created_by_id: currentView.data.created_by_id,
+    created_date: view.createdDate,
+  };
+
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-lg border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-3 shadow-sm md:p-6">
-      <div className="mb-3 flex items-center justify-between gap-2 border-b border-amber-200 pb-3">
-        <span className="inline-flex min-w-0 items-center gap-1.5 truncate text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-          <Sparkles className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span className="truncate">{navIndex === 0 ? c.cardCurrentLabel : c.cardLabel}</span>
-        </span>
-        <span className="flex shrink-0 flex-col items-end text-[10px] leading-tight text-slate-400">
-          <span>{view.date}</span>
-          <span>{view.time}</span>
-        </span>
-      </div>
-
-      <p className="min-w-0 truncate text-sm font-bold text-slate-800">{view.title}</p>
-      <p className="mt-0.5 min-w-0 truncate text-[11px] font-medium text-amber-700/80">
-        {view.author}
-      </p>
-
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="text-xs text-slate-500">{t("proposedChanges")}</span>
-        <Badge variant="outline" className="shrink-0 border-amber-300 text-[10px] text-amber-700">
-          {navIndex + 1} / {views.length}
-        </Badge>
-      </div>
-      <div className="mt-1 flex min-h-[5.25rem] items-start rounded border border-amber-200 bg-white/80 p-3 text-sm leading-relaxed text-slate-800">
-        <span className="min-w-0">{view.body}</span>
-      </div>
-
-      {/* Support threshold progress — same layout as the real card */}
-      <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <div className="relative h-2 overflow-hidden rounded-full bg-slate-200">
-          <div
-            className={`absolute inset-y-0 start-0 rounded-full ${passed ? "bg-green-500" : "bg-blue-400"}`}
-            style={{ width: `${progress}%` }} />
+    <div className="w-full min-w-0 overflow-hidden rounded-lg border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-3 transition-all duration-300 hover:border-amber-400 hover:shadow-md md:p-6">
+      {/* Section number + position, then the real proposal header line */}
+      <div className="mb-3 flex items-center justify-between gap-2 md:mb-4">
+        <div className="flex min-w-0 flex-1 items-center gap-2 md:gap-3">
+          <div className="flex flex-shrink-0 flex-col items-start gap-0.5">
+            <div className="text-xs font-medium text-slate-500 md:text-sm">
+              {t("section")} 3
+            </div>
+            <Badge variant="outline" className="px-1.5 py-0 text-[10px] md:text-xs">
+              {navIndex + 1} / {views.length}
+            </Badge>
+          </div>
+          <CarouselTitleInline
+            currentView={currentView}
+            language={language}
+            getUserName={getUserName} />
           
         </div>
-        <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
-          <span className="flex items-center gap-1">
-            <ThumbsUp className="h-3 w-3" aria-hidden="true" />
-            {view.pro}
-          </span>
-          <span className="font-medium">
-            {c.cardThreshold}: {threshold}
-          </span>
-          <span className="flex items-center gap-1">
-            {view.con}
-            <ThumbsDown className="h-3 w-3" aria-hidden="true" />
-          </span>
-        </div>
-        <p className="mt-2 text-center text-xs font-medium text-slate-500">
-          {passed ? `✓ ${c.cardResult}` : t("votesNeededToPass", { count: votesNeeded })}
-        </p>
       </div>
 
-      <div className="mt-2 flex gap-2">
-        <div className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-green-200 px-2 text-sm font-semibold text-green-700">
-          <ThumbsUp className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span className="truncate">{t("votePro")}</span>
-          <span className="text-xs opacity-80">({view.pro})</span>
+      {/* Proposed wording — the real change-block diff */}
+      <div className="rounded-lg border border-slate-300 bg-white p-3">
+        <ChangeBlockDiffView originalContent={c.cardOriginal} newContent={view.proposed} />
+      </div>
+
+      {view.explanation &&
+      <div className="mt-3">
+          <div className="mb-1 font-semibold text-slate-700">{t("explanation")}:</div>
+          <p className="text-sm text-slate-600">{view.explanation}</p>
         </div>
-        <div className="flex h-10 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-red-200 px-2 text-sm font-semibold text-red-700">
-          <ThumbsDown className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span className="truncate">{t("voteCon")}</span>
+      }
+
+      <div className="mt-4 space-y-2">
+        <VotingProgressSection
+          suggestion={suggestion}
+          document={{ threshold: THRESHOLD }}
+          userVote={null}
+          voteMutation={{ isPending: false, mutate: () => {} }}
+          isRTL={isRTL} />
+        
+
+        <div className={`mt-2 flex flex-wrap items-center gap-2 ${isRTL ? "flex-row-reverse" : "flex-row"}`}>
+          <Button
+            variant="outline"
+            size="sm"
+            className={`h-8 gap-1.5 px-3 text-sm ${isRTL ? "mr-auto" : "ml-auto"} ${
+            view.comments > 0 ?
+            "border-blue-300 bg-blue-50 font-semibold text-blue-700" :
+            "text-slate-600"}`
+            }>
+            
+            <MessageSquare className={`h-4 w-4 ${view.comments > 0 ? "fill-blue-200" : ""}`} />
+            {t("comments")}{view.comments > 0 ? ` (${view.comments})` : ""}
+          </Button>
         </div>
       </div>
 
       {/* Paging between proposals — the real carousel navigation strip */}
       <CarouselNavigationArrows
-        currentView={navViews[navIndex]}
+        currentView={currentView}
         allViews={navViews}
         currentIndex={navIndex}
         isRTL={isRTL}
@@ -131,9 +128,10 @@ function ProposalCard({ c, isRTL }) {
         onNext={() => goTo(navIndex + 1)}
         onSelectView={(id) => setNavIndex(navViews.findIndex((v) => v.id === id))}
         onReturnToCurrent={() => setNavIndex(0)}
-        isOnCurrentView={navIndex === 0}
+        isOnCurrentView={false}
         getUserName={getUserName}
         t={t} />
+      
     </div>);
 
 }
