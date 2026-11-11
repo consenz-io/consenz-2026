@@ -6,8 +6,7 @@ import {
   fill,
   stateIndexFor,
 } from "@/components/learnMore/consensus-lab/demoStages";
-import StoryTimeline from "@/components/learnMore/consensus-lab/StoryTimeline";
-import NarrativeCard from "@/components/learnMore/consensus-lab/NarrativeCard";
+import StageNavigator from "@/components/learnMore/consensus-lab/StageNavigator";
 import VoteSplit from "@/components/learnMore/consensus-lab/VoteSplit";
 import EditStats from "@/components/learnMore/consensus-lab/EditStats";
 import ConsensusTrail from "@/components/learnMore/consensus-lab/ConsensusTrail";
@@ -39,7 +38,7 @@ export default function ConsensusStepsDemo({ s }) {
         <p className="mt-1 text-xs leading-relaxed text-slate-500 md:text-sm">{s.hint}</p>
       </div>
 
-      <StoryTimeline s={s} stages={SEQUENCE} index={index} onSelect={goTo} />
+      <StageNavigator s={s} stages={SEQUENCE} index={index} onSelect={goTo} />
 
       <motion.div
         key={index}
@@ -48,9 +47,7 @@ export default function ConsensusStepsDemo({ s }) {
         transition={{ duration: 0.25 }}
         className="p-5 md:p-6"
       >
-        <NarrativeCard s={s} stage={stage} />
-
-        <div className="mt-4 flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${tone}`}
           >
@@ -71,11 +68,23 @@ export default function ConsensusStepsDemo({ s }) {
         <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
           <span>{s.passedLabel}</span>
+          <span className="text-emerald-600" aria-hidden="true">
+            ·
+          </span>
+          <span>{s.docNotes[stage.type]}</span>
           <span className="ms-auto inline-flex items-baseline gap-1 font-medium text-emerald-800/80">
             <bdi className="font-bold tabular-nums">{stage.sections}</bdi>
             {s.sectionsLabel}
           </span>
         </div>
+
+        <p className="mt-3 text-sm leading-relaxed text-slate-600">
+          {fill(s.passNote, {
+            gap: stage.gap,
+            threshold: stage.threshold,
+            next: stage.nextThreshold,
+          })}
+        </p>
 
         <ConsensusTrail s={s} stage={stage} stateIndex={stateIndex} />
       </motion.div>

@@ -46,22 +46,17 @@ const buildStages = () => {
     const meterAfter = average(accepted);
     sections += type === "new_section" ? 1 : type === "delete_section" ? -1 : 0;
 
-    const meterPercent = Math.round(meter * 100);
-    const afterPercent = Math.round(meterAfter * 100);
-
     return {
       type,
       participants,
       pro,
       con,
-      voters: pro + con,
       undecided: participants - pro - con,
       gap,
       threshold,
       score: Math.round(score * 100),
-      meter: meterPercent,
-      meterAfter: afterPercent,
-      change: afterPercent - meterPercent,
+      meter: Math.round(meter * 100),
+      meterAfter: Math.round(meterAfter * 100),
       nextThreshold: thresholdFor(meterAfter, participants),
       sections,
     };
@@ -71,37 +66,3 @@ const buildStages = () => {
 export const SEQUENCE = buildStages();
 
 export const stateIndexFor = (percent) => (percent < 34 ? 0 : percent < 67 ? 1 : 2);
-
-// Two votes on the very same document, at the same moment: 60 participants,
-// a consensus meter already at 80%, and a threshold of 15 still in force from
-// an earlier vote held when the document was smaller. The two differ only in
-// how the group voted — and that is what decides which way the meter moves.
-const HISTORY = [0.8];
-const COMPARE_BASE = { participants: 60, threshold: 15 };
-
-const buildScenario = ({ pro, con }) => {
-  const { participants, threshold } = COMPARE_BASE;
-  const gap = pro - con;
-  const score = Math.min(1, Math.max(0, (gap + participants) / (2 * participants)));
-  const meterBefore = average(HISTORY);
-  const meterAfter = average([...HISTORY, score]);
-
-  return {
-    participants,
-    threshold,
-    pro,
-    con,
-    voters: pro + con,
-    gap,
-    score: Math.round(score * 100),
-    meterBefore: Math.round(meterBefore * 100),
-    meterAfter: Math.round(meterAfter * 100),
-    change: Math.round(meterAfter * 100) - Math.round(meterBefore * 100),
-  };
-};
-
-export const COMPARE = {
-  ...COMPARE_BASE,
-  calm: buildScenario({ pro: 45, con: 3 }),
-  split: buildScenario({ pro: 33, con: 18 }),
-};

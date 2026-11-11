@@ -1,4 +1,4 @@
-import { ArrowRight, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const TONES = [
   "bg-amber-50 text-amber-800",
@@ -12,7 +12,6 @@ const TONES = [
  */
 export default function ConsensusTrail({ s, stage, stateIndex }) {
   const clamped = Math.min(100, Math.max(0, stage.meterAfter));
-  const up = stage.change >= 0;
 
   return (
     <div className="mt-5 border-t border-slate-100 pt-4">
@@ -23,17 +22,7 @@ export default function ConsensusTrail({ s, stage, stateIndex }) {
         <span className="inline-flex items-center gap-1.5 text-xs font-bold tabular-nums text-slate-800">
           <bdi>{stage.meter}%</bdi>
           <ArrowRight className="h-3.5 w-3.5 text-slate-400 rtl:rotate-180" aria-hidden="true" />
-          <bdi className={up ? "text-emerald-700" : "text-rose-700"}>{stage.meterAfter}%</bdi>
-          <span
-            className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-bold ${up ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}
-          >
-            {up ? (
-              <TrendingUp className="h-3 w-3" aria-hidden="true" />
-            ) : (
-              <TrendingDown className="h-3 w-3" aria-hidden="true" />
-            )}
-            <bdi>{stage.change > 0 ? `+${stage.change}` : stage.change}</bdi>
-          </span>
+          <bdi className="text-emerald-700">{stage.meterAfter}%</bdi>
         </span>
       </div>
 
