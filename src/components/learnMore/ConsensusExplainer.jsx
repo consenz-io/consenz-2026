@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowUpRight, Equal, Activity, Scale } from "lucide-react";
-import ConsensusStabilityScale from "@/components/learnMore/ConsensusStabilityScale";
+import ConsensusStepsDemo from "@/components/learnMore/ConsensusStepsDemo";
 
 export default function ConsensusExplainer({ c }) {
   return (
@@ -84,7 +84,7 @@ export default function ConsensusExplainer({ c }) {
           </div>
         </div>
 
-        <ConsensusStabilityScale s={c.spectrum} />
+        <ConsensusStepsDemo s={c.spectrum} />
       </div>
     </section>
   );
