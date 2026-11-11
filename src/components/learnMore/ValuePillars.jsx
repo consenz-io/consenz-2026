@@ -25,12 +25,6 @@ export default function ValuePillars({ c }) {
           );
         })}
       </div>
-
-      {c.note &&
-      <p className="mt-6 rounded-xl border border-blue-100 bg-blue-50/70 p-6 text-sm leading-relaxed text-slate-700 md:text-base">
-          {c.note}
-        </p>
-      }
     </section>
   );
 }

@@ -48,25 +48,24 @@ const en = {
   },
   pillars: {
     title: "The principle behind every screen",
-    subtitle: "Three rules hold the whole process together — from the first proposal to the final version — and let groups of thousands, even tens of thousands, run one focused discussion that ends in clear agreement.",
+    subtitle: "Three rules hold the whole process together — from the first proposal to the final version.",
     items: [
       {
         icon: "eye",
         title: "Complete transparency",
-        text: "Every proposal, argument and vote is visible to all participants, in real time — no committee drafts behind closed doors, and the document carries the story of its own changes. In a large group this is the decisive advantage: nobody has to read tens of thousands of messages to know what is happening, and a decision cannot be pushed through quietly or by backstage pressure — anyone who tries is visible to everyone.",
+        text: "Every proposal, argument and vote is visible to all participants. No committee drafts behind closed doors — the document carries the story of its own changes.",
       },
       {
         icon: "scale",
         title: "Measurable consensus",
-        text: "Agreement is not a feeling, it is a number every participant can see. The support threshold is derived from the level of agreement the community has actually reached and updates with every decision, so a large group does not get stuck between a blocking minority and a silent majority: every proposal has a deadline, a tally of supporters and opponents, and a decision that arrives on time. The larger the group, the more the number speaks instead of the noise.",
+        text: "Agreement is not a feeling, it is a number. The support threshold is derived from the level of agreement the community has actually reached, and updates with every decision.",
       },
       {
         icon: "refresh",
         title: "A living document",
-        text: "Every change is saved as a version you can compare, restore and reopen for discussion, and every discussion happens around the exact section rather than a general thread. That is how tens of thousands of participants each contribute at their own time, in their own language and on the part that matters to them — while the result stays one converged, ordered, up-to-date document.",
+        text: "Every change is saved as a version. Compare, restore, reopen the discussion and keep building on what was already agreed — without losing the trail.",
       },
     ],
-    note: "This is what a large group looks like when it works: clear game rules — what counts as a proposal, when voting closes, what the acceptance threshold is and what happens to a rejected proposal — personal responsibility for what one proposes, and point rewards that encourage focused, contributing proposals instead of a flood of noise. Instead of thousands of voices scattering, the discussion converges on one wording: every step is documented, every participant can check it, and the final agreement is transparent, measurable and reproducible — something an open debate, a survey or a plain majority vote cannot deliver.",
   },
   how: {
     title: "How it works, step by step",
