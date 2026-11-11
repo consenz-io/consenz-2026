@@ -47,8 +47,8 @@ const en = {
     ],
   },
   pillars: {
-    title: "Thousands, one wording",
-    subtitle: "Three rules that keep a debate of thousands from scattering.",
+    title: "Big groups, one wording",
+    subtitle: "Three rules that keep a debate among many participants from scattering.",
     flow: ["Proposal", "Arguments", "Vote", "Updated wording"],
     items: [
       {
@@ -66,11 +66,11 @@ const en = {
       {
         icon: "refresh",
         title: "A living document",
-        text: "Every change is saved as a version. Compare, restore and keep building on what was agreed — even after thousands of votes.",
+        text: "Every change is saved as a version. Compare, restore and keep building on what was agreed — even after hundreds of votes.",
         stat: "Every version recorded",
       },
     ],
-    closing: "The result: one converging debate, one clear consensus, the same rules for everyone — even in a group of tens of thousands.",
+    closing: "The result: one converging debate, one clear consensus, the same rules for everyone — even in a very large community.",
   },
   how: {
     title: "How it works, step by step",
@@ -107,6 +107,11 @@ const en = {
         chips: ["Automatic approval", "A documented new version", "Restore and compare"],
       },
     ],
+    loop: {
+      title: "The update does not close the discussion",
+      text: "Every update opens a new round: back to step 1, while each section runs its own debate — with its own timer and votes.",
+      chips: ["Back to step 1", "Parallel debates", "An ongoing cycle"],
+    },
   },
   consensus: {
     overline: "The engine under the hood",
