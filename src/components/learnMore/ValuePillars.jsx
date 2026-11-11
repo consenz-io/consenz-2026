@@ -8,6 +8,14 @@ export default function ValuePillars({ c }) {
         <p className="mt-2 text-slate-600">{c.subtitle}</p>
       </div>
 
+      {c.lede && c.lede.length > 0 &&
+      <div className="mt-5 max-w-3xl space-y-3">
+        {c.lede.map((paragraph, index) =>
+        <p key={index} className="text-sm leading-relaxed text-slate-700">{paragraph}</p>
+        )}
+      </div>
+      }
+
       <div className="mt-8 grid gap-5 md:grid-cols-3">
         {c.items.map((item) => {
           const Icon = learnMoreIcon[item.icon];
