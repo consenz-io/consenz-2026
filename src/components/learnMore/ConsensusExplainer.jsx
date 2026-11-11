@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { ArrowUpRight, Equal, Activity, Scale } from "lucide-react";
 import ConsensusStepsDemo from "@/components/learnMore/ConsensusStepsDemo";
+import ScenarioCompare from "@/components/learnMore/consensus-lab/ScenarioCompare";
 
 export default function ConsensusExplainer({ c }) {
   return (
@@ -85,6 +86,7 @@ export default function ConsensusExplainer({ c }) {
         </div>
 
         <ConsensusStepsDemo s={c.spectrum} />
+        <ScenarioCompare s={c.spectrum} />
       </div>
     </section>
   );
