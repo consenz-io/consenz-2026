@@ -8,6 +8,7 @@ import {
 } from "@/components/learnMore/consensus-lab/demoStages";
 import StageNavigator from "@/components/learnMore/consensus-lab/StageNavigator";
 import StageNarrative from "@/components/learnMore/consensus-lab/StageNarrative";
+import ThresholdUpdate from "@/components/learnMore/consensus-lab/ThresholdUpdate";
 import VoteSplit from "@/components/learnMore/consensus-lab/VoteSplit";
 import EditStats from "@/components/learnMore/consensus-lab/EditStats";
 import ConsensusTrail from "@/components/learnMore/consensus-lab/ConsensusTrail";
@@ -83,9 +84,7 @@ export default function ConsensusStepsDemo({ s }) {
 
         <ConsensusTrail s={s} stage={stage} stateIndex={stateIndex} />
 
-        <p className="mt-3 text-xs leading-relaxed text-slate-500">
-          {fill(s.nextNote, { next: stage.nextThreshold })}
-        </p>
+        <ThresholdUpdate s={s} stage={stage} />
       </motion.div>
 
       <p className="sr-only" aria-live="polite">

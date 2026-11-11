@@ -1,16 +1,17 @@
 const DEFAULT_METER = 0.5; // a document with no accepted proposal yet
 const START_SECTIONS = 4;
 
-// One accepted proposal per stage: how many people take part, how many were
-// against, and how many participants there were when the vote opened and the
-// threshold was fixed. A proposal stays open for days while the group keeps
-// growing, so the threshold a vote has to clear can lag behind the group size —
-// which is exactly how a proposal passes and still pulls the meter down.
+// One accepted proposal per stage. `openedAt` is how many participants the
+// document had when the vote opened and its threshold was fixed — the first
+// vote starts at the floor every document starts from: 2 supporters. A vote
+// stays open for days while the group keeps growing, so a fixed threshold can
+// lag behind the group size, which is how a proposal passes and still pulls
+// the meter down.
 const PROPOSALS = [
-  { type: "new_section", participants: 8, openedAt: 8, con: 1 },
+  { type: "new_section", participants: 5, openedAt: 4, con: 1 },
   { type: "edit_section", participants: 16, openedAt: 16, con: 1 },
   { type: "delete_section", participants: 26, openedAt: 26, con: 2 },
-  { type: "edit_section", participants: 55, openedAt: 24, con: 12 },
+  { type: "edit_section", participants: 55, openedAt: 24, con: 13 },
   { type: "new_section", participants: 68, openedAt: 68, con: 5 },
 ];
 
@@ -23,7 +24,7 @@ export const fill = (template, vars) =>
   );
 
 // The platform's own numbers (see computeConsensusUpdate):
-//   threshold = round(consensus meter × participants), never below 2
+//   threshold = max(2, round(consensus meter × participants)) — 2 is the floor
 //   score     = (gap + participants) / (2 × participants)
 //   meter     = average of the scores of all accepted proposals
 const thresholdFor = (meter, participants) =>
@@ -35,8 +36,6 @@ const buildStages = () => {
 
   return PROPOSALS.map(({ type, participants, openedAt, con }) => {
     const meter = accepted.length ? average(accepted) : DEFAULT_METER;
-    // The threshold is the one that stood while people voted — fixed when the
-    // vote opened, not recomputed every time someone else joins the document.
     const threshold = thresholdFor(meter, openedAt);
 
     // The vote that pushed it over — the acceptance vote included.
@@ -61,6 +60,7 @@ const buildStages = () => {
       meter: Math.round(meter * 100),
       meterAfter: Math.round(meterAfter * 100),
       trend: meterAfter >= meter ? "up" : "down",
+      // The threshold the document now carries into the next proposal.
       nextThreshold: thresholdFor(meterAfter, participants),
       sections,
     };
