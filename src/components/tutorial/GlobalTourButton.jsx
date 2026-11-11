@@ -63,7 +63,11 @@ export default function GlobalTourButton({ user }) {
   });
 
   const isLoggedOut = !user;
-  const isHomePage = location.pathname === "/" || /\/Home/i.test(location.pathname);
+  // Home and Learn More render their own scroll-morphing tour button in the hero.
+  const isHomePage =
+  location.pathname === "/" ||
+  /\/Home/i.test(location.pathname) ||
+  /\/LearnMore/i.test(location.pathname);
   const isDocumentPage = /\/(DocumentView|document)/i.test(location.pathname) && !/\/DocumentCleanView/i.test(location.pathname);
 
   // Track whether the tour has been fully completed (persisted in localStorage).

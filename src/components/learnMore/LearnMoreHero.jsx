@@ -7,15 +7,9 @@ import ChangeBlockDiffView from "@/components/document/ChangeBlockDiffView";
 import VotingProgressSection from "@/components/document/VotingProgressSection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle2,
-  Compass,
-  LogIn,
-  MessageSquare } from
-"lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, MessageSquare } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import TourScrollButton from "@/components/tutorial/TourScrollButton";
 import usePlatformCtas from "./usePlatformCtas";
 
 // The sample card is assembled from the real building blocks of a document's
@@ -138,7 +132,7 @@ function ProposalCard({ c, isRTL }) {
 
 export default function LearnMoreHero({ c, isRTL }) {
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
-  const { user, startTour, signIn } = usePlatformCtas();
+  const { startTour } = usePlatformCtas();
 
   return (
     <section className="relative overflow-hidden">
@@ -166,20 +160,7 @@ export default function LearnMoreHero({ c, isRTL }) {
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button
-                size="lg"
-                onClick={startTour}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                
-                <Compass className="h-4 w-4" aria-hidden="true" />
-                {c.primaryCta}
-              </Button>
-              {!user &&
-              <Button size="lg" variant="outline" onClick={signIn}>
-                  <LogIn className="h-4 w-4" aria-hidden="true" />
-                  {c.secondaryCta}
-                </Button>
-              }
+              <TourScrollButton label={c.primaryCta} onClick={startTour} />
             </div>
 
             <p className="mt-5 flex items-start gap-2 text-sm text-slate-600">

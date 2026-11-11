@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Users, Trophy, CheckCircle, MessageSquare } from "lucide-react";
+import { Users, Trophy, CheckCircle, MessageSquare } from "lucide-react";
+import TourScrollButton from "@/components/tutorial/TourScrollButton";
 import { useLanguage } from "@/components/LanguageContext";
 import StatsCards from "./StatsCards";
 import SingleLineHeroTitle from "@/components/home/SingleLineHeroTitle";
@@ -57,22 +58,6 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
     }
   };
 
-  // Floating button: show when the original button scrolls out of view
-  const buttonRef = React.useRef(null);
-  const [showFloating, setShowFloating] = React.useState(false);
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      const el = buttonRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      setShowFloating(rect.bottom < 0);
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
     <section className="relative overflow-hidden" aria-labelledby="hero-heading">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-indigo-600/10 to-purple-600/10" />
@@ -124,24 +109,9 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
             </div>
           </div>
           <div className="flex gap-4 justify-center flex-wrap">
-            <div ref={buttonRef} className="w-full md:w-auto">
-              {!showFloating &&
-              <motion.div
-                layoutId="tour-button"
-                className="inline-flex w-full md:w-auto"
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-                
-                  <Button
-                  size="lg"
-                  className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                  onClick={startTutorial}>
-                  
-                    {tourLabel[language] || tourLabel.en}
-                    {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
-                  </Button>
-                </motion.div>
-              }
-            </div>
+            <TourScrollButton
+              label={tourLabel[language] || tourLabel.en}
+              onClick={startTutorial} />
             <Button asChild size="lg" variant="outline" className="w-full md:w-auto">
               <Link to={createPageUrl("LearnMore")}>{t('learnMore')}</Link>
             </Button>
@@ -158,24 +128,6 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
           contributorsCount={contributorsCount} />
         
       </div>
-
-      {/* Floating tour button — morphs from the original position via shared layoutId */}
-      {showFloating &&
-      <motion.div
-        layoutId="tour-button"
-        className="fixed bottom-6 inset-x-0 z-40 flex justify-center px-4 pointer-events-none"
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-        
-          <Button
-          size="lg"
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg pointer-events-auto"
-          onClick={startTutorial}>
-          
-            {tourLabel[language] || tourLabel.en}
-            {isRTL ? <ArrowLeft className="w-4 h-4 mr-2" /> : <ArrowRight className="w-4 h-4 ml-2" />}
-          </Button>
-        </motion.div>
-      }
     </section>);
 
 }
