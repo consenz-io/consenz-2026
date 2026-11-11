@@ -1,17 +1,17 @@
 const DEFAULT_METER = 0.5; // a document with no accepted proposal yet
 const START_SECTIONS = 4;
 
-// One accepted proposal per stage: the group as it stood, the opposition it
-// met, and what kind of proposal it was. Support is derived, never typed by
-// hand: a proposal passes the moment (for − against) reaches the threshold,
-// so the gap lands exactly on the threshold — never above it.
+// One accepted proposal per stage: how many people take part, how many were
+// against, and how many participants there were when the vote opened and the
+// threshold was fixed. A proposal stays open for days while the group keeps
+// growing, so the threshold a vote has to clear can lag behind the group size —
+// which is exactly how a proposal passes and still pulls the meter down.
 const PROPOSALS = [
-  { type: "new_section", participants: 8, con: 1 },
-  { type: "edit_section", participants: 16, con: 1 },
-  { type: "delete_section", participants: 30, con: 2 },
-  { type: "edit_section", participants: 55, con: 4 },
-  { type: "new_section", participants: 90, con: 5 },
-  { type: "delete_section", participants: 140, con: 6 },
+  { type: "new_section", participants: 8, openedAt: 8, con: 1 },
+  { type: "edit_section", participants: 16, openedAt: 16, con: 1 },
+  { type: "delete_section", participants: 26, openedAt: 26, con: 2 },
+  { type: "edit_section", participants: 55, openedAt: 24, con: 12 },
+  { type: "new_section", participants: 68, openedAt: 68, con: 5 },
 ];
 
 const average = (list) => list.reduce((sum, value) => sum + value, 0) / list.length;
@@ -33,9 +33,11 @@ const buildStages = () => {
   const accepted = [];
   let sections = START_SECTIONS;
 
-  return PROPOSALS.map(({ type, participants, con }) => {
+  return PROPOSALS.map(({ type, participants, openedAt, con }) => {
     const meter = accepted.length ? average(accepted) : DEFAULT_METER;
-    const threshold = thresholdFor(meter, participants);
+    // The threshold is the one that stood while people voted — fixed when the
+    // vote opened, not recomputed every time someone else joins the document.
+    const threshold = thresholdFor(meter, openedAt);
 
     // The vote that pushed it over — the acceptance vote included.
     const pro = threshold + con;
@@ -49,6 +51,7 @@ const buildStages = () => {
     return {
       type,
       participants,
+      openedAt,
       pro,
       con,
       undecided: participants - pro - con,
@@ -57,6 +60,7 @@ const buildStages = () => {
       score: Math.round(score * 100),
       meter: Math.round(meter * 100),
       meterAfter: Math.round(meterAfter * 100),
+      trend: meterAfter >= meter ? "up" : "down",
       nextThreshold: thresholdFor(meterAfter, participants),
       sections,
     };

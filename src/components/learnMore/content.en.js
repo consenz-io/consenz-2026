@@ -176,7 +176,14 @@ const en = {
         edit_section: "The section was reworded",
         delete_section: "A section was removed",
       },
-      passNote: "The proposal passed the moment the gap between for and against reached the threshold: {gap} against {threshold}. A new proposal here already needs {next} supporters.",
+      storyLabel: "What happened here",
+      upLabel: "The meter rose",
+      downLabel: "The meter fell",
+      narrative:
+        "{participants} people take part in this document. {pro} of them voted for the proposal, {con} against, and {undecided} did not vote. The gap between them — {gap} — reached the threshold of {threshold}, so the proposal passed. Its section score came out at {score}%, above the consensus meter, and the meter rose from {meter}% to {after}%.",
+      narrativeDrop:
+        "The document grew to {participants} participants. {pro} voted for the proposal and {con} against — a gap of {gap}, enough to reach the threshold of {threshold} because that threshold was fixed when only {openedAt} people were here. The proposal passed, but that gap looks thin next to {participants} participants: the section scored {score}%, and the consensus meter fell from {meter}% to {after}%.",
+      nextNote: "A new proposal opened here now would need {next} supporters.",
     },
     link: "Read the full consensus explainer",
   },

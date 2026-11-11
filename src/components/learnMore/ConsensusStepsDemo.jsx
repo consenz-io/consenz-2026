@@ -7,6 +7,7 @@ import {
   stateIndexFor,
 } from "@/components/learnMore/consensus-lab/demoStages";
 import StageNavigator from "@/components/learnMore/consensus-lab/StageNavigator";
+import StageNarrative from "@/components/learnMore/consensus-lab/StageNarrative";
 import VoteSplit from "@/components/learnMore/consensus-lab/VoteSplit";
 import EditStats from "@/components/learnMore/consensus-lab/EditStats";
 import ConsensusTrail from "@/components/learnMore/consensus-lab/ConsensusTrail";
@@ -62,11 +63,13 @@ export default function ConsensusStepsDemo({ s }) {
           </span>
         </div>
 
+        <StageNarrative s={s} stage={stage} />
+
         <VoteSplit s={s} stage={stage} />
         <EditStats s={s} stage={stage} />
 
         <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
-          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
           <span>{s.passedLabel}</span>
           <span className="text-emerald-600" aria-hidden="true">
             ·
@@ -78,21 +81,18 @@ export default function ConsensusStepsDemo({ s }) {
           </span>
         </div>
 
-        <p className="mt-3 text-sm leading-relaxed text-slate-600">
-          {fill(s.passNote, {
-            gap: stage.gap,
-            threshold: stage.threshold,
-            next: stage.nextThreshold,
-          })}
-        </p>
-
         <ConsensusTrail s={s} stage={stage} stateIndex={stateIndex} />
+
+        <p className="mt-3 text-xs leading-relaxed text-slate-500">
+          {fill(s.nextNote, { next: stage.nextThreshold })}
+        </p>
       </motion.div>
 
       <p className="sr-only" aria-live="polite">
         {fill(s.stepLabel, { n: index + 1, total })} — {s.typeLabels[stage.type]},{" "}
         {stage.participants} {s.participantsLabel}, {stage.pro} {s.proLabel}, {stage.con}{" "}
-        {s.conLabel}, {stage.threshold} {s.supporters}
+        {s.conLabel}, {stage.threshold} {s.supporters}, {s.levelLabel}: {stage.meter}% →{" "}
+        {stage.meterAfter}%
       </p>
     </div>
   );
