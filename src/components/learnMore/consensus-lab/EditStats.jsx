@@ -14,11 +14,11 @@ export default function EditStats({ s, stage }) {
     <dl className="mt-4 grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-100 bg-slate-50 py-2.5 rtl:divide-x-reverse">
       {cells.map((cell) => (
         <div key={cell.label} className="min-w-0 px-2 text-center">
-          <dt className="text-[10px] font-medium leading-tight text-slate-500">{cell.label}</dt>
-          <dd className="mt-0.5 text-sm font-bold tabular-nums text-slate-900">
+          <dt className="text-xs font-medium leading-tight text-slate-600">{cell.label}</dt>
+          <dd className="mt-1 text-base font-bold tabular-nums text-slate-900">
             <bdi>{cell.value}</bdi>
             {cell.unit && (
-              <span className="ms-1 text-[10px] font-medium text-slate-500">{cell.unit}</span>
+              <span className="ms-1 text-xs font-medium text-slate-600">{cell.unit}</span>
             )}
           </dd>
         </div>

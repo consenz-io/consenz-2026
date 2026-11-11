@@ -55,17 +55,17 @@ export default function ConsensusStepsDemo({ s }) {
             {s.typeLabels[stage.type]}
           </span>
           <span className="inline-flex items-baseline gap-1">
-            <bdi className="text-xl font-bold tabular-nums text-slate-900">
+            <bdi className="text-2xl font-bold tabular-nums text-slate-900">
               {stage.participants}
             </bdi>
-            <span className="text-xs font-medium text-slate-500">{s.participantsLabel}</span>
+            <span className="text-sm font-medium text-slate-600">{s.participantsLabel}</span>
           </span>
         </div>
 
         <VoteSplit s={s} stage={stage} />
         <EditStats s={s} stage={stage} />
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-900">
+        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" aria-hidden="true" />
           <span>{s.passedLabel}</span>
           <span className="text-emerald-600" aria-hidden="true">
@@ -78,7 +78,7 @@ export default function ConsensusStepsDemo({ s }) {
           </span>
         </div>
 
-        <p className="mt-3 text-xs leading-relaxed text-slate-500">
+        <p className="mt-3 text-sm leading-relaxed text-slate-600">
           {fill(s.passNote, {
             gap: stage.gap,
             threshold: stage.threshold,
