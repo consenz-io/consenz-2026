@@ -1,0 +1,49 @@
+import { ArrowRight } from "lucide-react";
+
+const TONES = [
+  "bg-amber-50 text-amber-800",
+  "bg-sky-50 text-sky-800",
+  "bg-emerald-50 text-emerald-800",
+];
+
+/**
+ * Where the document sits after this edit: the meter before, the meter after,
+ * and what that position means for the wording.
+ */
+export default function ConsensusTrail({ s, stage, stateIndex }) {
+  const clamped = Math.min(100, Math.max(0, stage.meterAfter));
+
+  return (
+    <div className="mt-5 border-t border-slate-100 pt-4">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          {s.levelLabel}
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold tabular-nums text-slate-800">
+          <bdi>{stage.meter}%</bdi>
+          <ArrowRight className="h-3.5 w-3.5 text-slate-400 rtl:rotate-180" aria-hidden="true" />
+          <bdi className="text-emerald-700">{stage.meterAfter}%</bdi>
+        </span>
+      </div>
+
+      <div className="relative mt-2 h-2.5 rounded-full bg-gradient-to-r from-amber-200 via-sky-200 to-emerald-300 rtl:bg-gradient-to-l">
+        <span
+          className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-slate-900 shadow transition-all duration-500 rtl:translate-x-1/2"
+          style={{ insetInlineStart: `${clamped}%` }}
+          aria-hidden="true"
+        />
+      </div>
+
+      <div className="mt-1.5 flex justify-between gap-3 text-[11px] text-slate-400">
+        <span>{s.dynamicPole}</span>
+        <span className="text-end">{s.stablePole}</span>
+      </div>
+
+      <span
+        className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${TONES[stateIndex]}`}
+      >
+        {s.stateLabels[stateIndex]}
+      </span>
+    </div>
+  );
+}

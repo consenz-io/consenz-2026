@@ -2,9 +2,9 @@ import { Check, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { fill } from "@/components/learnMore/consensus-lab/demoStages";
 
 /**
- * Stage progression and the controls that move through it. The numbered rail
- * shows where the group is heading (its size under every node), and the two
- * wide buttons spell out what each one does.
+ * The edit rail: every node is one edit the document went through, with the
+ * group's size at that point underneath. The two wide buttons spell out where
+ * they move to.
  */
 export default function StageNavigator({ s, stages, index, onSelect }) {
   const total = stages.length;
@@ -13,17 +13,10 @@ export default function StageNavigator({ s, stages, index, onSelect }) {
   const progress = total > 1 ? (index / (total - 1)) * 100 : 100;
 
   return (
-    <div className="border-b border-slate-100 bg-white p-5 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-sm font-bold text-slate-800">
-          {fill(s.stepLabel, { n: index + 1, total })}
-        </span>
-        {stages[index].growth !== null && (
-          <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700">
-            {fill(s.growthNote, { n: stages[index].growth })}
-          </span>
-        )}
-      </div>
+    <div className="border-b border-slate-100 p-5 md:p-6">
+      <span className="text-sm font-bold text-slate-800">
+        {fill(s.stepLabel, { n: index + 1, total })}
+      </span>
 
       <ol className="relative mt-4 flex items-start justify-between" aria-label={s.stepsNavLabel}>
         <span
