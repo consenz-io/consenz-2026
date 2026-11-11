@@ -47,29 +47,30 @@ const en = {
     ],
   },
   pillars: {
-    title: "Thousands of people, one wording: the rules that let a large group reach agreement",
-    subtitle: "Three rules carry the entire process — from the first proposal to the final version — and let even tens of thousands of participants debate a single text without losing the thread.",
-    lede: [
-      "The bigger the group, the more the discussion tends to scatter: dozens of versions of the same change, voices nobody hears, and a decision formed behind a closed door. Consenz is built the other way around — a new proposal is checked against what already exists so support never splits, the discussion stays attached to the section it is about, votes are public, and the support threshold is set by the level of agreement the group has actually reached. That is how a community of thousands or tens of thousands keeps one converging debate, moves stage by stage — proposal, arguments, vote, updated wording — and arrives at a clear consensus that is also transparent: anyone can see how it was built.",
-      "The rules of the game are part of the solution, not a limitation on it: a defined voting window, one vote per participant, a small cost for opening a proposal and points for support received — so the discussion rewards a positive contribution and shrinks to the signal, and influence goes to whoever moves the wording forward rather than to whoever writes the most. That is what one platform can do at this scale, and what no other method or tool offers today.",
-    ],
+    title: "Thousands, one wording",
+    subtitle: "Three rules that keep a debate of thousands from scattering.",
+    flow: ["Proposal", "Arguments", "Vote", "Updated wording"],
     items: [
       {
         icon: "eye",
         title: "Complete transparency",
-        text: "At this scale transparency is not a slogan, it is what lets someone who joined yesterday understand the discussion without reading a thousand messages. Every proposal, argument and vote stays visible and attached to the exact section it changes.",
+        text: "Every proposal, argument and vote is public, attached to the section it changes. Even someone who joined yesterday can see where the debate stands.",
+        stat: "All visible, all recorded",
       },
       {
         icon: "scale",
         title: "Measurable consensus",
-        text: "Agreement is not the loudest voice in the room, it is a number: one vote per participant, a defined voting window, and a support threshold derived from the agreement the group has actually reached. The same rule works for fifty participants and for fifty thousand.",
+        text: "Agreement is a number, not the loudest voice: one vote per participant, and a threshold derived from the agreement the group reached.",
+        stat: "One vote per participant",
       },
       {
         icon: "refresh",
         title: "A living document",
-        text: "Every change is saved as a version — who proposed it, what the previous wording was and what changed. In a long process with thousands of participants, this is what keeps the road back open: compare, restore a version and keep building on what was already agreed.",
+        text: "Every change is saved as a version. Compare, restore and keep building on what was agreed — even after thousands of votes.",
+        stat: "Every version recorded",
       },
     ],
+    closing: "The result: one converging debate, one clear consensus, the same rules for everyone — even in a group of tens of thousands.",
   },
   how: {
     title: "How it works, step by step",
