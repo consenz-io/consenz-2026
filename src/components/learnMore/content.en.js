@@ -149,6 +149,16 @@ const en = {
       dynamicPole: "Dynamism — easy to change",
       stablePole: "Stability — built to last",
       hint: "Drag the marker: the higher the consensus, the higher the threshold, and the more stable the wording becomes.",
+      participantsLabel: "participants",
+      joinNote: "New participants join at every stage, and the circle grows gradually.",
+      thresholdLabel: "Required support threshold",
+      thresholdNote: "The threshold rises with the number of participants: the same consensus percentage needs more supporters as the circle grows.",
+      stages: [
+        { label: "Opening the document", participants: 40 },
+        { label: "Section debate", participants: 320 },
+        { label: "Votes and decisions", participants: 1100 },
+        { label: "Wording update", participants: 2600 },
+      ],
       states: [
         "Low consensus: the threshold drops, the wording stays open to frequent changes and gets rebuilt again and again.",
         "Medium consensus: the wording evolves without flipping over — every change has to persuade, but it can happen.",
