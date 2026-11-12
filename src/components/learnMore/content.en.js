@@ -259,8 +259,8 @@ const en = {
       },
       {
         title: "The proposal is accepted and the reward grows",
-        text: "When the proposal reaches the vote threshold and is accepted into the document, its author receives 500 points, and whoever's vote decided it receives 50.",
-        example: "Example: the proposal passed. Its author got 500 points, and the person whose vote tipped it got 50.",
+        text: "When the proposal reaches the vote threshold and is accepted into the document, its author receives 500 points, and everyone who voted for it — except the author — receives 50.",
+        example: "Example: the proposal passed with 12 supporters. Its author got 500 points, and each of the 11 other supporters got 50.",
       },
       {
         title: "A proposal that goes nowhere closes on its own",
@@ -305,7 +305,7 @@ const en = {
     rewards: [
       { label: "Each vote for your proposal", value: "+10" },
       { label: "Your proposal is accepted", value: "+500" },
-      { label: "Your vote decided the proposal", value: "+50" },
+      { label: "You voted for an accepted proposal", value: "+50" },
       { label: "A like on your comment", value: "+5" },
     ],
     rewardsNote: "Every new participant starts with 1,000 points. In a document without the points system, every proposal is open to everyone for free.",
