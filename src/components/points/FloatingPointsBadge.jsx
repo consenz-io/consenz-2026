@@ -17,7 +17,7 @@ import { translateTransactionDescription } from "./translateTransaction";
 
 // Display priority within a same-minute cluster: the suggestion-acceptance reward
 // (+500, the headline result) is shown above the pro-vote reward (+10, its trigger).
-const ACTION_PRIORITY = { suggestion_accepted: 0, vote_received: 2, vote_influenced_acceptance: 2 };
+const ACTION_PRIORITY = { suggestion_accepted: 0, vote_received: 2, vote_influenced_acceptance: 2, vote_influenced_rejection: 2 };
 const getActionPriority = (action) => (action in ACTION_PRIORITY ? ACTION_PRIORITY[action] : 1);
 
 function AnimatedCounter({ value }) {

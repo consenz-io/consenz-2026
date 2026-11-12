@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
+import { awardRejectionVotePoints } from '../../shared/rejectionVotePoints.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -92,44 +93,13 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Award 50 points to con-voters if gamification is enabled (read from
-      // the document record, not the client-supplied request body)
-      if (document?.gamificationEnabled) {
-        const conVotes = await base44.asServiceRole.entities.Vote.filter({
-          suggestionId: suggestion.id,
-          vote: 'con'
-        });
-
-        for (const vote of conVotes) {
-          const voterUsers = await base44.asServiceRole.entities.User.filter({ id: vote.userId });
-          const voter = voterUsers[0];
-          if (!voter) continue;
-
-          // Idempotency: skip if points were already awarded for this
-          // suggestion + voter pair, preventing repeated award cycles.
-          const existingTx = await base44.asServiceRole.entities.PointsTransaction.filter({
-            userId: voter.id,
-            relatedEntityId: suggestion.id,
-            action: 'vote_influenced_acceptance'
-          });
-          if (existingTx.length > 0) continue;
-
-          const voterCurrentPoints = voter.points || 1000;
-          await Promise.all([
-            base44.asServiceRole.entities.User.update(voter.id, {
-              points: voterCurrentPoints + 50,
-            }),
-            base44.asServiceRole.entities.PointsTransaction.create({
-              userId: voter.id,
-              amount: 50,
-              action: 'vote_influenced_acceptance',
-              description: `הצעה שהצבעת נגדה נדחתה: ${suggestion.title || ''}`,
-              relatedEntityId: suggestion.id,
-              relatedEntityType: 'suggestion'
-            })
-          ]);
-        }
-      }
+      // Rejection is rewarded for the opposing voters (shared helper checks
+      // gamification on the document record, never the request body).
+      await awardRejectionVotePoints(
+        base44.asServiceRole,
+        { ...suggestion, status: 'rejected' },
+        document
+      );
     }
 
     console.log('[REJECT ORPHANED] Done. Rejected:', orphanedSuggestions.length);

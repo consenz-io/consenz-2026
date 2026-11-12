@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 import { INTERNAL_AUTOMATION_TOKEN } from '../../shared/authGate.ts';
+import { awardRejectionVotePoints } from '../../shared/rejectionVotePoints.ts';
 
 // The single server-side owner of administrator state transitions on a Suggestion.
 // Before this function existed the browser performed these writes directly
@@ -92,7 +93,10 @@ export default async function (req) {
         }
       );
       if (!lock?.updated) return Response.json({ error: 'Suggestion already processed' }, { status: 409 });
-      return Response.json({ success: true, status: 'rejected' });
+
+      // An admin rejection pays the opposing voters, just like an expiry does.
+      const points = await awardRejectionVotePoints(base44.asServiceRole, { ...suggestion, status: 'rejected' }, document);
+      return Response.json({ success: true, status: 'rejected', points });
     }
 
     // reopen — identified as "returned to voting", not as a set of cleared fields.

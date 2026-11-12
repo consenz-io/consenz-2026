@@ -13,6 +13,7 @@ const actionLabels = {
   vote_canceled: { he: 'הצבעה בוטלה', ar: 'تم إلغاء تصويت', en: 'Vote canceled' },
   suggestion_accepted: { he: 'הצעה התקבלה', ar: 'تم قبول مقترح', en: 'Suggestion accepted' },
   vote_influenced_acceptance: { he: 'הצבעה השפיעה על קבלה', ar: 'أثر التصويت على القبول', en: 'Vote influenced acceptance' },
+  vote_influenced_rejection: { he: 'הצבעה השפיעה על דחייה', ar: 'أثر التصويت على الرفض', en: 'Vote influenced rejection' },
   comment_like_received: { he: 'קיבלת לייק על תגובה', ar: 'حصلت على إعجاب على تعليق', en: 'Comment like received' },
   comment_like_removed: { he: 'בוטל לייק על תגובה', ar: 'تم إلغاء إعجاب على تعليق', en: 'Comment like removed' },
 };

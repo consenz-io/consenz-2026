@@ -27,6 +27,9 @@ export const translateTransactionDescription = (transaction, language) => {
     }
     return language === 'he' ? 'הצבעה בוטלה' : language === 'ar' ? 'تم إلغاء التصويت' : 'Vote canceled';
   }
+  if (action === 'vote_influenced_rejection') {
+    return language === 'he' ? 'הצבעתך השפיעה על דחיית הצעה' : language === 'ar' ? 'أثّر تصويتك على رفض اقتراح' : 'Your vote influenced suggestion rejection';
+  }
   if (action === 'vote_influenced_acceptance') {
     const isRejection = description.includes('דחיית') || description.includes('rejection') || description.includes('rejected') || description.includes('رفض');
     return isRejection

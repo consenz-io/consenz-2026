@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { authorizeInternalOrUser } from '../../shared/authGate.ts';
+import { awardRejectionVotePoints } from '../../shared/rejectionVotePoints.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -89,35 +90,11 @@ Deno.serve(async (req) => {
 
       console.log('[EXPIRE SUGGESTIONS] Done:', suggestion.id, 'notified', recipientUserIds.size);
 
-      // Award points to con voters if gamification is enabled
-      try {
-        const documents = await base44.asServiceRole.entities.Document.filter({ id: suggestion.documentId });
-        const document = documents[0];
-        if (document?.gamificationEnabled) {
-          const conVoterIds = votes.filter(v => v.vote === 'con' && v.userId !== suggestion.created_by_id).map(v => v.userId).filter(Boolean);
-          if (conVoterIds.length > 0) {
-            // Fetch all users and filter client-side (platform doesn't reliably support $in on User)
-            const allUsers = await base44.asServiceRole.entities.User.list();
-            const conVoterUsers = allUsers.filter(u => conVoterIds.includes(u.id));
-            for (const u of conVoterUsers) {
-              await Promise.all([
-                base44.asServiceRole.entities.User.update(u.id, { points: (u.points || 1000) + 50 }),
-                base44.asServiceRole.entities.PointsTransaction.create({
-                  userId: u.id,
-                  amount: 50,
-                  action: 'vote_influenced_acceptance',
-                  description: `הצבעתך השפיעה על דחיית ההצעה: ${suggestion.title || 'הצעה'}`,
-                  relatedEntityId: suggestion.id,
-                  relatedEntityType: 'suggestion'
-                })
-              ]);
-            }
-            console.log('[EXPIRE SUGGESTIONS] ✓ Awarded 50 points to', conVoterUsers.length, 'con voters');
-          }
-        }
-      } catch (pointsErr) {
-        console.error('[EXPIRE SUGGESTIONS] Points award failed (non-critical):', pointsErr.message);
-      }
+      // Expiry is a rejection — the opposing voters are rewarded for it.
+      await awardRejectionVotePoints(
+        base44.asServiceRole,
+        { ...suggestion, status: 'rejected' }
+      );
 
       processedCount++;
     }
