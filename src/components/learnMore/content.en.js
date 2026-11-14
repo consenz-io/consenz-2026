@@ -188,6 +188,8 @@ const en = {
         "But the threshold was fixed when the document had only {openedAt} participants, and the vote stayed open while the community grew to {participants}: that same gap no longer looks like a clear majority, and the score of {score}% is lower than the one before it — so the meter dropped from {meter}% to {after}%.",
       updatedThresholdLabel: "The updated threshold for the next stage",
       updatedThresholdNote: "{percent}% × {participants} participants = {next} supporters.",
+      growthNote:
+        "This proposal opened with {openedAt} participants and a threshold of {threshold} supporters; while the vote was open the group grew to {participants}, so the next proposal opens at a higher threshold.",
     },
     link: "Read the full consensus explainer",
   },

@@ -3,7 +3,7 @@ import { fill } from "@/components/learnMore/consensus-lab/demoStages";
 /**
  * The threshold the document carries out of this stage — shown with the numbers
  * it came from, so the reader can check the rule: meter × participants, never
- * below 2.
+ * below 2 — and why it jumped: the group grew while the vote was open.
  */
 export default function ThresholdUpdate({ s, stage }) {
   return (
@@ -24,6 +24,13 @@ export default function ThresholdUpdate({ s, stage }) {
           percent: stage.meterAfter,
           participants: stage.participants,
           next: stage.nextThreshold,
+        })}
+      </p>
+      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+        {fill(s.growthNote, {
+          openedAt: stage.openedAt,
+          participants: stage.participants,
+          threshold: stage.threshold,
         })}
       </p>
     </div>
