@@ -162,7 +162,6 @@ const he = {
       proLabel: "בעד",
       conLabel: "נגד",
       thresholdLabel: "רף התמיכה הנדרש",
-      gapLabel: "הפרש בעד–נגד",
       scoreLabel: "ציון הסעיף",
       passedLabel: "ההצעה עברה",
       sectionsLabel: "סעיפים במסמך",

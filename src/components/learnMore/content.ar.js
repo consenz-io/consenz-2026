@@ -159,7 +159,6 @@ const ar = {
       proLabel: "مع",
       conLabel: "ضد",
       thresholdLabel: "عتبة الدعم المطلوبة",
-      gapLabel: "الفارق بين مع وضد",
       scoreLabel: "درجة البند",
       passedLabel: "تم قبول الاقتراح",
       sectionsLabel: "بنود في الوثيقة",

@@ -162,7 +162,6 @@ const en = {
       proLabel: "For",
       conLabel: "Against",
       thresholdLabel: "Required support threshold",
-      gapLabel: "For minus against",
       scoreLabel: "Section score",
       passedLabel: "The proposal passed",
       sectionsLabel: "sections in the document",
