@@ -1,18 +1,21 @@
 const DEFAULT_METER = 0.5; // a document with no accepted proposal yet
 const START_SECTIONS = 4;
 
-// One accepted proposal per stage. `openedAt` is how many participants the
-// document had when the vote opened and its threshold was fixed — the first
-// vote starts at the floor every document starts from: 2 supporters. A vote
-// stays open for days while the group keeps growing, so a fixed threshold can
-// lag behind the group size, which is how a proposal passes and still pulls
-// the meter down.
+// The group the demo starts with, before the first proposal. The first vote
+// therefore opens at the floor every document starts from: 2 supporters.
+const START_PARTICIPANTS = 4;
+
+// One accepted proposal per stage. A vote stays open for days while the group
+// keeps growing, so its threshold is fixed at the number of participants the
+// previous stage ended with — exactly the threshold the previous stage showed
+// for this one — while `participants` counts the group by the time it passed.
+// That lag is how a proposal passes and still pulls the meter down.
 const PROPOSALS = [
-  { type: "new_section", participants: 5, openedAt: 4, con: 1 },
-  { type: "edit_section", participants: 16, openedAt: 16, con: 1 },
-  { type: "delete_section", participants: 26, openedAt: 26, con: 2 },
-  { type: "edit_section", participants: 55, openedAt: 24, con: 13 },
-  { type: "new_section", participants: 68, openedAt: 68, con: 5 },
+  { type: "new_section", participants: 5, con: 1 },
+  { type: "edit_section", participants: 16, con: 1 },
+  { type: "delete_section", participants: 26, con: 2 },
+  { type: "edit_section", participants: 56, con: 13 },
+  { type: "new_section", participants: 68, con: 5 },
 ];
 
 const average = (list) => list.reduce((sum, value) => sum + value, 0) / list.length;
@@ -32,9 +35,12 @@ const thresholdFor = (meter, participants) =>
 
 const buildStages = () => {
   const accepted = [];
+  const stages = [];
   let sections = START_SECTIONS;
+  // Carried from stage to stage: the group size the previous vote ended with.
+  let openedAt = START_PARTICIPANTS;
 
-  return PROPOSALS.map(({ type, participants, openedAt, con }) => {
+  PROPOSALS.forEach(({ type, participants, con }) => {
     const meter = accepted.length ? average(accepted) : DEFAULT_METER;
     const threshold = thresholdFor(meter, openedAt);
 
@@ -48,7 +54,7 @@ const buildStages = () => {
     const sectionsBefore = sections;
     sections += type === "new_section" ? 1 : type === "delete_section" ? -1 : 0;
 
-    return {
+    stages.push({
       type,
       participants,
       openedAt,
@@ -61,12 +67,16 @@ const buildStages = () => {
       meter: Math.round(meter * 100),
       meterAfter: Math.round(meterAfter * 100),
       trend: meterAfter >= meter ? "up" : "down",
-      // The threshold the document now carries into the next proposal.
+      // The threshold the document now carries into the next proposal — the
+      // exact number the next stage opens with.
       nextThreshold: thresholdFor(meterAfter, participants),
       sectionsBefore,
       sections,
-    };
+    });
+    openedAt = participants;
   });
+
+  return stages;
 };
 
 export const SEQUENCE = buildStages();
