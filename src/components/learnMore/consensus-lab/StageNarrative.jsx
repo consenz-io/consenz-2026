@@ -33,7 +33,6 @@ export const narrativeText = (s, stage) => {
     stage.trend === "down" ? s.narrativeDropSuffix : s.narrativeRise,
     vars,
   );
-
   return `${typeStory} ${verdict}`.trim();
 };
 

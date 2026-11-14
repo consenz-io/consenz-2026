@@ -149,7 +149,7 @@ const en = {
       stateLabels: ["Wording stays open", "Wording evolves", "Wording is protected"],
       dynamicPole: "Dynamism — easy to change",
       stablePole: "Stability — built to last",
-      hint: "Each stage is a proposal the community accepted — a new section, an edit or a deletion — and the document moves on from it. Step through and watch the threshold and consensus meter respond.",
+      hint: "Each stage shows one proposal the community accepted, and the document moves on from it. At the top: the kind of proposal — a new section, a rewritten section or a deleted one — and the number of participants at that moment. Below it the story of that vote, then the split: how many supported, how many opposed, the threshold that was required and the section score. At the bottom, the consensus meter and the threshold the document carries into the next stage. Note: the first proposal in a document always passes at a threshold of 2 supporters only — the lowest threshold — and from there it rises as the group grows and agreement strengthens.",
       simulatorLabel: "Guided demo",
       stepLabel: "Stage {n} of {total}",
       prevLabel: "Previous stage",
