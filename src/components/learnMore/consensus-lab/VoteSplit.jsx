@@ -40,16 +40,16 @@ export default function VoteSplit({ s, stage }) {
         </div>
       </div>
 
-      <div className="mt-2 flex h-2.5 overflow-hidden rounded-full bg-slate-100 hidden" aria-hidden="true">
-        <div
-          className="bg-emerald-500 transition-all duration-500 hidden"
-          style={{ width: `${proPercent}%` }} />
-        
-        <div
-          className="bg-rose-500 transition-all duration-500"
-          style={{ width: `${conPercent}%` }} />
-        
-      </div>
+      
+
+
+
+
+
+
+
+
+      
 
       <p className="mt-1.5 text-xs font-medium text-slate-600">
         <bdi className="font-bold tabular-nums text-slate-800">{stage.undecided}</bdi>{" "}
