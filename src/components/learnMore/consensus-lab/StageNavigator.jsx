@@ -1,5 +1,5 @@
 import { Check, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
-import { fill } from "@/components/learnMore/consensus-lab/demoStages";
+import { fill, fmt } from "@/components/learnMore/consensus-lab/demoStages";
 
 /**
  * The edit rail: every node is one edit the document went through, with the
@@ -55,7 +55,7 @@ export default function StageNavigator({ s, stages, index, onSelect }) {
                   type="button"
                   onClick={() => onSelect(stepIndex)}
                   aria-current={active ? "step" : undefined}
-                  aria-label={`${fill(s.stepLabel, { n: stepIndex + 1, total })} — ${item.participants} ${s.participantsLabel}`}
+                  aria-label={`${fill(s.stepLabel, { n: stepIndex + 1, total })} — ${fmt(item.participants)} ${s.participantsLabel}`}
                   className={`grid h-7 w-7 place-items-center rounded-full border-2 text-[11px] font-bold tabular-nums transition-all duration-200 ${
                     active
                       ? "scale-110 border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-200"
@@ -71,7 +71,7 @@ export default function StageNavigator({ s, stages, index, onSelect }) {
                     active ? "text-blue-700" : "text-slate-400"
                   }`}
                 >
-                  {item.participants}
+                  {fmt(item.participants)}
                 </bdi>
               </li>
             );

@@ -4,6 +4,7 @@ import { ArrowRight, CheckCircle2, FilePlus2, Pencil, Trash2 } from "lucide-reac
 import {
   SEQUENCE,
   fill,
+  fmt,
   stateIndexFor,
 } from "@/components/learnMore/consensus-lab/demoStages";
 import StageNavigator from "@/components/learnMore/consensus-lab/StageNavigator";
@@ -78,16 +79,16 @@ export default function ConsensusStepsDemo({ s }) {
           <span className="flex flex-col items-end">
             <span className="inline-flex items-center gap-1.5">
               <bdi className="text-sm font-semibold tabular-nums text-slate-400">
-                {stage.openedAt}
+                {fmt(stage.openedAt)}
               </bdi>
               <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-600 rtl:rotate-180" aria-hidden="true" />
               <bdi className="text-lg font-bold leading-none tabular-nums text-slate-900">
-                {stage.participants}
+                {fmt(stage.participants)}
               </bdi>
               <span className="text-xs font-medium text-slate-600">{s.participantsLabel}</span>
             </span>
             <span className="mt-0.5 text-[11px] font-bold tabular-nums text-emerald-700">
-              +{stage.participants - stage.openedAt}
+              +{fmt(stage.participants - stage.openedAt)}
             </span>
           </span>
         </div>
@@ -121,8 +122,9 @@ export default function ConsensusStepsDemo({ s }) {
 
       <p className="sr-only" aria-live="polite">
         {fill(s.stepLabel, { n: index + 1, total })} — {s.typeLabels[stage.type]},{" "}
-        {stage.openedAt} → {stage.participants} {s.participantsLabel}, {stage.pro} {s.proLabel}, {stage.con}{" "}
-        {s.conLabel}, {stage.threshold} {s.supporters}, {s.levelLabel}: {stage.meter}% →{" "}
+        {fmt(stage.openedAt)} → {fmt(stage.participants)} {s.participantsLabel},{" "}
+        {fmt(stage.pro)} {s.proLabel}, {fmt(stage.con)} {s.conLabel},{" "}
+        {fmt(stage.threshold)} {s.supporters}, {s.levelLabel}: {stage.meter}% →{" "}
         {stage.meterAfter}%
       </p>
     </div>

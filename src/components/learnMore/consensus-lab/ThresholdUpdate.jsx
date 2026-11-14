@@ -1,4 +1,4 @@
-import { fill } from "@/components/learnMore/consensus-lab/demoStages";
+import { fill, fmt } from "@/components/learnMore/consensus-lab/demoStages";
 
 /**
  * The threshold the document carries out of this stage — shown with the numbers
@@ -14,7 +14,7 @@ export default function ThresholdUpdate({ s, stage }) {
         </span>
         <span className="inline-flex items-baseline gap-1.5">
           <bdi className="text-xl font-bold tabular-nums text-slate-900">
-            {stage.nextThreshold}
+            {fmt(stage.nextThreshold)}
           </bdi>
           <span className="text-sm font-medium text-slate-600">{s.supporters}</span>
         </span>
@@ -22,15 +22,15 @@ export default function ThresholdUpdate({ s, stage }) {
       <p className="mt-1 text-xs leading-relaxed text-slate-600">
         {fill(s.updatedThresholdNote, {
           percent: stage.meterAfter,
-          participants: stage.participants,
-          next: stage.nextThreshold,
+          participants: fmt(stage.participants),
+          next: fmt(stage.nextThreshold),
         })}
       </p>
       <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
         {fill(s.growthNote, {
-          openedAt: stage.openedAt,
-          participants: stage.participants,
-          threshold: stage.threshold,
+          openedAt: fmt(stage.openedAt),
+          participants: fmt(stage.participants),
+          threshold: fmt(stage.threshold),
         })}
       </p>
     </div>

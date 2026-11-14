@@ -1,4 +1,5 @@
 import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { fmt } from "@/components/learnMore/consensus-lab/demoStages";
 
 /**
  * The vote on this proposal as two large counts — the numbers carry the
@@ -17,7 +18,7 @@ export default function VoteSplit({ s, stage }) {
           </span>
           <span className="min-w-0">
             <bdi className="block text-xl font-bold leading-none tabular-nums text-emerald-900">
-              {stage.pro}
+              {fmt(stage.pro)}
             </bdi>
             <span className="mt-0.5 block text-xs font-semibold leading-none text-emerald-800">
               {s.proLabel}
@@ -31,7 +32,7 @@ export default function VoteSplit({ s, stage }) {
           </span>
           <span className="min-w-0">
             <bdi className="block text-xl font-bold leading-none tabular-nums text-rose-900">
-              {stage.con}
+              {fmt(stage.con)}
             </bdi>
             <span className="mt-0.5 block text-xs font-semibold leading-none text-rose-800">
               {s.conLabel}
@@ -52,7 +53,7 @@ export default function VoteSplit({ s, stage }) {
       
 
       <p className="mt-1.5 text-xs font-medium text-slate-600">
-        <bdi className="font-bold tabular-nums text-slate-800">{stage.undecided}</bdi>{" "}
+        <bdi className="font-bold tabular-nums text-slate-800">{fmt(stage.undecided)}</bdi>{" "}
         {s.undecidedLabel}
       </p>
     </div>);

@@ -1,10 +1,12 @@
+import { fmt } from "@/components/learnMore/consensus-lab/demoStages";
+
 /**
  * The two figures this edit turned on, side by side — what was required, and
  * the score it gave the section.
  */
 export default function EditStats({ s, stage }) {
   const cells = [
-    { label: s.thresholdLabel, value: stage.threshold, unit: s.supporters },
+    { label: s.thresholdLabel, value: fmt(stage.threshold), unit: s.supporters },
     { label: s.scoreLabel, value: `${stage.score}%`, unit: null },
   ];
 

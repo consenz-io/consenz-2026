@@ -1,5 +1,5 @@
 import { BookOpen, Lightbulb } from "lucide-react";
-import { fill } from "@/components/learnMore/consensus-lab/demoStages";
+import { fill, fmt } from "@/components/learnMore/consensus-lab/demoStages";
 
 const TONES = {
   story: "border-blue-200 bg-blue-50/70",
@@ -14,13 +14,13 @@ const TONES = {
  */
 export const narrativeText = (s, stage) => {
   const vars = {
-    participants: stage.participants,
-    openedAt: stage.openedAt,
-    pro: stage.pro,
-    con: stage.con,
-    undecided: stage.undecided,
-    gap: stage.gap,
-    threshold: stage.threshold,
+    participants: fmt(stage.participants),
+    openedAt: fmt(stage.openedAt),
+    pro: fmt(stage.pro),
+    con: fmt(stage.con),
+    undecided: fmt(stage.undecided),
+    gap: fmt(stage.gap),
+    threshold: fmt(stage.threshold),
     score: stage.score,
     meter: stage.meter,
     after: stage.meterAfter,

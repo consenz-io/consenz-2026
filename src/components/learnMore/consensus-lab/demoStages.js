@@ -5,20 +5,24 @@ const START_SECTIONS = 4;
 // therefore opens at the floor every document starts from: 2 supporters.
 const START_PARTICIPANTS = 4;
 
-// One accepted proposal per stage. A vote stays open for days while the group
-// keeps growing, so its threshold is fixed at the number of participants the
-// previous stage ended with — exactly the threshold the previous stage showed
-// for this one — while `participants` counts the group by the time it passed.
-// That lag is how a proposal passes and still pulls the meter down.
+// One accepted proposal per stage, on a document that spreads and grows by
+// thousands. A vote stays open for days while the group keeps growing, so its
+// threshold is fixed at the number of participants the previous stage ended
+// with — exactly the threshold the previous stage showed for this one — while
+// `participants` counts the group by the time it passed. That lag is how a
+// proposal passes and still pulls the meter down.
 const PROPOSALS = [
-  { type: "new_section", participants: 5, con: 1 },
-  { type: "edit_section", participants: 16, con: 1 },
-  { type: "delete_section", participants: 26, con: 2 },
-  { type: "edit_section", participants: 56, con: 13 },
-  { type: "new_section", participants: 68, con: 5 },
+  { type: "new_section", participants: 9, con: 1 },
+  { type: "edit_section", participants: 70, con: 2 },
+  { type: "delete_section", participants: 100, con: 3 },
+  { type: "edit_section", participants: 700, con: 15 },
+  { type: "new_section", participants: 3800, con: 60 },
 ];
 
 const average = (list) => list.reduce((sum, value) => sum + value, 0) / list.length;
+
+// Participant counts run to the thousands, so they are grouped in the UI.
+export const fmt = (value) => Number(value).toLocaleString("en-US");
 
 export const fill = (template, vars) =>
   Object.entries(vars).reduce(
