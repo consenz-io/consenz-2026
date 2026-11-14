@@ -7,7 +7,9 @@ import {
   stateIndexFor,
 } from "@/components/learnMore/consensus-lab/demoStages";
 import StageNavigator from "@/components/learnMore/consensus-lab/StageNavigator";
-import StageNarrative from "@/components/learnMore/consensus-lab/StageNarrative";
+import StageNarrative, {
+  narrativeText,
+} from "@/components/learnMore/consensus-lab/StageNarrative";
 import ThresholdUpdate from "@/components/learnMore/consensus-lab/ThresholdUpdate";
 import VoteSplit from "@/components/learnMore/consensus-lab/VoteSplit";
 import EditStats from "@/components/learnMore/consensus-lab/EditStats";
@@ -21,12 +23,21 @@ const TYPES = {
 
 export default function ConsensusStepsDemo({ s }) {
   const [index, setIndex] = useState(0);
+  // The story of the current stage takes the top slot once the reader steps
+  // through the demo; the general guide moves down to where the story was.
+  const [swapped, setSwapped] = useState(false);
 
   const total = SEQUENCE.length;
   const stage = SEQUENCE[index];
   const stateIndex = stateIndexFor(stage.meterAfter);
   const { Icon, tone } = TYPES[stage.type];
-  const goTo = (next) => setIndex(Math.min(total - 1, Math.max(0, next)));
+  const story = narrativeText(s, stage);
+
+  const goTo = (next) => {
+    const bounded = Math.min(total - 1, Math.max(0, next));
+    setIndex(bounded);
+    setSwapped(bounded !== 0);
+  };
 
   return (
     <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -37,7 +48,13 @@ export default function ConsensusStepsDemo({ s }) {
         <h3 className="mt-1 text-base font-bold leading-tight text-slate-900 md:text-lg">
           {s.title}
         </h3>
-        <p className="mt-1 text-xs leading-relaxed text-slate-500 md:text-sm">{s.hint}</p>
+        <p
+          className={`mt-1 leading-relaxed ${
+            swapped ? "text-sm text-slate-700 md:text-base" : "text-xs text-slate-500 md:text-sm"
+          }`}
+        >
+          {swapped ? story : s.hint}
+        </p>
       </div>
 
       <StageNavigator s={s} stages={SEQUENCE} index={index} onSelect={goTo} />
@@ -64,7 +81,11 @@ export default function ConsensusStepsDemo({ s }) {
           </span>
         </div>
 
-        <StageNarrative s={s} stage={stage} />
+        <StageNarrative
+          label={swapped ? s.guideLabel : s.storyLabel}
+          text={swapped ? s.hint : story}
+          tone={swapped ? "guide" : stage.trend === "down" ? "warn" : "story"}
+        />
 
         <VoteSplit s={s} stage={stage} />
         <EditStats s={s} stage={stage} />

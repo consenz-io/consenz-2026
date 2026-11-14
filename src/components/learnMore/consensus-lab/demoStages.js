@@ -45,6 +45,7 @@ const buildStages = () => {
 
     accepted.push(score);
     const meterAfter = average(accepted);
+    const sectionsBefore = sections;
     sections += type === "new_section" ? 1 : type === "delete_section" ? -1 : 0;
 
     return {
@@ -62,6 +63,7 @@ const buildStages = () => {
       trend: meterAfter >= meter ? "up" : "down",
       // The threshold the document now carries into the next proposal.
       nextThreshold: thresholdFor(meterAfter, participants),
+      sectionsBefore,
       sections,
     };
   });
