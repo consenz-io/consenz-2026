@@ -81,11 +81,9 @@ export default function ConsensusStepsDemo({ s }) {
           </span>
         </div>
 
-        <StageNarrative
-          label={swapped ? s.guideLabel : s.storyLabel}
-          text={swapped ? s.hint : story}
-          tone={swapped ? "guide" : stage.trend === "down" ? "warn" : "story"}
-        />
+        {/* The first stage opens with the guide only — the story starts once
+            the reader steps through the demo. */}
+        {swapped && <StageNarrative label={s.guideLabel} text={s.hint} tone="guide" />}
 
         <VoteSplit s={s} stage={stage} />
         <EditStats s={s} stage={stage} />
