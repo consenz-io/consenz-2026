@@ -86,10 +86,10 @@ export default function ConsensusStepsDemo({ s }) {
         <div className="mt-3 grid gap-3 md:grid-cols-2 md:gap-x-5">
           <div className="space-y-3">
             <VoteSplit s={s} stage={stage} />
-            <EditStats s={s} stage={stage} />
+            <ConsensusTrail s={s} stage={stage} stateIndex={stateIndex} />
           </div>
           <div className="space-y-3">
-            <ConsensusTrail s={s} stage={stage} stateIndex={stateIndex} />
+            <EditStats s={s} stage={stage} />
             <ThresholdUpdate s={s} stage={stage} />
           </div>
         </div>
