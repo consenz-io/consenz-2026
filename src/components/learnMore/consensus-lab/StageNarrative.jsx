@@ -36,13 +36,19 @@ export const narrativeText = (s, stage) => {
   return `${typeStory} ${verdict}`.trim();
 };
 
-export default function StageNarrative({ label: labelText, text, tone = "story" }) {
+export default function StageNarrative({ label: labelText, text, tone = "story", compact = false }) {
   const dropped = tone === "warn";
   const guide = tone === "guide";
   const Icon = guide ? Lightbulb : BookOpen;
+  const box = compact ? "mt-3 px-3.5 py-2.5" : "mt-4 px-4 py-3.5";
+  const body = guide
+    ? compact
+      ? "text-xs text-slate-600 md:text-[13px]"
+      : "text-sm text-slate-600"
+    : "text-base text-slate-800 md:text-lg";
 
   return (
-    <div className={`mt-4 rounded-xl border-2 px-4 py-3.5 ${TONES[tone] || TONES.story}`}>
+    <div className={`${box} rounded-xl border-2 ${TONES[tone] || TONES.story}`}>
       <span
         className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider ${
           dropped ? "text-amber-800" : guide ? "text-slate-600" : "text-blue-800"
@@ -51,13 +57,7 @@ export default function StageNarrative({ label: labelText, text, tone = "story" 
         <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         {labelText}
       </span>
-      <p
-        className={`mt-1.5 leading-relaxed ${
-          guide ? "text-sm text-slate-600" : "text-base text-slate-800 md:text-lg"
-        }`}
-      >
-        {text}
-      </p>
+      <p className={`mt-1 leading-relaxed ${body}`}>{text}</p>
     </div>
   );
 }

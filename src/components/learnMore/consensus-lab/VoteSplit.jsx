@@ -9,7 +9,7 @@ export default function VoteSplit({ s, stage }) {
   const conPercent = (stage.con / stage.participants) * 100;
 
   return (
-    <div className="mt-4">
+    <div>
       <div className="grid grid-cols-2 gap-2">
         <div className="flex min-w-0 items-center gap-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 px-3 py-2.5">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-emerald-600 text-white">

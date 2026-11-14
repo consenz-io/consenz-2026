@@ -16,7 +16,7 @@ export default function ConsensusTrail({ s, stage, stateIndex }) {
   const dropped = stage.trend === "down";
 
   return (
-    <div className="mt-5 border-t border-slate-100 pt-4">
+    <div>
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
           {s.levelLabel}
@@ -44,13 +44,13 @@ export default function ConsensusTrail({ s, stage, stateIndex }) {
         />
       </div>
 
-      <div className="mt-1.5 flex justify-between gap-3 text-[11px] text-slate-500">
+      <div className="mt-1 flex justify-between gap-3 text-[10px] text-slate-500">
         <span>{s.dynamicPole}</span>
         <span className="text-end">{s.stablePole}</span>
       </div>
 
       <span
-        className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${TONES[stateIndex]}`}
+        className={`mt-2 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${TONES[stateIndex]}`}
       >
         {s.stateLabels[stateIndex]}
       </span>

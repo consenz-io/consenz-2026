@@ -7,7 +7,7 @@ import { fill } from "@/components/learnMore/consensus-lab/demoStages";
  */
 export default function ThresholdUpdate({ s, stage }) {
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5">
+    <div className="rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className="text-sm font-semibold text-slate-700">
           {s.updatedThresholdLabel}

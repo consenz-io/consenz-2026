@@ -11,7 +11,7 @@ export default function EditStats({ s, stage }) {
   ];
 
   return (
-    <dl className="mt-4 grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-100 bg-slate-50 py-2.5 rtl:divide-x-reverse">
+    <dl className="grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-100 bg-slate-50 py-2 rtl:divide-x-reverse">
       {cells.map((cell) => (
         <div key={cell.label} className="min-w-0 px-2 text-center">
           <dt className="text-xs font-medium leading-tight text-slate-600">{cell.label}</dt>

@@ -41,16 +41,16 @@ export default function ConsensusStepsDemo({ s }) {
 
   return (
     <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-5 md:p-6">
+      <div className="border-b border-slate-100 px-4 py-3.5 md:px-5">
         <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700">
           {s.simulatorLabel}
         </span>
-        <h3 className="mt-1 text-base font-bold leading-tight text-slate-900 md:text-lg">
+        <h3 className="mt-0.5 text-base font-bold leading-tight text-slate-900 md:text-lg">
           {s.title}
         </h3>
         <p
           className={`mt-1 leading-relaxed ${
-            swapped ? "text-sm text-slate-700 md:text-base" : "text-xs text-slate-500 md:text-sm"
+            swapped ? "text-sm text-slate-700 md:text-[15px]" : "text-xs text-slate-500 md:text-sm"
           }`}
         >
           {swapped ? story : s.hint}
@@ -64,31 +64,37 @@ export default function ConsensusStepsDemo({ s }) {
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="p-5 md:p-6"
+        className="px-4 py-3.5 md:px-5"
       >
         <div className="flex items-center justify-between gap-3">
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${tone}`}
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${tone}`}
           >
             <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             {s.typeLabels[stage.type]}
           </span>
           <span className="inline-flex items-baseline gap-1">
-            <bdi className="text-2xl font-bold tabular-nums text-slate-900">
+            <bdi className="text-lg font-bold leading-none tabular-nums text-slate-900">
               {stage.participants}
             </bdi>
-            <span className="text-sm font-medium text-slate-600">{s.participantsLabel}</span>
+            <span className="text-xs font-medium text-slate-600">{s.participantsLabel}</span>
           </span>
         </div>
 
-        {/* The first stage opens with the guide only — the story starts once
-            the reader steps through the demo. */}
-        {swapped && <StageNarrative label={s.guideLabel} text={s.hint} tone="guide" />}
+        {/* Votes and the numbers on one side, the meter and the next threshold on
+            the other — the whole demo fits one screen on desktop. */}
+        <div className="mt-3 grid gap-3 md:grid-cols-2 md:gap-x-5">
+          <div className="space-y-3">
+            <VoteSplit s={s} stage={stage} />
+            <EditStats s={s} stage={stage} />
+          </div>
+          <div className="space-y-3">
+            <ConsensusTrail s={s} stage={stage} stateIndex={stateIndex} />
+            <ThresholdUpdate s={s} stage={stage} />
+          </div>
+        </div>
 
-        <VoteSplit s={s} stage={stage} />
-        <EditStats s={s} stage={stage} />
-
-        <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
+        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
           <span>{s.passedLabel}</span>
           <span className="text-emerald-600" aria-hidden="true">
@@ -101,9 +107,9 @@ export default function ConsensusStepsDemo({ s }) {
           </span>
         </div>
 
-        <ConsensusTrail s={s} stage={stage} stateIndex={stateIndex} />
-
-        <ThresholdUpdate s={s} stage={stage} />
+        {/* The first stage opens with the guide only — it moves down here once
+            the reader steps through the demo. */}
+        {swapped && <StageNarrative label={s.guideLabel} text={s.hint} tone="guide" compact />}
       </motion.div>
 
       <p className="sr-only" aria-live="polite">
