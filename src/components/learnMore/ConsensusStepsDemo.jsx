@@ -97,10 +97,6 @@ export default function ConsensusStepsDemo({ s }) {
         <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
           <span>{s.passedLabel}</span>
-          <span className="text-emerald-600" aria-hidden="true">
-            ·
-          </span>
-          <span>{s.docNotes[stage.type]}</span>
           <span className="ms-auto inline-flex items-baseline gap-1 font-medium text-emerald-800/80">
             <bdi className="font-bold tabular-nums">{stage.sections}</bdi>
             {s.sectionsLabel}

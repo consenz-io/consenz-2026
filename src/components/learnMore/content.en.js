@@ -149,7 +149,7 @@ const en = {
       stateLabels: ["Wording stays open", "Wording evolves", "Wording is protected"],
       dynamicPole: "Dynamism — easy to change",
       stablePole: "Stability — built to last",
-      hint: "Each stage shows one proposal the community accepted, and the document moves on from it. At the top: the kind of proposal — a new section, a rewritten section or a deleted one — and the number of participants at that moment. Below it the story of that vote, then the split: how many supported, how many opposed, the threshold that was required and the section score. At the bottom, the consensus meter and the threshold the document carries into the next stage. Note: the first proposal in a document always passes at a threshold of 2 supporters only — the lowest threshold — and from there it rises as the group grows and agreement strengthens.",
+      hint: "Each stage shows one proposal the community accepted — a new section, a rewrite or a deletion — and the document moves on from it. The first proposal in a document passes at a threshold of 2 supporters only, and from there it rises as the group grows and agreement strengthens.",
       simulatorLabel: "Guided demo",
       stepLabel: "Stage {n} of {total}",
       prevLabel: "Previous stage",
@@ -170,30 +170,24 @@ const en = {
         edit_section: "Proposal to edit a section",
         delete_section: "Proposal to delete a section",
       },
-      docNotes: {
-        new_section: "A section was added",
-        edit_section: "The section was reworded",
-        delete_section: "A section was removed",
-      },
       storyLabel: "What happened here",
       guideLabel: "How to read this demo",
       upLabel: "The meter rose",
       downLabel: "The meter fell",
       narratives: {
         new_section:
-          "At this stage the document held {sectionsBefore} sections and {participants} participants. One of them proposed adding a section that was not written yet. {pro} voted for it, {con} against and {undecided} did not vote — a gap of {gap}, which reached the threshold of {threshold} supporters set at the time. The proposal passed, the section entered the document, and its section score of {score}% placed the document anew on the meter.",
+          "At this stage the document held {sectionsBefore} sections. One of them proposed adding a section that was not written yet. {pro} voted for it, {con} against and {undecided} did not vote — a gap of {gap}, which reached the threshold of {threshold} supporters set at the time. The proposal passed, the section entered the document, and its section score of {score}% placed the document anew on the meter.",
         edit_section:
-          "At this stage the document held {sectionsBefore} sections and {participants} participants. One of them proposed rewording an existing section. {pro} backed the new wording, {con} preferred the text as it was and {undecided} did not vote — a gap of {gap} against a threshold of {threshold} supporters. The change passed and the wording was updated, and its section score of {score}% placed the document anew on the meter.",
+          "At this stage the document held {sectionsBefore} sections. One of them proposed rewording an existing section. {pro} backed the new wording, {con} preferred the text as it was and {undecided} did not vote — a gap of {gap} against a threshold of {threshold} supporters. The change passed and the wording was updated, and its section score of {score}% placed the document anew on the meter.",
         delete_section:
-          "At this stage the document held {sectionsBefore} sections and {participants} participants. One of them proposed deleting a whole section. {pro} voted to remove it, {con} asked to keep it and {undecided} did not vote — a gap of {gap} against a threshold of {threshold} supporters. The proposal passed, the section was removed leaving {sections} sections, and its section score of {score}% placed the document anew on the meter.",
+          "At this stage the document held {sectionsBefore} sections. One of them proposed deleting a whole section. {pro} voted to remove it, {con} asked to keep it and {undecided} did not vote — a gap of {gap} against a threshold of {threshold} supporters. The proposal passed, the section was removed leaving {sections} sections, and its section score of {score}% placed the document anew on the meter.",
       },
       narrativeRise:
         "The score is higher than the consensus meter stood before the proposal, so the meter rose from {meter}% to {after}%.",
       narrativeDropSuffix:
         "But the threshold was fixed when the document had only {openedAt} participants, and the vote stayed open while the community grew to {participants}: that same gap no longer looks like a clear majority, and the score of {score}% is lower than the one before it — so the meter dropped from {meter}% to {after}%.",
       updatedThresholdLabel: "The updated threshold for the next stage",
-      updatedThresholdNote:
-        "{percent}% × {participants} participants = {next} supporters. The threshold is never below 2 — that is where every document starts.",
+      updatedThresholdNote: "{percent}% × {participants} participants = {next} supporters.",
     },
     link: "Read the full consensus explainer",
   },
