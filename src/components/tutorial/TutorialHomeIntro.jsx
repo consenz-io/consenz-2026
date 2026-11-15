@@ -157,9 +157,16 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       }, 200);
     }
 
+    // One reposition per animation frame: the listener fires several times per
+    // frame and each call re-renders the bubble while the page scrolls.
+    let scrollFrame = null;
     function handleScroll() {
-      const el = document.querySelector(activeStep.targetSelector);
-      if (el) updatePosition(el);
+      if (scrollFrame !== null) return;
+      scrollFrame = requestAnimationFrame(() => {
+        scrollFrame = null;
+        const el = document.querySelector(activeStep.targetSelector);
+        if (el) updatePosition(el);
+      });
     }
 
     // Re-apply spotlight when the target element is replaced in the DOM
@@ -189,6 +196,7 @@ export default function TutorialHomeIntro({ step, nextStep, onSkip, onRequestSki
       if (spotlightObserver) spotlightObserver.disconnect();
       if (cleanupSpotlight) cleanupSpotlight();
       if (cancelScrollSettleRef.current) cancelScrollSettleRef.current();
+      if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
     };
   }, [activeStep.targetSelector, activeStep.tooltipPosition]);
 

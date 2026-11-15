@@ -547,7 +547,9 @@ function LayoutContent({ children, currentPageName }) {
           aria-label={isRTL ? 'תוכן ראשי' : 'Main content'}
           style={{ '--sidebar-width': '16rem' }}>
           
-          <header className={`bg-white/80 backdrop-blur-sm border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'fixed md:inset-inline-start-64 md:w-[calc(100vw-16rem)]' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'shadow-md' : ''}`} role="banner">
+          {/* Opaque, not translucent: a sticky backdrop-blur repaints the whole
+              header strip on every scroll frame, which made scrolling stutter. */}
+          <header className={`bg-white/95 border-b border-slate-200 ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'fixed md:inset-inline-start-64 md:w-[calc(100vw-16rem)]' : 'sticky'} top-0 z-30 w-full ${user && totalUnvotedSuggestions > 0 && showUnvotedNudge ? 'shadow-md' : ''}`} role="banner">
             <div className="flex items-center gap-2 px-2 md:px-6 py-2 md:py-4 w-full min-w-0">
               {/* Left side: Sidebar Trigger + Logo */}
               <div className="flex-shrink-0">

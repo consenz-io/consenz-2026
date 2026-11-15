@@ -15,14 +15,27 @@ export default function TourScrollButton({ label, onClick }) {
   const [showFloating, setShowFloating] = React.useState(false);
 
   React.useEffect(() => {
-    const handleScroll = () => {
+    // rAF-coalesced: scroll fires several times per frame, and each measurement
+    // here forces a layout. Measuring once per frame keeps the morph animation
+    // smooth instead of stuttering on every scroll event.
+    let frame = null;
+    const measure = () => {
+      frame = null;
       const el = buttonRef.current;
       if (!el) return;
-      setShowFloating(el.getBoundingClientRect().bottom < 0);
+      const floating = el.getBoundingClientRect().bottom < 0;
+      setShowFloating((prev) => (prev === floating ? prev : floating));
     };
-    handleScroll();
+    const handleScroll = () => {
+      if (frame !== null) return;
+      frame = requestAnimationFrame(measure);
+    };
+    measure();
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frame !== null) cancelAnimationFrame(frame);
+    };
   }, []);
 
   const arrow = isRTL ?

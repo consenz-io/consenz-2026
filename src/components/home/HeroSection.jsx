@@ -83,7 +83,7 @@ export default function HeroSection({ documentsCount, displayedUsers, publicProf
           <div className="max-w-3xl mx-auto py-1 md:py-3 px-2 md:px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 md:gap-3">
               {(features[language] || features.en).map((feature, idx) =>
-              <div key={idx} className="flex flex-col bg-white/70 backdrop-blur-sm border border-slate-200 rounded-xl p-3 md:p-3.5 shadow-sm hover:shadow-md transition-shadow text-start">
+              <div key={idx} className="flex flex-col bg-white/85 border border-slate-200 rounded-xl p-3 md:p-3.5 shadow-sm hover:shadow-md transition-shadow text-start">
                 <div className="flex items-start gap-2 sm:gap-3">
                   <div className="flex-shrink-0 w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white">
                     <feature.icon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden="true" />

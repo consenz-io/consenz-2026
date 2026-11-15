@@ -13,7 +13,7 @@ export default function StatsCards({ documentsCount, displayedUsers, publicProfi
       {/* Active Documents */}
       <button
         type="button"
-        className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all w-full text-left"
+        className="bg-white/90 border border-slate-200 rounded-lg cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all w-full text-left"
         onClick={onDocumentsClick}
         aria-label={`${documentsCount} ${t('activeDocuments')}. ${language === 'he' ? 'לחץ לגלילה למסמכים' : 'Click to scroll to documents'}`}
       >
@@ -27,7 +27,7 @@ export default function StatsCards({ documentsCount, displayedUsers, publicProfi
       {/* Collaborators */}
       <button
         type="button"
-        className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all w-full text-left"
+        className="bg-white/90 border border-slate-200 rounded-lg cursor-pointer hover:shadow-lg hover:border-indigo-300 transition-all w-full text-left"
         onClick={onContributorsClick}
         aria-label={`${contributorsCount ?? displayedUsers.length} ${t('collaborators')}. ${language === 'he' ? 'לחץ לצפייה ברשימה מלאה' : 'Click to view full list'}`}
       >
@@ -44,7 +44,7 @@ export default function StatsCards({ documentsCount, displayedUsers, publicProfi
 
       {/* Average Consensus */}
       <Link to={`${createPageUrl("LearnMore")}#consensus-calculation`}>
-        <Card className="bg-white/80 backdrop-blur-sm border-slate-200 cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all">
+        <Card className="bg-white/90 border-slate-200 cursor-pointer hover:shadow-lg hover:border-purple-300 transition-all">
           <CardContent className="p-6 text-center">
             <TrendingUp className="w-8 h-8 mx-auto mb-3 text-purple-600" />
             <div className="text-3xl font-bold text-slate-900">{averageConsensus}%</div>

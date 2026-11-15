@@ -229,8 +229,12 @@ export default function TutorialTooltip({
       // overlap the target.
       const bubbleH = tooltipRef.current?.getBoundingClientRect().height || TOOLTIP_HEIGHT;
       const rp = computePosition(rect, step.tooltipPosition, isRTL, bubbleH);
-      setResolvedPosition(rp);
-      setPos(getTooltipStyle(rect, rp, bubbleH));
+      const nextPos = getTooltipStyle(rect, rp, bubbleH);
+      setResolvedPosition((prev) => (prev === rp ? prev : rp));
+      // Same coordinates → keep the previous object so React skips the render.
+      setPos((prev) =>
+        prev && prev.left === nextPos.left && prev.top === nextPos.top ? prev : nextPos
+      );
     }
 
     function update() {
@@ -306,11 +310,22 @@ export default function TutorialTooltip({
       }, 150);
     }
 
-    window.addEventListener('scroll', update, { passive: true });
+    // One reposition per animation frame — the scroll listener fires many times
+    // per frame and each call re-renders the bubble while the page scrolls.
+    let scrollFrame = null;
+    const onScroll = () => {
+      if (scrollFrame !== null) return;
+      scrollFrame = requestAnimationFrame(() => {
+        scrollFrame = null;
+        update();
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', update);
     return () => {
-      window.removeEventListener('scroll', update);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', update);
+      if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
       if (pollInterval) clearInterval(pollInterval);
       if (settleRaf) cancelAnimationFrame(settleRaf);
       if (settleTimer) clearTimeout(settleTimer);

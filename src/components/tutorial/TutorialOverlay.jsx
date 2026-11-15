@@ -56,8 +56,10 @@ export default function TutorialOverlay({ targetSelector, additionalSpotlights =
   useEffect(() => {
     const selectors = spotlightsKey.split('|').filter(Boolean);
     let lastKey = '';
+    let frame = null;
 
     function update() {
+      frame = null;
       const rects = selectors.map(rectOf).filter(Boolean);
       const nextSize = { w: window.innerWidth, h: window.innerHeight };
       // Skip state updates when nothing moved — avoids re-rendering the
@@ -69,17 +71,25 @@ export default function TutorialOverlay({ targetSelector, additionalSpotlights =
       setSize(nextSize);
     }
 
+    // One measurement per animation frame: a scroll can emit several events per
+    // frame, and each one re-renders the full-viewport mask under the tour.
+    function schedule() {
+      if (frame !== null) return;
+      frame = requestAnimationFrame(update);
+    }
+
     update();
-    window.addEventListener('scroll', update, { passive: true });
-    window.addEventListener('resize', update);
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
 
     // Poll for element availability (in case it renders after mount)
-    const interval = setInterval(update, 300);
+    const interval = setInterval(schedule, 300);
 
     return () => {
-      window.removeEventListener('scroll', update);
-      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
       clearInterval(interval);
+      if (frame !== null) cancelAnimationFrame(frame);
     };
   }, [spotlightsKey]);
 
