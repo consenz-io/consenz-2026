@@ -22,26 +22,37 @@ const getActionPriority = (action) => (action in ACTION_PRIORITY ? ACTION_PRIORI
 
 function AnimatedCounter({ value }) {
   const [displayValue, setDisplayValue] = React.useState(value);
+  // Mirror of the rendered value so the animation effect can read the starting
+  // point WITHOUT depending on displayValue. Depending on it restarted the
+  // interval on every step (clear + recreate every 20ms) and re-ran the whole
+  // effect ~20 times per change.
+  const displayRef = React.useRef(value);
 
   React.useEffect(() => {
-    if (displayValue === value) return;
+    displayRef.current = displayValue;
+  }, [displayValue]);
 
-    const difference = value - displayValue;
-    const steps = Math.min(Math.abs(difference), 20);
+  React.useEffect(() => {
+    const start = displayRef.current;
+    if (start === value) return;
+
+    const difference = value - start;
+    const steps = Math.max(1, Math.min(Math.abs(difference), 20));
     const stepValue = difference / steps;
     let current = 0;
 
     const interval = setInterval(() => {
       current++;
-      setDisplayValue(Math.round(displayValue + stepValue * current));
       if (current >= steps) {
         clearInterval(interval);
         setDisplayValue(value);
+        return;
       }
+      setDisplayValue(Math.round(start + stepValue * current));
     }, 20);
 
     return () => clearInterval(interval);
-  }, [value, displayValue]);
+  }, [value]);
 
   return <span className="font-bold text-sm tabular-nums">{displayValue}</span>;
 }
@@ -80,13 +91,19 @@ export default function FloatingPointsBadge() {
     retry: false,
   });
 
+  // The badge only needs a recent summary, but it used to refetch the user's
+  // ENTIRE points history (no limit, staleTime: 0) on every mount — i.e. on
+  // every page navigation — and that payload grows forever with usage.
+  // Limited to the recent window and given its own cache key so it does not
+  // truncate the full history the Profile page loads.
   const { data: pointsTransactions = [], isLoading: isLoadingTransactions } = useQuery({
-    queryKey: ['pointsTransactions', user?.id],
-    queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date'),
+    queryKey: ['pointsTransactionsRecent', user?.id],
+    queryFn: () => base44.entities.PointsTransaction
+      .filter({ userId: user.id }, { sort: '-created_date', limit: 100 })
+      .then((page) => page.items),
     enabled: !!user?.id,
     initialData: [],
-    staleTime: 0,
-    refetchOnMount: true,
+    staleTime: 60 * 1000,
   });
 
   const lastPointsVisit = user?.lastPointsVisit;

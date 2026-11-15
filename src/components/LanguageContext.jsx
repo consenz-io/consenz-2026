@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { Toaster } from "sonner";
 
 const translations = {
@@ -1551,8 +1551,16 @@ export const LanguageProvider = ({ children }) => {
 
   const isRTL = language === 'he' || language === 'ar';
 
+  // Stable context value: this provider also owns the language-modal state, so
+  // without memoization every open/close of that modal handed a brand-new object
+  // to useLanguage() and re-rendered every consumer in the app.
+  const contextValue = useMemo(
+    () => ({ language, setLanguage, t, isRTL }),
+    [language, t, isRTL]
+  );
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
+    <LanguageContext.Provider value={contextValue}>
       {showLanguageModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">

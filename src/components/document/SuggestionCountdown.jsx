@@ -1,33 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
 import { useLanguage } from "@/components/LanguageContext";
+import { subscribeToMinute } from "@/components/utils/minuteClock";
+
+// Remaining milliseconds, as a NUMBER so React's bail-out works: setting the
+// same value does not re-render. (The old object state created a new object on
+// every tick, so every expired card re-rendered once a minute forever.)
+const computeRemaining = (timerEndsAt) => Math.max(0, new Date(timerEndsAt) - Date.now());
 
 export default function SuggestionCountdown({ timerEndsAt, size = "sm", status }) {
   const { language } = useLanguage();
-  const [timeLeft, setTimeLeft] = useState(null);
+  const [remaining, setRemaining] = useState(null);
+  const isActive = status === 'pending' && !!timerEndsAt;
 
   useEffect(() => {
-    if (!timerEndsAt) return;
+    if (!isActive) {
+      setRemaining(null);
+      return;
+    }
 
-    const calculate = () => {
-      const diff = new Date(timerEndsAt) - new Date();
-      if (diff <= 0) {
-        setTimeLeft({ expired: true });
-        return;
-      }
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      setTimeLeft({ hours, minutes, diff });
-    };
+    const now = computeRemaining(timerEndsAt);
+    setRemaining(now);
+    if (now <= 0) return; // already expired — nothing left to count down
 
-    calculate();
-    const interval = setInterval(calculate, 60000);
-    return () => clearInterval(interval);
-  }, [timerEndsAt]);
+    const unsubscribe = subscribeToMinute(() => {
+      const next = computeRemaining(timerEndsAt);
+      setRemaining(next); // identical value => no re-render
+      if (next <= 0) unsubscribe();
+    });
+    return unsubscribe;
+  }, [timerEndsAt, isActive]);
 
-  if (!timerEndsAt || !timeLeft || status !== 'pending') return null;
+  if (!isActive || remaining === null) return null;
 
-  if (timeLeft.expired) {
+  if (remaining <= 0) {
     const expiredLabel = language === 'he' ? 'הצבעה הסתיימה' : language === 'ar' ? 'انتهى التصويت' : 'Voting ended';
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500">
@@ -37,13 +43,15 @@ export default function SuggestionCountdown({ timerEndsAt, size = "sm", status }
     );
   }
 
-  const isUrgent = timeLeft.diff < 6 * 60 * 60 * 1000; // less than 6 hours
+  const hours = Math.floor(remaining / (1000 * 60 * 60));
+  const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+  const isUrgent = remaining < 6 * 60 * 60 * 1000; // less than 6 hours
 
   const label = language === 'he'
-    ? `${timeLeft.hours > 0 ? `${timeLeft.hours}ש׳ ` : ''}${timeLeft.minutes}  דקות נותרו לסגירת ההצבעה`
+    ? `${hours > 0 ? `${hours}ש׳ ` : ''}${minutes}  דקות נותרו לסגירת ההצבעה`
     : language === 'ar'
-    ? `${timeLeft.hours > 0 ? `${timeLeft.hours}س ` : ''}${timeLeft.minutes}د متبقية`
-    : `${timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ''}${timeLeft.minutes}m left`;
+    ? `${hours > 0 ? `${hours}س ` : ''}${minutes}د متبقية`
+    : `${hours > 0 ? `${hours}h ` : ''}${minutes}m left`;
 
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-medium ${
