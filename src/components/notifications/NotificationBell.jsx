@@ -115,10 +115,42 @@ export default function NotificationBell({ user }) {
         unreadNotifications.map(n => ({ id: n.id, read: true }))
       );
     },
+    // Optimistic: the badge must drop to zero the moment the bell is opened,
+    // not after the round-trip.
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['notifications', user.id] });
+      const previous = queryClient.getQueryData(['notifications', user.id]);
+      queryClient.setQueryData(['notifications', user.id], (old) =>
+        Array.isArray(old) ? old.map(n => (n.read ? n : { ...n, read: true })) : old
+      );
+      return { previous };
+    },
+    onError: (_error, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['notifications', user.id], context.previous);
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications', user.id] });
     },
   });
+
+  // Opening the bell clears the unread badge: everything currently listed is
+  // marked as read on every open. The ref stops the post-mutation refetch from
+  // firing the mutation a second time for the same opening.
+  const clearedOnThisOpenRef = React.useRef(false);
+  const handleOpenChange = (nextOpen) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      clearedOnThisOpenRef.current = false;
+      return;
+    }
+    if (clearedOnThisOpenRef.current) return;
+    clearedOnThisOpenRef.current = true;
+    if (notifications.some(n => !n.read)) {
+      markAllAsReadMutation.mutate();
+    }
+  };
 
   const deleteNotificationMutation = useMutation({
     mutationFn: (notificationId) => base44.entities.Notification.delete(notificationId),
@@ -228,7 +260,7 @@ export default function NotificationBell({ user }) {
   if (!user) return null;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="w-5 h-5" />
