@@ -87,15 +87,19 @@ export default function SectionDeletionVoteBar({ section, document, user, isRTL,
   const userEffectiveVote = userVote?.vote || userInheritedVote;
 
   // Simulate the effect of a pro/con vote on the deletion progress.
-  // Clicking the same as your direct vote toggles it off (reverts to inherited or removed).
-  // The delta change depends on the user's effective vote (not just their direct vote),
-  // because inherited suggestion votes are part of the dedup count.
-  const afterProDelta = userVote?.vote === 'pro'
-    ? delta + (userInheritedVote === 'pro' ? 0 : userInheritedVote === 'con' ? 2 : 1)  // toggle off direct 'pro'
-    : delta - (userEffectiveVote === 'con' ? 2 : userEffectiveVote === 'pro' ? 0 : 1); // switch/create 'pro'
-  const afterConDelta = userVote?.vote === 'con'
-    ? delta - (userInheritedVote === 'con' ? 0 : userInheritedVote === 'pro' ? 2 : 1)  // toggle off direct 'con'
-    : delta + (userEffectiveVote === 'pro' ? 2 : userEffectiveVote === 'con' ? 0 : 1); // switch/create 'con'
+  // Clicking your current stance again cancels it — the backend withdraws the vote
+  // (an explicit 'abstain' when a vote is also inherited from the accepted suggestion),
+  // so a cancellation always removes the user from the counted votes.
+  const afterProDelta = userEffectiveVote === 'pro'
+    ? delta + 1   // cancel 'pro' → the user is no longer counted as a supporter
+    : userEffectiveVote === 'con'
+    ? delta - 2   // switch 'con' → 'pro'
+    : delta - 1;  // cast 'pro'
+  const afterConDelta = userEffectiveVote === 'con'
+    ? delta - 1   // cancel 'con'
+    : userEffectiveVote === 'pro'
+    ? delta + 2   // switch 'pro' → 'con'
+    : delta + 1;  // cast 'con'
   const afterProProgress = Math.min(100, Math.max(0, afterProDelta / threshold * 100));
   const afterConProgress = Math.min(100, Math.max(0, afterConDelta / threshold * 100));
 

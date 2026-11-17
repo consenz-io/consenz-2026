@@ -59,11 +59,51 @@ Deno.serve(async (req) => {
       }
       const existingVote = userVotes[0] || null;
 
+      // ── Votes inherited from the most recent accepted suggestion of this section ──
+      // A user who voted on the suggestion that produced this section is counted as
+      // having voted on the section. Fetched BEFORE the toggle because a cancelled
+      // vote must override that inherited vote.
+      let inheritedVoters = new Map();
+      try {
+        const [creationSuggs, editSuggs] = await Promise.all([
+          base44.asServiceRole.entities.Suggestion.filter({
+            sectionId, status: 'accepted', type: 'new_section'
+          }),
+          base44.asServiceRole.entities.Suggestion.filter({
+            sectionId, status: 'accepted', type: 'edit_section'
+          })
+        ]);
+        let latest = null;
+        for (const s of [...creationSuggs, ...editSuggs]) {
+          if (!latest || new Date(s.updated_date) > new Date(latest.updated_date)) {
+            latest = s;
+          }
+        }
+        if (latest) {
+          const suggestionVotes = await base44.asServiceRole.entities.Vote.filter({
+            suggestionId: latest.id
+          });
+          for (const v of suggestionVotes) {
+            if (v.userId) inheritedVoters.set(v.userId, v.vote);
+          }
+        }
+      } catch (e) {
+        console.error('[VOTE ON SECTION V2 inherited votes lookup error]', e);
+      }
+
       let action;
       if (existingVote) {
         if (existingVote.vote === vote) {
-          await base44.asServiceRole.entities.SectionVote.delete(existingVote.id);
-          action = 'deleted';
+          if (inheritedVoters.has(user.id)) {
+            // Cancel: the user also inherits a vote from the accepted suggestion, so the
+            // vote is replaced by an explicit 'abstain' record — otherwise the inherited
+            // vote would silently come back and the cancellation would have no effect.
+            await base44.asServiceRole.entities.SectionVote.update(existingVote.id, { vote: 'abstain' });
+            action = 'abstained';
+          } else {
+            await base44.asServiceRole.entities.SectionVote.delete(existingVote.id);
+            action = 'deleted';
+          }
         } else {
           await base44.asServiceRole.entities.SectionVote.update(existingVote.id, { vote });
           action = 'updated';
@@ -90,40 +130,18 @@ Deno.serve(async (req) => {
       const proCount = freshVotes.filter(v => v.vote === 'pro').length;
       const conCount = freshVotes.filter(v => v.vote === 'con').length;
 
-      // ── Inherited votes from the most recent accepted suggestion linked to this section ──
+      // ── Deduplicated counts: inherited votes overridden by direct section votes ──
+      // A direct section vote (including 'abstain', which withdraws the vote) always
+      // overrides the vote inherited from the accepted suggestion.
       let totalPro = proCount;
       let totalCon = conCount;
-      try {
-        const [creationSuggs, editSuggs] = await Promise.all([
-          base44.asServiceRole.entities.Suggestion.filter({
-            sectionId, status: 'accepted', type: 'new_section'
-          }),
-          base44.asServiceRole.entities.Suggestion.filter({
-            sectionId, status: 'accepted', type: 'edit_section'
-          })
-        ]);
-        let latest = null;
-        for (const s of [...creationSuggs, ...editSuggs]) {
-          if (!latest || new Date(s.updated_date) > new Date(latest.updated_date)) {
-            latest = s;
-          }
+      if (inheritedVoters.size > 0) {
+        const dedupMap = new Map(inheritedVoters);
+        for (const v of freshVotes) {
+          if (v.userId) dedupMap.set(v.userId, v.vote);
         }
-        if (latest) {
-          const suggestionVotes = await base44.asServiceRole.entities.Vote.filter({
-            suggestionId: latest.id
-          });
-          const dedupMap = new Map();
-          for (const v of suggestionVotes) {
-            if (v.userId) dedupMap.set(v.userId, v.vote);
-          }
-          for (const v of freshVotes) {
-            if (v.userId) dedupMap.set(v.userId, v.vote);
-          }
-          totalPro = Array.from(dedupMap.values()).filter(v => v === 'pro').length;
-          totalCon = Array.from(dedupMap.values()).filter(v => v === 'con').length;
-        }
-      } catch (e) {
-        console.error('[VOTE ON SECTION V2 source suggestion lookup error]', e);
+        totalPro = Array.from(dedupMap.values()).filter(v => v === 'pro').length;
+        totalCon = Array.from(dedupMap.values()).filter(v => v === 'con').length;
       }
 
       // ── Deletion check ──────────────────────────────────────────────

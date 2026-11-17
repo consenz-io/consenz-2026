@@ -20,9 +20,15 @@
       "type": "string",
       "enum": [
         "pro",
-        "con"
+        "con",
+        "abstain"
       ],
-      "description": "Vote direction"
+      "enumColors": [
+        "green",
+        "red",
+        "gray"
+      ],
+      "description": "Vote direction. 'abstain' records an explicit withdrawal of the user's vote, so a vote inherited from the accepted suggestion that created the section is not counted for them either."
     }
   },
   "required": [
