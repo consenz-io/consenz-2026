@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { UserPlus, Mail, Lock, Loader2, User } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
+import ConsentCheckboxes from "@/components/legal/ConsentCheckboxes";
 import GoogleIcon from "@/components/GoogleIcon";
 import { useLanguage } from "@/components/LanguageContext";
 import { toast } from "@/components/ui/use-toast";
@@ -22,6 +23,52 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [emailOptIn, setEmailOptIn] = useState(false);
+
+  const CONSENT_VERSION = "2026-11-25";
+
+  // Consent is stored before the account exists: email sign-up finishes after
+  // the OTP step, and Google sign-up redirects away entirely, so the pending
+  // record is applied once the user is authenticated.
+  const savePendingConsent = () => {
+    const acceptedAt = new Date().toISOString();
+    const consent = {
+      termsAcceptedAt: acceptedAt,
+      termsVersion: CONSENT_VERSION,
+      emailOptIn: !!emailOptIn,
+      emailOptInAt: emailOptIn ? acceptedAt : null,
+    };
+    try {
+      localStorage.setItem("consenz_pending_consent", JSON.stringify(consent));
+    } catch {
+      // Storage can be unavailable; consent is still applied right after verification
+    }
+    return consent;
+  };
+
+  const readPendingConsent = () => {
+    try {
+      return JSON.parse(localStorage.getItem("consenz_pending_consent") || "null");
+    } catch {
+      return null;
+    }
+  };
+
+  const applyConsent = async (consent) => {
+    if (!consent) return;
+    await base44.auth.updateMe({
+      termsAcceptedAt: consent.termsAcceptedAt,
+      termsVersion: consent.termsVersion,
+      emailOptIn: !!consent.emailOptIn,
+      emailOptInAt: consent.emailOptInAt || null,
+    });
+    try {
+      localStorage.removeItem("consenz_pending_consent");
+    } catch {
+      // ignore
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,6 +81,11 @@ export default function Register() {
       setError(t('authPasswordsDoNotMatch'));
       return;
     }
+    if (!acceptedTerms) {
+      setError(t('consentTermsRequired'));
+      return;
+    }
+    savePendingConsent();
     setLoading(true);
     try {
       await base44.auth.register({ email, password });
@@ -69,6 +121,17 @@ export default function Register() {
             console.error("Failed to set display name:", err);
           }
         }
+        // Record the consents captured on the registration form
+        try {
+          await applyConsent(readPendingConsent() || {
+            termsAcceptedAt: new Date().toISOString(),
+            termsVersion: CONSENT_VERSION,
+            emailOptIn: !!emailOptIn,
+            emailOptInAt: emailOptIn ? new Date().toISOString() : null,
+          });
+        } catch (err) {
+          console.error("Failed to record consent:", err);
+        }
       }
       window.location.href = safeReturnTo();
     } catch (err) {
@@ -92,6 +155,12 @@ export default function Register() {
   };
 
   const handleGoogle = () => {
+    setError("");
+    if (!acceptedTerms) {
+      setError(t('consentTermsRequired'));
+      return;
+    }
+    savePendingConsent();
     base44.auth.loginWithProvider("google", safeReturnTo());
   };
 
@@ -256,6 +325,12 @@ export default function Register() {
             />
           </div>
         </div>
+        <ConsentCheckboxes
+          acceptedTerms={acceptedTerms}
+          onAcceptedTermsChange={setAcceptedTerms}
+          emailOptIn={emailOptIn}
+          onEmailOptInChange={setEmailOptIn}
+        />
         <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
           {loading ? (
             <>

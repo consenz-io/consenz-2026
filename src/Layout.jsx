@@ -428,6 +428,27 @@ function LayoutContent({ children, currentPageName }) {
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       }
 
+      // Consent captured on the registration page is applied here for sign-ups
+      // that leave the page before the account exists (Google sign-up).
+      try {
+        const pendingRaw = localStorage.getItem('consenz_pending_consent');
+        if (pendingRaw) {
+          const pending = JSON.parse(pendingRaw);
+          if (!user.termsAcceptedAt && pending?.termsAcceptedAt) {
+            await base44.auth.updateMe({
+              termsAcceptedAt: pending.termsAcceptedAt,
+              termsVersion: pending.termsVersion || null,
+              emailOptIn: !!pending.emailOptIn,
+              emailOptInAt: pending.emailOptIn ? pending.termsAcceptedAt : null,
+            });
+            queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+          }
+          localStorage.removeItem('consenz_pending_consent');
+        }
+      } catch (err) {
+        console.error('Error applying registration consent:', err);
+      }
+
       // Create UserPublicProfile if missing — only once per session.
       // Never overwrite an existing fullName: the User entity's full_name
       // defaults to the email prefix for email-registered users and cannot be

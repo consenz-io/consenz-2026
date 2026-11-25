@@ -18,6 +18,7 @@ import PageHeader from "../components/PageHeader";
 import { formatLocalDate } from "@/components/utils/dateFormatter";
 import { useProfileActivity } from "@/components/profile/useProfileActivity";
 import ProfileActivityTabs from "@/components/profile/ProfileActivityTabs";
+import EmailPreferences from "@/components/profile/EmailPreferences";
 import PointsHistoryList from "@/components/profile/PointsHistoryList";
 import { userProfileCache } from "@/components/utils/cache";
 
@@ -606,6 +607,8 @@ export default function Profile() {
                 }
               </div>
             </div>
+
+            {isOwnProfile && <EmailPreferences user={user} />}
 
             <div className="border-t pt-4">
               <p className="text-xs text-slate-500">

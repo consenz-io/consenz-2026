@@ -18,6 +18,8 @@ import ResetPassword from '@/pages/ResetPassword';
 import RejectedSuggestions from './pages/RejectedSuggestions';
 import Messages from './pages/Messages';
 import TranslationReview from './pages/TranslationReview';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
 
 // Clear cache - EmailLogs has been removed
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -61,6 +63,22 @@ const AuthenticatedApp = () => {
           <MainPage />
         </LayoutWrapper>
       } />
+      <Route
+        path="/PrivacyPolicy"
+        element={
+          <LayoutWrapper currentPageName="PrivacyPolicy">
+            <PrivacyPolicy />
+          </LayoutWrapper>
+        }
+      />
+      <Route
+        path="/TermsOfUse"
+        element={
+          <LayoutWrapper currentPageName="TermsOfUse">
+            <TermsOfUse />
+          </LayoutWrapper>
+        }
+      />
       {Object.entries(Pages).filter(([path]) => !PROTECTED_PAGES.has(path)).map(([path, Page]) => (
         <Route
           key={path}

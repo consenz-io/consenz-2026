@@ -1,6 +1,8 @@
-import React from "react";
+import { Link } from "react-router-dom";
+import { useLanguage } from "@/components/LanguageContext";
 
 export default function AuthLayout({ icon: Icon, title, subtitle, footer, children }) {
+  const { t } = useLanguage();
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
@@ -17,6 +19,15 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
         {footer && (
           <p className="text-center text-sm text-muted-foreground mt-6">{footer}</p>
         )}
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          <Link to="/TermsOfUse" className="hover:underline hover:text-foreground">
+            {t("legalTermsOfUse")}
+          </Link>
+          <span className="mx-2" aria-hidden="true">·</span>
+          <Link to="/PrivacyPolicy" className="hover:underline hover:text-foreground">
+            {t("legalPrivacyPolicy")}
+          </Link>
+        </p>
       </div>
     </div>
   );

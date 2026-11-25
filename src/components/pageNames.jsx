@@ -1,4 +1,3 @@
-
 /**
  * Centralized page name constants
  * Use these EVERYWHERE instead of hardcoding page names
@@ -24,4 +23,6 @@ export const PAGE_NAMES = {
   LEARN_MORE: 'LearnMore',
   EMAIL_SETTINGS: 'EmailSettings',
   EMAIL_LOGS: 'EmailLogs',
+  PRIVACY_POLICY: 'PrivacyPolicy',
+  TERMS_OF_USE: 'TermsOfUse',
 };
