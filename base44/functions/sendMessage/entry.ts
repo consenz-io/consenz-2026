@@ -11,6 +11,9 @@ const MESSAGE_EMAIL_COPY = {
     intro: '{name} שלח/ה לך הודעה חדשה במערכת המסרים של Consenz:',
     ctaLabel: 'לצפייה בהודעה',
     footer: 'קיבלת מייל זה כי יש לך חשבון ב-Consenz. אפשר להשיב להודעה מתוך המערכת.',
+    messageLabel: 'הודעה חדשה',
+    fromLabel: 'מאת',
+    textAlign: 'right',
   },
   en: {
     subject: 'New message from {name}',
@@ -19,6 +22,9 @@ const MESSAGE_EMAIL_COPY = {
     intro: '{name} sent you a new message in the Consenz messaging system:',
     ctaLabel: 'View message',
     footer: 'You are receiving this email because you have a Consenz account. You can reply from inside the app.',
+    messageLabel: 'New message',
+    fromLabel: 'From',
+    textAlign: 'left',
   },
   ar: {
     subject: 'رسالة جديدة من {name}',
@@ -27,11 +33,16 @@ const MESSAGE_EMAIL_COPY = {
     intro: '{name} أرسل لك رسالة جديدة في نظام الرسائل في Consenz:',
     ctaLabel: 'عرض الرسالة',
     footer: 'تلقيت هذا البريد لأن لديك حساباً في Consenz. يمكنك الرد من داخل التطبيق.',
+    messageLabel: 'رسالة جديدة',
+    fromLabel: 'من',
+    textAlign: 'right',
   },
 };
 
-// One email per conversation every 10 minutes — an active chat must not send
-// an email for every single message.
+// One email per recipient every 10 minutes — an active chat must not send an
+// email for every single message. Keyed per recipient (not per conversation) so
+// a reply from the other side is still emailed: the person replying has not been
+// emailed recently, only the person who wrote first was.
 const MESSAGE_EMAIL_THROTTLE_MS = 10 * 60 * 1000;
 const lastMessageEmailAt = new Map();
 
@@ -169,12 +180,13 @@ export default async function(req) {
 
     // Email the recipient about the message (non-critical, sent after the response)
     try {
-      const lastSent = lastMessageEmailAt.get(conversation.id) || 0;
+      const emailKey = `${conversation.id}|${recipientId}`;
+      const lastSent = lastMessageEmailAt.get(emailKey) || 0;
       if (Date.now() - lastSent > MESSAGE_EMAIL_THROTTLE_MS) {
         const recipients = await base44.asServiceRole.entities.User.filter({ id: recipientId });
         const recipient = recipients[0];
         if (recipient?.email) {
-          lastMessageEmailAt.set(conversation.id, Date.now());
+          lastMessageEmailAt.set(emailKey, Date.now());
           const copy = MESSAGE_EMAIL_COPY[recipient.preferredLanguage] || MESSAGE_EMAIL_COPY.he;
           waitUntil(
             base44.asServiceRole.integrations.Core.SendEmail({
@@ -192,6 +204,9 @@ export default async function(req) {
                 cta_label: copy.ctaLabel,
                 cta_url: `https://consenz.net/Messages?conversation=${conversation.id}`,
                 footer_note: copy.footer,
+                messageLabel: copy.messageLabel,
+                fromLabel: copy.fromLabel,
+                text_align: copy.textAlign,
               },
             }).catch(() => {})
           );
