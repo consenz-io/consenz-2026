@@ -282,18 +282,20 @@ const en = {
     impactTitle: "How it looks in practice",
     impactText: "Fewer proposals arrive, but each one is worded better and gathers more support. Instead of twenty versions of the same change, there is one proposal that brings everyone around it.",
     spectrum: {
-      title: "The spectrum: between noise and freedom of expression",
-      noisePole: "Noise",
-      freedomPole: "Freedom of expression",
-      hint: "The points place the document in the middle: open to everyone's proposals, without being flooded by them.",
+      title: "The proposal funnel: from openness to focus",
+      openLabel: "Openness",
+      openCaption: "Any participant can propose a change, with no prior approval and no censorship.",
+      focusLabel: "Focus",
+      focusCaption: "What the community really wants moves into the document, and the rest closes on its own.",
+      hint: "Points are the neck of the funnel: they never close the door on anyone, they just keep the document focused on what matters.",
       markers: [
         {
-          label: "Noise",
-          text: "Without points every proposal goes in immediately. Support scatters across versions of the same change, and the document struggles to move forward.",
+          label: "Openness",
+          text: "No one approves or rejects proposals up front. Every participant can propose a change, and every proposal enters the process.",
         },
         {
-          label: "Signal",
-          text: "Points put a price on every proposal, so people propose what really matters and spend their attention voting on the rest. What the community wants becomes visible.",
+          label: "Focus",
+          text: "The price in points makes people propose only what really matters and spend their time voting on the rest, so the document keeps moving forward.",
         },
       ],
     },
