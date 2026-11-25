@@ -5,7 +5,8 @@ import { useLanguage } from "@/components/LanguageContext";
 import ConversationList from "@/components/messages/ConversationList";
 import ChatView from "@/components/messages/ChatView";
 import NewConversationDialog from "@/components/messages/NewConversationDialog";
-import { MessageSquare, PenSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export default function Messages() {
   const { language, isRTL } = useLanguage();
@@ -14,9 +15,11 @@ export default function Messages() {
   const [newRecipientId, setNewRecipientId] = React.useState(null);
   const [showNewDialog, setShowNewDialog] = React.useState(false);
 
-  // Read conversation ID from URL on mount (for deep-linking from notifications)
+  // Follow the conversation in the URL (deep links from notifications, including
+  // while the Messages page is already open)
+  const location = useLocation();
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     const convId = params.get("conversation");
     const recipientId = params.get("newRecipient");
     if (convId) {
@@ -24,7 +27,7 @@ export default function Messages() {
     } else if (recipientId) {
       setNewRecipientId(recipientId);
     }
-  }, []);
+  }, [location.search]);
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -40,20 +43,27 @@ export default function Messages() {
     refetchInterval: 60000,
   });
 
-  // Profiles of the people in this user's conversations only (was: every profile
-  // in the platform, refetched every minute)
-  const conversationUserIds = React.useMemo(() => {
-    const ids = new Set();
-    conversations.forEach((c) => (c.participants || []).forEach((id) => { if (id) ids.add(id); }));
-    return Array.from(ids);
-  }, [conversations]);
+  // Every real account, so a conversation can be started with anyone and every
+  // participant resolves to a display name. Only admins may list accounts, so
+  // this is best-effort and used just to recognise deleted accounts.
+  const { data: accountIds = [] } = useQuery({
+    queryKey: ["messagingAccountIds"],
+    queryFn: async () => {
+      try {
+        const accounts = await base44.entities.User.list("-created_date", 500);
+        return accounts.map((a) => a.id);
+      } catch (e) {
+        return [];
+      }
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
 
-  const { data: profiles = [] } = useQuery({
-    queryKey: ["profilesForConversations", conversationUserIds.slice().sort().join(",")],
-    queryFn: () => conversationUserIds.length > 0
-      ? base44.entities.UserPublicProfile.filter({ userId: { $in: conversationUserIds } })
-      : Promise.resolve([]),
-    enabled: conversationUserIds.length > 0,
+  const { data: allProfiles = [] } = useQuery({
+    queryKey: ["messagingProfiles"],
+    queryFn: () => base44.entities.UserPublicProfile.list("-created_date", 500),
+    enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -84,11 +94,35 @@ export default function Messages() {
 
   const profileMap = React.useMemo(() => {
     const map = {};
-    profiles.forEach((p) => {
+    allProfiles.forEach((p) => {
       map[p.userId] = p;
     });
     return map;
-  }, [profiles]);
+  }, [allProfiles]);
+
+  const deletedUserLabel = language === "he" ? "משתמש שנמחק" : language === "ar" ? "مستخدم محذوف" : "Deleted user";
+  const unknownUserLabel = language === "he" ? "משתמש" : language === "ar" ? "مستخدم" : "User";
+
+  // Display name for any user id: the name they chose in their profile, then
+  // the deleted-account label when the account no longer exists.
+  const nameFor = React.useCallback((id) => {
+    if (!id) return "";
+    const name = profileMap[id]?.fullName;
+    if (name) return name;
+    if (accountIds.length > 0 && !accountIds.includes(id)) return deletedUserLabel;
+    return unknownUserLabel;
+  }, [profileMap, accountIds, deletedUserLabel, unknownUserLabel]);
+
+  // People a conversation can be started with — never the current user and
+  // never an account that no longer exists.
+  const people = React.useMemo(
+    () => allProfiles
+      .filter((p) => p.userId !== user?.id)
+      .filter((p) => (accountIds.length > 0 ? accountIds.includes(p.userId) : true))
+      .map((p) => ({ userId: p.userId, fullName: p.fullName, email: p.email }))
+      .filter((p) => p.fullName),
+    [allProfiles, accountIds, user?.id]
+  );
 
   const unreadByConversation = React.useMemo(() => {
     const map = {};
@@ -103,7 +137,7 @@ export default function Messages() {
     ? activeConversation.participants.find((p) => p !== user?.id)
     : newRecipientId;
 
-  const otherUserName = otherUserId ? profileMap[otherUserId]?.fullName || "User" : "";
+  const otherUserName = otherUserId ? nameFor(otherUserId) : "";
   const isActiveChat = !!(activeConversationId || newRecipientId);
 
   const handleSelectConversation = (id) => {
@@ -146,7 +180,7 @@ export default function Messages() {
         <ConversationList
           conversations={conversations}
           loading={conversationsLoading}
-          profileMap={profileMap}
+          nameFor={nameFor}
           user={user}
           unreadByConversation={unreadByConversation}
           activeConversationId={activeConversationId}
@@ -181,7 +215,7 @@ export default function Messages() {
       <NewConversationDialog
         open={showNewDialog}
         onOpenChange={setShowNewDialog}
-        profiles={profiles}
+        profiles={people}
         currentUserId={user?.id}
         onSelect={handleNewConversation}
         language={language}

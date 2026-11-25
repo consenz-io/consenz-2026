@@ -141,9 +141,18 @@ export default async function(req) {
       content: trimmedContent
     });
 
+    // The User entity's full_name is the email prefix for email-registered
+    // accounts; the public profile holds the display name the person chose.
+    let senderName = user.full_name || 'User';
+    try {
+      const senderProfiles = await base44.asServiceRole.entities.UserPublicProfile.filter({ userId: user.id });
+      senderName = senderProfiles[0]?.fullName || senderName;
+    } catch (e) {
+      // Keep the account name
+    }
+
     // Create notification for recipient (service role ensures it's created)
     try {
-      const senderName = user.full_name || 'User';
       await base44.asServiceRole.entities.Notification.create({
         userId: recipientId,
         type: 'direct_message',
@@ -166,7 +175,6 @@ export default async function(req) {
         const recipient = recipients[0];
         if (recipient?.email) {
           lastMessageEmailAt.set(conversation.id, Date.now());
-          const senderName = user.full_name || 'User';
           const copy = MESSAGE_EMAIL_COPY[recipient.preferredLanguage] || MESSAGE_EMAIL_COPY.he;
           waitUntil(
             base44.asServiceRole.integrations.Core.SendEmail({

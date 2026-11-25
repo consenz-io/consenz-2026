@@ -34,7 +34,7 @@ function formatRelativeTime(dateStr, language) {
 export default function ConversationList({
   conversations,
   loading,
-  profileMap,
+  nameFor,
   user,
   unreadByConversation,
   activeConversationId,
@@ -50,10 +50,10 @@ export default function ConversationList({
     const q = search.toLowerCase();
     return conversations.filter((c) => {
       const otherId = c.participants.find((p) => p !== user?.id);
-      const name = profileMap[otherId]?.fullName || "";
+      const name = nameFor(otherId) || "";
       return name.toLowerCase().includes(q);
     });
-  }, [conversations, search, profileMap, user]);
+  }, [conversations, search, nameFor, user]);
 
   const titleText = language === "he" ? "הודעות" : language === "ar" ? "الرسائل" : "Messages";
   const newText = language === "he" ? "חדש" : language === "ar" ? "جديد" : "New";
@@ -110,8 +110,7 @@ export default function ConversationList({
         ) : (
           filtered.map((conv) => {
             const otherId = conv.participants.find((p) => p !== user?.id);
-            const profile = profileMap[otherId];
-            const name = profile?.fullName || "User";
+            const name = nameFor(otherId) || "User";
             const initial = name.charAt(0).toUpperCase();
             const unreadCount = unreadByConversation[conv.id] || 0;
             const isActive = conv.id === activeConversationId;
