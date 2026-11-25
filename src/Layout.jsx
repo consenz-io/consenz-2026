@@ -425,6 +425,9 @@ function LayoutContent({ children, currentPageName }) {
       if (user.suggestionsCreated === undefined) needsUpdate.suggestionsCreated = 0;
       if (user.points === undefined) needsUpdate.points = 1000;
       if (user.lastPointsVisit === undefined) needsUpdate.lastPointsVisit = new Date().toISOString();
+      // Email updates are on by default for every user. Only an explicit
+      // opt-out (emailOptIn === false) counts as off.
+      if (user.emailOptIn === undefined) needsUpdate.emailOptIn = true;
       if (Object.keys(needsUpdate).length > 0) {
         await base44.auth.updateMe(needsUpdate);
         queryClient.invalidateQueries({ queryKey: ['currentUser'] });

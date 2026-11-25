@@ -24,7 +24,9 @@ export default function Register() {
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [emailOptIn, setEmailOptIn] = useState(false);
+  // Receiving email updates is on by default; the user can turn it off here
+  // or later in the profile.
+  const [emailOptIn, setEmailOptIn] = useState(true);
 
   const CONSENT_VERSION = "2026-11-25";
 

@@ -45,7 +45,7 @@ export default function EmailPreferences({ user }) {
           <p className="text-xs text-slate-600 mt-1">{t("emailPreferencesHint")}</p>
         </div>
         <Switch
-          checked={!!user.emailOptIn}
+          checked={user.emailOptIn !== false}
           onCheckedChange={handleChange}
           disabled={saving}
           aria-label={t("emailPreferencesTitle")}
