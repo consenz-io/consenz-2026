@@ -9,7 +9,15 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test \"tests/unit/*.test.js\"",
+    "test:http": "node --test \"tests/http/*.test.js\"",
+    "test:e2e": "playwright test -c src/playwright.config.js",
+    "test:smoke": "playwright test -c src/playwright.config.js smoke.spec.js",
+    "test:mobile": "playwright test -c src/playwright.config.js --project=mobile-chromium",
+    "test:a11y": "playwright test -c src/playwright.config.js translation-a11y.spec.js",
+    "test:report": "playwright show-report test-results/html"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.63",
