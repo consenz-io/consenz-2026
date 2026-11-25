@@ -47,16 +47,25 @@ export default function SuggestionSidebar({
   const [isAccepting, setIsAccepting] = useState(false);
   const prevStatusRef = React.useRef(null);
 
-  // Polling interval for live sync (10 seconds for better responsiveness)
   const SYNC_INTERVAL = 10000;
 
   const { data: suggestion, isLoading: suggestionLoading } = useQuery({
     queryKey: ['suggestion', suggestionId],
     queryFn: () => base44.entities.Suggestion.filter({ id: suggestionId }).then(s => s[0]),
     enabled: !!suggestionId,
-    refetchInterval: SYNC_INTERVAL,
-    refetchIntervalInBackground: false,
   });
+
+  // Live sync through one realtime subscription instead of re-downloading the
+  // whole suggestion record every 10 seconds: other users' votes and status
+  // changes now land instantly, and an open sidebar costs no requests at all.
+  React.useEffect(() => {
+    if (!suggestionId) return;
+    const unsubscribe = base44.entities.Suggestion.subscribe((event) => {
+      if (event?.type === 'delete' || event?.data?.id !== suggestionId) return;
+      queryClient.setQueryData(['suggestion', suggestionId], event.data);
+    });
+    return unsubscribe;
+  }, [suggestionId, queryClient]);
 
   const { data: document } = useQuery({
     queryKey: ['document', suggestion?.documentId],

@@ -18,7 +18,7 @@ const actionLabels = {
   comment_like_removed: { he: 'בוטל לייק על תגובה', ar: 'تم إلغاء إعجاب على تعليق', en: 'Comment like removed' },
 };
 
-export default function PointsHistoryList({ transactions = [] }) {
+export default function PointsHistoryList({ transactions = [], truncated = false }) {
   const { language } = useLanguage();
   const navigate = useNavigate();
   const [resolvingId, setResolvingId] = useState(null);
@@ -95,6 +95,11 @@ export default function PointsHistoryList({ transactions = [] }) {
           </div>
         );
       })}
+      {truncated && (
+        <p className="text-xs text-slate-500 text-center pt-2">
+          {language === 'he' ? 'מוצגות 200 הפעולות האחרונות' : language === 'ar' ? 'يتم عرض آخر 200 عملية' : 'Showing the latest 200 entries'}
+        </p>
+      )}
     </div>
   );
 }

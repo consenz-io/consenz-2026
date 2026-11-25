@@ -95,9 +95,13 @@ export default function Profile() {
 
   const { data: pointsTransactions } = useQuery({
     queryKey: ['pointsTransactions', user?.id],
-    queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date'),
+    // Only the latest 200 entries — the balance itself comes from user.points,
+    // so loading a lifetime of transactions just to render a list is wasted
+    // payload and memory for long-standing users.
+    queryFn: () => base44.entities.PointsTransaction.filter({ userId: user.id }, '-created_date', 200),
     enabled: !!user?.id,
-    initialData: []
+    initialData: [],
+    staleTime: 60 * 1000
   });
 
   const { userSuggestions, userComments, acceptedSuggestions, isLoadingActivity } = useProfileActivity(user?.id);
@@ -649,7 +653,7 @@ export default function Profile() {
                 <h3 className="text-lg font-semibold text-slate-900 mb-3">
                   {language === 'he' ? 'היסטוריית נקודות' : language === 'ar' ? 'تاريخ النقاط' : 'Points History'}
                 </h3>
-                <PointsHistoryList transactions={pointsTransactions} />
+                <PointsHistoryList transactions={pointsTransactions} truncated={pointsTransactions.length >= 200} />
               </div>
             }
 

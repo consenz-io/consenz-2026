@@ -328,13 +328,15 @@ Deno.serve(async (req) => {
         const pendingResurrectChildren = resurrectChildren.filter(c => c.status === 'pending');
         if (pendingResurrectChildren.length > 0) {
           console.log('[PROCESS ACCEPTANCE V4] Re-linking', pendingResurrectChildren.length, 'child suggestions to resurrected section', section.id);
-          for (const child of pendingResurrectChildren) {
-            await base44.asServiceRole.entities.Suggestion.update(child.id, {
+          // One batched write instead of a round-trip per child.
+          await base44.asServiceRole.entities.Suggestion.bulkUpdate(
+            pendingResurrectChildren.map((child) => ({
+              id: child.id,
               sectionId: section.id,
               type: 'edit_section',
               parentSuggestionId: null
-            });
-          }
+            }))
+          );
         }
 
         const sameSlotOrphans = await base44.asServiceRole.entities.Suggestion.filter({
@@ -345,12 +347,13 @@ Deno.serve(async (req) => {
         const otherSlotOrphans = sameSlotOrphans.filter(s => s.id !== suggestion.id && !s.parentSuggestionId);
         if (otherSlotOrphans.length > 0) {
           console.log('[PROCESS ACCEPTANCE V4] Re-linking', otherSlotOrphans.length, 'orphaned suggestions to resurrected section', section.id);
-          for (const s of otherSlotOrphans) {
-            await base44.asServiceRole.entities.Suggestion.update(s.id, {
+          await base44.asServiceRole.entities.Suggestion.bulkUpdate(
+            otherSlotOrphans.map((s) => ({
+              id: s.id,
               sectionId: section.id,
               originalSectionOrder: null
-            });
-          }
+            }))
+          );
         }
 
         console.log('[PROCESS ACCEPTANCE V4] Resurrected deleted section', section.id, 'at order', resurrectOrder);
@@ -400,13 +403,14 @@ Deno.serve(async (req) => {
       const pendingChildren = childEditSuggestions.filter(c => c.status === 'pending');
       if (pendingChildren.length > 0) {
         console.log('[PROCESS ACCEPTANCE V4] Re-linking', pendingChildren.length, 'child suggestions to new section', newSection.id);
-        for (const child of pendingChildren) {
-          await base44.asServiceRole.entities.Suggestion.update(child.id, {
+        await base44.asServiceRole.entities.Suggestion.bulkUpdate(
+          pendingChildren.map((child) => ({
+            id: child.id,
             sectionId: newSection.id,
             type: 'edit_section',
             parentSuggestionId: null
-          });
-        }
+          }))
+        );
       }
 
       await base44.asServiceRole.entities.Suggestion.update(suggestion.id, {
@@ -454,14 +458,15 @@ Deno.serve(async (req) => {
             status: 'pending'
           });
           const otherSiblings = siblings.filter(s => s.id !== suggestion.id);
-          for (const sibling of otherSiblings) {
-            await base44.asServiceRole.entities.Suggestion.update(sibling.id, {
+          await base44.asServiceRole.entities.Suggestion.bulkUpdate(
+            otherSiblings.map((sibling) => ({
+              id: sibling.id,
               type: 'edit_section',
               sectionId: newSection.id,
               parentSuggestionId: null,
               originalContent: newSection.content
-            });
-          }
+            }))
+          );
           if (otherSiblings.length > 0) {
             console.log('[PROCESS ACCEPTANCE V4] Converted', otherSiblings.length, 'sibling edit_suggestions to edit_section');
           }
