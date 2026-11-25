@@ -84,7 +84,7 @@ export default function SectionHistory() {
   // nothing but still cost a platform-wide query on every mount.
   const { data: users } = useQuery({
     queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => base44.entities.User.list('-created_date', 500),
     enabled: user?.role === 'admin',
     initialData: [],
     staleTime: 10 * 60 * 1000,
@@ -457,7 +457,7 @@ function SuggestionDetails({ suggestionId, user, getUserName, showComments, togg
   // nothing but still cost a platform-wide query on every mount.
   const { data: users } = useQuery({
     queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => base44.entities.User.list('-created_date', 500),
     enabled: user?.role === 'admin',
     initialData: [],
     staleTime: 10 * 60 * 1000,

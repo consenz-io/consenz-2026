@@ -31,10 +31,11 @@ export default function SuggestionsList({ suggestions, document, user, isAdmin }
   // User entity is admin-only — don't even call it for regular viewers.
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => base44.entities.User.list('-created_date', 500),
     enabled: !!isAdmin,
     initialData: [],
     retry: false,
+    staleTime: 10 * 60 * 1000,
   });
 
   const getUserName = (suggestion) => {

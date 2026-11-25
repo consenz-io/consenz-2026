@@ -2,7 +2,10 @@ import React from "react";
 import { useLanguage } from "@/components/LanguageContext";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
-export default function DocumentTextContent({ content, className = "" }) {
+// Memoized: the props are primitives, so a section's HTML is only re-rendered
+// (and re-sanitized) when its content or language direction actually changes,
+// not on every parent state change.
+const DocumentTextContent = React.memo(function DocumentTextContent({ content, className = "" }) {
   const { isRTL } = useLanguage();
   
   return (
@@ -18,4 +21,6 @@ export default function DocumentTextContent({ content, className = "" }) {
       }}
     />
   );
-}
+});
+
+export default DocumentTextContent;

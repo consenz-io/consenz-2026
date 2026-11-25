@@ -43,12 +43,23 @@ export function useGroupsData() {
   const visibleGroupIds = useMemo(() => visibleGroups.map(g => g.id).sort(), [visibleGroups]);
   const visibleGroupIdsKey = useMemo(() => visibleGroupIds.join(','), [visibleGroupIds]);
 
-  // Step 3: Fetch documents in those groups (for doc count per group)
-  const { data: documents = [] } = useQuery({
-    queryKey: ['groupDocuments', visibleGroupIdsKey],
-    queryFn: () => base44.entities.Document.filter({ groupId: { $in: visibleGroupIds } }),
+  // Step 3: Document count per group — computed on the server. This page only
+  // shows the number, so downloading every document record (title + full
+  // rich-text description) just to count them was the heaviest read on the
+  // page and grew linearly with the platform's content.
+  const { data: docCountByGroup = new Map() } = useQuery({
+    queryKey: ['groupDocumentCounts', visibleGroupIdsKey],
+    queryFn: async () => {
+      const result = await base44.entities.Document.aggregate({
+        query: { groupId: { $in: visibleGroupIds } },
+        groupBy: 'groupId',
+      });
+      const map = new Map();
+      for (const row of result.rows || []) map.set(row.groupId, row.count);
+      return map;
+    },
     enabled: visibleGroupIds.length > 0,
-    placeholderData: [],
+    placeholderData: new Map(),
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
@@ -89,13 +100,6 @@ export function useGroupsData() {
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
   });
-
-  // Pre-build O(1) count maps
-  const docCountByGroup = useMemo(() => {
-    const map = new Map();
-    for (const d of documents) map.set(d.groupId, (map.get(d.groupId) ?? 0) + 1);
-    return map;
-  }, [documents]);
 
   const adminGroupIds = useMemo(() => {
     if (!currentUser?.id) return new Set();

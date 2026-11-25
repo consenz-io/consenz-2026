@@ -45,10 +45,15 @@ export default function CreateDocument() {
     retry: false,
   });
 
-  const { data: existingDocuments } = useQuery({
-    queryKey: ['allDocuments'],
-    queryFn: () => base44.entities.Document.list(),
-    initialData: [],
+  // Only the URL names already taken, not every document record: this page
+  // needs a uniqueness check, while documents carry long rich-text descriptions.
+  const { data: takenUrlNames = [] } = useQuery({
+    queryKey: ['documentUrlNames'],
+    queryFn: async () => {
+      const res = await base44.entities.Document.list({ distinct: 'urlName' });
+      return Array.isArray(res) ? res : (res?.items || []);
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   // Check if user is group admin for the target group
@@ -113,7 +118,7 @@ export default function CreateDocument() {
     if (!/^[a-z0-9-]+$/.test(urlName)) {
       return "URL name can only contain lowercase letters, numbers, and hyphens";
     }
-    const exists = existingDocuments.some(doc => doc.urlName === urlName);
+    const exists = takenUrlNames.includes(urlName);
     if (exists) {
       return "This URL name is already taken. Please choose another.";
     }
@@ -333,7 +338,7 @@ export default function CreateDocument() {
       // Invalidate queries and wait for them to settle
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['publicDocuments'] }),
-        queryClient.invalidateQueries({ queryKey: ['allDocuments'] }),
+        queryClient.invalidateQueries({ queryKey: ['documentUrlNames'] }),
         queryClient.invalidateQueries({ queryKey: ['currentUser'] })
       ]);
       
