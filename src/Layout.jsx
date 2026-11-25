@@ -35,6 +35,7 @@ import FloatingPointsBadge from "@/components/points/FloatingPointsBadge";
 import GroupInviteHandler from "@/components/group/GroupInviteHandler";
 import { AccessibilityAnnouncer } from "@/components/AccessibilityAnnouncer";
 import { AccessibilityToolbarContent } from "@/components/AccessibilityToolbar";
+import CookieSettingsButton from "@/components/consent/CookieSettingsButton";
 
 function MobileMenuButton({ isRTL, nudgeActive }) {
   const { toggleSidebar } = useSidebar();
@@ -202,6 +203,7 @@ function SidebarInner({ isMobileViewport, navigationItems, language, location, u
           <SidebarGroupContent>
             <div className="px-3 py-2">
               <AccessibilityToolbarContent />
+              <CookieSettingsButton />
             </div>
           </SidebarGroupContent>
         </SidebarGroup>

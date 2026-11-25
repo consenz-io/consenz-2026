@@ -65,7 +65,7 @@ export const privacy = {
       heading: "5. Cookies, local storage and analytics",
       bullets: [
         "Essential cookies and local storage keep you signed in, protect forms against forgery, remember your language and accessibility settings, and let the Service function. These cannot be switched off while you use the Service.",
-        "Analytics identifiers are used only with your consent where the law requires it, and only to measure how features are used. They are not used to build advertising profiles.",
+        "Analytics identifiers are used only with your consent where the law requires it, and only to measure how features are used. They are not used to build advertising profiles. A banner on your first visit records your choice, measurement stays off until you allow it, and you can change the choice at any time from Cookie settings.",
         "We do not use advertising cookies, cross-site tracking pixels or data brokers. If we ever introduce advertising, we will ask for your prior consent and update this policy first.",
         "You can clear cookies and local storage in your browser at any time. Clearing the session cookie signs you out.",
       ],

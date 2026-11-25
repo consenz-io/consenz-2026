@@ -133,6 +133,10 @@ Deno.serve(async (req) => {
   // Use a high limit to avoid missing users beyond the default 50-record cap
   const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 10000);
   const registeredEmails = new Set(allUsers.map(u => u.email?.toLowerCase()).filter(Boolean));
+  // Optional mail: anyone who turned email off in their profile is skipped.
+  const optedOutEmails = new Set(
+    allUsers.filter(u => u.emailOptIn === false).map(u => u.email?.toLowerCase()).filter(Boolean)
+  );
 
   if (isTestEmail) {
     recipientEmails = [user.email].filter(isValidEmail);
@@ -178,7 +182,7 @@ Deno.serve(async (req) => {
       if (adminEmail) emailSet.add(adminEmail);
     });
 
-    recipientEmails = [...emailSet].filter(e => e && isValidEmail(e));
+    recipientEmails = [...emailSet].filter(e => e && isValidEmail(e) && !optedOutEmails.has(e));
   }
 
   if (recipientEmails.length === 0) {
@@ -206,18 +210,21 @@ Deno.serve(async (req) => {
       subject: `סיכום פעילות: ${safeTitle}`,
       viewDoc: 'לצפייה במסמך',
       footer: 'מייל זה נשלח אוטומטית על ידי פלטפורמת Consenz.',
+      unsub: 'לא רוצים לקבל מיילים כאלה? אפשר לכבות אותם בהגדרות הפרופיל.',
       sentBy: `נשלח על ידי ${safeSenderName}`,
     },
     ar: {
       subject: `ملخص النشاط: ${safeTitle}`,
       viewDoc: 'عرض الوثيقة',
       footer: 'تم إرسال هذا البريد الإلكتروني تلقائيًا بواسطة منصة Consenz.',
+      unsub: 'لا ترغب في تلقي رسائل كهذه؟ يمكنك إيقافها من إعدادات ملفك.',
       sentBy: `أرسله ${safeSenderName}`,
     },
     en: {
       subject: `Activity Summary: ${safeTitle}`,
       viewDoc: 'View Document',
       footer: 'This email was sent automatically by the Consenz platform.',
+      unsub: 'Do not want emails like this? Turn them off in your profile settings.',
       sentBy: `Sent by ${safeSenderName}`,
     },
   };
@@ -314,6 +321,9 @@ Deno.serve(async (req) => {
           <tr>
             <td style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;text-align:center;">
               <div style="font-size:12px;color:#94a3b8;">${l.footer}</div>
+              <div style="font-size:12px;margin-top:8px;">
+                <a href="${appBase}/Profile" style="color:#4f46e5;text-decoration:underline;">${l.unsub}</a>
+              </div>
             </td>
           </tr>
 
@@ -374,6 +384,7 @@ Deno.serve(async (req) => {
         subject: l.subject,
         body: emailHtml,
         from_name: 'Consenz',
+        category: 'marketing',
       });
       sent++;
     } catch (err) {
