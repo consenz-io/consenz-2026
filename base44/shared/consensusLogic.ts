@@ -58,6 +58,69 @@ export async function calculateContributors(base44, documentId) {
   return Math.max(1, uniqueParticipants.size);
 }
 
+/**
+ * Returns the set of keys (userId, or email for legacy records) of the people who
+ * actually take part in a document: suggestion voters, section voters, commenters,
+ * proposers and signers. Group membership is NOT included here — callers that care
+ * about it check GroupMember themselves.
+ *
+ * Mirrors calculateContributors above, but returns WHO instead of how many.
+ * Opening a document (a UserInteraction record) is not participation.
+ */
+export async function getDocumentParticipantIds(base44, documentId) {
+  const [suggestions, sections, agreements] = await Promise.all([
+    base44.asServiceRole.entities.Suggestion.filter({ documentId }),
+    base44.asServiceRole.entities.Section.filter({ documentId }),
+    base44.asServiceRole.entities.DocumentAgreement.filter({ documentId }),
+  ]);
+
+  const suggestionIds = suggestions.map(s => s.id);
+  const sectionIds = sections.map(s => s.id);
+
+  const [votes, docComments, sectionComments, suggestionComments, sectionVotes] = await Promise.all([
+    suggestionIds.length > 0
+      ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: suggestionIds } })
+      : Promise.resolve([]),
+    base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'document', rootEntityId: documentId }),
+    sectionIds.length > 0
+      ? base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'section', rootEntityId: { $in: sectionIds } })
+      : Promise.resolve([]),
+    suggestionIds.length > 0
+      ? base44.asServiceRole.entities.Comment.filter({ rootEntityType: 'suggestion', rootEntityId: { $in: suggestionIds } })
+      : Promise.resolve([]),
+    sectionIds.length > 0
+      ? base44.asServiceRole.entities.SectionVote.filter({ sectionId: { $in: sectionIds } })
+      : Promise.resolve([]),
+  ]);
+
+  const participants = new Set();
+  const add = (userId, email) => {
+    if (userId) participants.add(userId);
+    else if (email) participants.add(email);
+  };
+
+  votes.forEach(v => add(v.userId, v.created_by));
+  docComments.forEach(c => add(c.created_by_id, c.created_by));
+  sectionComments.forEach(c => add(c.created_by_id, c.created_by));
+  suggestionComments.forEach(c => add(c.created_by_id, c.created_by));
+  sectionVotes.forEach(v => add(v.userId, v.created_by));
+  suggestions.forEach(s => add(s.created_by_id, s.created_by));
+  agreements.forEach(a => add(a.userId, a.userEmail));
+
+  // Resolve legacy email-only keys to userIds so callers can compare by userId.
+  const emails = Array.from(participants).filter(k => typeof k === 'string' && k.includes('@'));
+  if (emails.length > 0) {
+    const profiles = await base44.asServiceRole.entities.UserPublicProfile
+      .filter({ email: { $in: emails } })
+      .catch(() => []);
+    for (const p of profiles) {
+      if (p.email && p.userId) participants.add(p.userId);
+    }
+  }
+
+  return participants;
+}
+
 export async function calculateActiveVoterCount(base44, documentId) {
   try {
     const docSuggs = await base44.asServiceRole.entities.Suggestion.filter({ documentId });

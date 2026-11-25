@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { buildTranslations, t } from '../../shared/notificationTranslations.ts';
 import { verifyGroupMembership } from '../../shared/documentAuth.ts';
+import { getDocumentParticipantIds } from '../../shared/consensusLogic.ts';
 
 /**
  * Admin Activity Digest — detects new participants in the calling admin's
@@ -80,8 +81,50 @@ export default async function(req) {
       return Response.json({ success: true, newParticipants: 0 });
     }
 
+    // 5b. Keep only genuine participants.
+    //     A UserInteraction record is written whenever someone OPENS a document,
+    //     and a public group lets anyone open its documents without joining. Opening
+    //     is not participating: the app's participant roster counts only suggestion
+    //     voters, section voters, commenters, proposers, signers and group members.
+    //     Without this filter an admin is told "X joined the document" about a visitor
+    //     who never appears in any participant list.
+    const candidateIds = [...new Set(newInteractions.map((i) => i.userId).filter(Boolean))];
+    let verifiedInteractions = newInteractions;
+
+    if (candidateIds.length > 0) {
+      const memberships = await sr.entities.GroupMember.filter({
+        groupId: { $in: groupIds },
+        userId: { $in: candidateIds },
+      }).catch(() => []);
+      const memberKeys = new Set(memberships.map((m) => `${m.groupId}|${m.userId}`));
+
+      const participantCache = new Map();
+      const participantsOf = async (docId) => {
+        if (!participantCache.has(docId)) {
+          const set = await getDocumentParticipantIds(base44, docId).catch(() => new Set());
+          participantCache.set(docId, set);
+        }
+        return participantCache.get(docId);
+      };
+
+      const isParticipant = await Promise.all(newInteractions.map(async (interaction) => {
+        if (!interaction.userId) return false;
+        const groupId = docMap.get(interaction.documentId)?.groupId;
+        if (groupId && memberKeys.has(`${groupId}|${interaction.userId}`)) return true;
+        const participants = await participantsOf(interaction.documentId);
+        return participants.has(interaction.userId);
+      }));
+
+      verifiedInteractions = newInteractions.filter((_, idx) => isParticipant[idx]);
+    }
+
+    if (verifiedInteractions.length === 0) {
+      await sr.entities.User.update(user.id, { lastAdminDigestAt: new Date().toISOString() });
+      return Response.json({ success: true, newParticipants: 0, reason: 'no_new_participants' });
+    }
+
     // 6. Resolve participant names
-    const participantIds = [...new Set(newInteractions.map((i) => i.userId).filter(Boolean))];
+    const participantIds = [...new Set(verifiedInteractions.map((i) => i.userId).filter(Boolean))];
     const [participantUsers, participantProfiles] = await Promise.all([
       sr.entities.User.filter({ id: { $in: participantIds } }),
       sr.entities.UserPublicProfile.filter({ userId: { $in: participantIds } }),
@@ -95,7 +138,7 @@ export default async function(req) {
 
     // 7. Create one notification per new participant × document
     const userLang = user.preferredLanguage || 'he';
-    const notifications = newInteractions.map((interaction) => {
+    const notifications = verifiedInteractions.map((interaction) => {
       const doc = docMap.get(interaction.documentId);
       const participantName = nameFor(interaction.userId);
       const replacements = { name: participantName, doc: doc?.title || '' };
