@@ -3,56 +3,47 @@ import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 
 // Per-user rate limiter — document summaries use an expensive LLM model
 // (claude_sonnet). Cap at 3 summaries per 10 minutes and 10 per day per user.
+//
+// The counters live on the account record, not in function memory: an
+// in-memory Map is wiped whenever the function restarts, so a caller could
+// reset the cap simply by waiting for a cold start.
 const RATE_LIMIT = 3;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const DAILY_LIMIT = 10;
-const rateLimiter = new Map();
-const dailyLimiter = new Map();
 
 function getTodayKey() {
   const d = new Date();
   return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
 }
 
-function checkRateLimit(userId) {
+async function checkRateLimit(sr, userId) {
+  const records = await sr.entities.User.filter({ id: userId });
+  const state = records[0]?.docSummaryRate || {};
   const now = Date.now();
-  const key = `docSummary-${userId}`;
-  const record = rateLimiter.get(key);
-  if (!record || now >= record.resetAt) {
-    rateLimiter.set(key, { count: 1, resetAt: now + RATE_WINDOW_MS });
-  } else {
-    record.count++;
-    if (record.count > RATE_LIMIT) {
-      return { allowed: false, remainingMs: record.resetAt - now };
-    }
+
+  const windowStart = state.windowStart ? new Date(state.windowStart).getTime() : 0;
+  const inWindow = windowStart > 0 && now - windowStart < RATE_WINDOW_MS;
+  const windowCount = inWindow ? (state.windowCount || 0) : 0;
+  if (windowCount >= RATE_LIMIT) {
+    return { allowed: false, remainingMs: RATE_WINDOW_MS - (now - windowStart) };
   }
 
-  // Daily cap
-  const dailyKey = `docSummary-daily-${userId}`;
   const today = getTodayKey();
-  const daily = dailyLimiter.get(dailyKey);
-  if (!daily || daily.date !== today) {
-    dailyLimiter.set(dailyKey, { date: today, count: 1 });
-  } else {
-    daily.count++;
-    if (daily.count > DAILY_LIMIT) {
-      return { allowed: false, remainingMs: null, daily: true };
-    }
+  const dayCount = state.day === today ? (state.dayCount || 0) : 0;
+  if (dayCount >= DAILY_LIMIT) {
+    return { allowed: false, daily: true };
   }
 
-  return { allowed: true };
+  return {
+    allowed: true,
+    next: {
+      windowStart: inWindow ? state.windowStart : new Date(now).toISOString(),
+      windowCount: windowCount + 1,
+      day: today,
+      dayCount: dayCount + 1,
+    },
+  };
 }
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of rateLimiter.entries()) {
-    if (now >= record.resetAt) rateLimiter.delete(key);
-  }
-  const today = getTodayKey();
-  for (const [key, record] of dailyLimiter.entries()) {
-    if (record.date !== today) dailyLimiter.delete(key);
-  }
-}, 5 * 60 * 1000);
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -60,7 +51,7 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const rl = checkRateLimit(user.id);
+  const rl = await checkRateLimit(base44.asServiceRole, user.id);
   if (!rl.allowed) {
     if (rl.daily) {
       return Response.json({ error: 'Daily summary limit exceeded. Try again tomorrow.' }, { status: 429 });
@@ -68,6 +59,9 @@ Deno.serve(async (req) => {
     const mins = Math.ceil(rl.remainingMs / 60000);
     return Response.json({ error: `Rate limit exceeded. Try again in ${mins} minute(s).` }, { status: 429 });
   }
+  // Count the attempt before the model call, so a failure mid-generation
+  // cannot be used to skip the cap.
+  await base44.asServiceRole.entities.User.update(user.id, { docSummaryRate: rl.next });
 
   const { documentId, additionalInstructions, language } = await req.json();
   if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });
@@ -85,31 +79,48 @@ Deno.serve(async (req) => {
   if (notFound) return Response.json({ error: 'Document not found' }, { status: 404 });
   if (!authorized) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-  // Fetch all relevant data in parallel
-  const [topics, sections, suggestions, allVotes, allComments, publicProfiles, documentVersions, allArguments] = await Promise.all([
+  // Only this document's own records are loaded. Earlier versions pulled the
+  // whole vote, comment, argument and profile tables into memory on every
+  // call, which any signed-in user could trigger repeatedly.
+  const [topics, sections, suggestions, documentVersions] = await Promise.all([
     base44.asServiceRole.entities.Topic.filter({ documentId }),
     base44.asServiceRole.entities.Section.filter({ documentId }),
     base44.asServiceRole.entities.Suggestion.filter({ documentId }),
-    base44.asServiceRole.entities.Vote.list(),
-    base44.asServiceRole.entities.Comment.list(),
-    base44.asServiceRole.entities.UserPublicProfile.list(),
     base44.asServiceRole.entities.DocumentVersion.filter({ documentId }),
-    base44.asServiceRole.entities.Argument.list(),
   ]);
 
-  // Build lookup: email -> displayName (created_by is email)
-  const profileMap = {};
-  publicProfiles.forEach(p => { if (p.email) profileMap[p.email] = p.fullName || p.email || 'משתמש'; });
-
-  // Filter votes/comments relevant to this document
   const suggestionIds = new Set(suggestions.map(s => s.id));
   const sectionIds = new Set(sections.map(s => s.id));
+  const scopedIds = [...suggestionIds, ...sectionIds, documentId];
+
+  const [allVotes, allComments, allArguments] = await Promise.all([
+    suggestionIds.size > 0
+      ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: [...suggestionIds] } })
+      : [],
+    base44.asServiceRole.entities.Comment.filter({ rootEntityId: { $in: scopedIds } }),
+    suggestionIds.size > 0
+      ? base44.asServiceRole.entities.Argument.filter({ suggestionId: { $in: [...suggestionIds] } })
+      : [],
+  ]);
+
   const relevantVotes = allVotes.filter(v => suggestionIds.has(v.suggestionId));
   const relevantComments = allComments.filter(c =>
     (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
     (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
     (c.rootEntityType === 'document' && c.rootEntityId === documentId)
   );
+
+  // Build lookup: email -> displayName (created_by is email), for the authors
+  // that actually appear in this document only.
+  const authorEmails = new Set();
+  [...suggestions, ...relevantVotes, ...relevantComments, ...allArguments].forEach(r => {
+    if (r.created_by) authorEmails.add(r.created_by);
+  });
+  const publicProfiles = authorEmails.size > 0
+    ? await base44.asServiceRole.entities.UserPublicProfile.filter({ email: { $in: [...authorEmails] } })
+    : [];
+  const profileMap = {};
+  publicProfiles.forEach(p => { if (p.email) profileMap[p.email] = p.fullName || p.email || 'משתמש'; });
 
   // Build unique participants set
   const participantEmails = new Set();

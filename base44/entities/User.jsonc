@@ -93,6 +93,14 @@
       "type": "string",
       "format": "date-time",
       "description": "Last time the admin group activity digest was computed (new participant detection)"
+    },
+    "docSummaryRate": {
+      "type": "object",
+      "description": "AI summary rate-limit counters kept on the account so they survive a function restart: {windowStart, windowCount, day, dayCount}"
+    },
+    "accountDeletion": {
+      "type": "object",
+      "description": "Pending account-deletion confirmation: {codeHash, expiresAt, requestedAt, attempts}. The code itself is never stored."
     }
   },
   "required": []

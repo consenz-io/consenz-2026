@@ -129,42 +129,82 @@ Deno.serve(async (req) => {
   // Determine recipients
   let recipientEmails = [];
 
-  // Fetch all registered users — used for SendEmail vs Resend routing and admin email lookup
-  // Use a high limit to avoid missing users beyond the default 50-record cap
-  const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 10000);
-  const registeredEmails = new Set(allUsers.map(u => u.email?.toLowerCase()).filter(Boolean));
-  // Optional mail: anyone who turned email off in their profile is skipped.
-  const optedOutEmails = new Set(
-    allUsers.filter(u => u.emailOptIn === false).map(u => u.email?.toLowerCase()).filter(Boolean)
-  );
-
   if (isTestEmail) {
     recipientEmails = [user.email].filter(isValidEmail);
   } else {
-    // Collect all participant emails from this document
-    const [suggestions, sections, allVotes, allComments, allAgreements, publicProfiles] = await Promise.all([
+    // Only this document's own records are loaded. Earlier versions pulled the
+    // whole vote, comment, profile and account tables into memory on every
+    // call, which any signed-in user could trigger repeatedly.
+    const [suggestions, sections, allAgreements, docAdmins] = await Promise.all([
       base44.asServiceRole.entities.Suggestion.filter({ documentId }),
       base44.asServiceRole.entities.Section.filter({ documentId }),
-      base44.asServiceRole.entities.Vote.list('-created_date', 10000),
-      base44.asServiceRole.entities.Comment.list('-created_date', 10000),
       base44.asServiceRole.entities.DocumentAgreement.filter({ documentId }),
-      base44.asServiceRole.entities.UserPublicProfile.list('-created_date', 10000),
+      base44.asServiceRole.entities.DocumentAdmin.filter({ documentId }),
     ]);
 
     const suggestionIds = new Set(suggestions.map(s => s.id));
     const sectionIds = new Set(sections.map(s => s.id));
+
+    const [allVotes, allComments] = await Promise.all([
+      suggestionIds.size > 0
+        ? base44.asServiceRole.entities.Vote.filter({ suggestionId: { $in: [...suggestionIds] } })
+        : [],
+      base44.asServiceRole.entities.Comment.filter({
+        rootEntityId: { $in: [...suggestionIds, ...sectionIds, documentId] },
+      }),
+    ]);
+
     const emailSet = new Set();
+    // Addresses to look up on the account table — the raw form as stored on the
+    // record plus its lowercase form, so the registered/opt-out checks below
+    // match the same way they did when every account was loaded.
+    const candidateEmails = new Set();
 
     // Normalize all emails to lowercase for consistent comparison with registeredEmails
-    const addEmail = (email) => { if (email) emailSet.add(email.toLowerCase().trim()); };
+    const addEmail = (email) => {
+      if (!email) return;
+      emailSet.add(email.toLowerCase().trim());
+      candidateEmails.add(String(email).trim());
+      candidateEmails.add(email.toLowerCase().trim());
+    };
 
     suggestions.forEach(s => addEmail(s.created_by));
-    allVotes.filter(v => suggestionIds.has(v.suggestionId)).forEach(v => addEmail(v.created_by));
+    allVotes.forEach(v => addEmail(v.created_by));
     allComments.filter(c =>
       (c.rootEntityType === 'suggestion' && suggestionIds.has(c.rootEntityId)) ||
       (c.rootEntityType === 'section' && sectionIds.has(c.rootEntityId)) ||
       (c.rootEntityType === 'document' && c.rootEntityId === documentId)
     ).forEach(c => addEmail(c.created_by));
+
+    allAgreements.forEach(a => {
+      if (!a.userEmail) return;
+      candidateEmails.add(String(a.userEmail).trim());
+      candidateEmails.add(String(a.userEmail).toLowerCase().trim());
+    });
+
+    const adminUserIds = docAdmins.map(da => da.userId).filter(Boolean);
+
+    // Look up only the accounts this send involves: the candidate authors (for
+    // the registered-user and opt-out checks) and the document's admins (for
+    // their addresses).
+    const [matchingUsers, adminUsers] = await Promise.all([
+      candidateEmails.size > 0
+        ? base44.asServiceRole.entities.User.filter({ email: { $in: [...candidateEmails] } })
+        : [],
+      adminUserIds.length > 0
+        ? base44.asServiceRole.entities.User.filter({ id: { $in: adminUserIds } })
+        : [],
+    ]);
+
+    const registeredEmails = new Set(matchingUsers.map(u => u.email?.toLowerCase()).filter(Boolean));
+    // Optional mail: anyone who turned email off in their profile is skipped.
+    const optedOutEmails = new Set(
+      [...matchingUsers, ...adminUsers]
+        .filter(u => u.emailOptIn === false)
+        .map(u => u.email?.toLowerCase())
+        .filter(Boolean)
+    );
+
     // DocumentAgreement.userEmail is client-writable (create RLS only checks
     // userId), so a caller could plant an agreement with any external address.
     // Only include agreement recipients whose email matches a registered app
@@ -175,8 +215,7 @@ Deno.serve(async (req) => {
     });
 
     // Always add document admins
-    const docAdmins = await base44.asServiceRole.entities.DocumentAdmin.filter({ documentId });
-    const adminEmailMap = new Map(allUsers.map(u => [u.id, u.email]));
+    const adminEmailMap = new Map(adminUsers.map(u => [u.id, u.email]));
     docAdmins.forEach(da => {
       const adminEmail = adminEmailMap.get(da.userId);
       if (adminEmail) emailSet.add(adminEmail);

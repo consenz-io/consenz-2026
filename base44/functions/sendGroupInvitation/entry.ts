@@ -31,8 +31,12 @@ Deno.serve(async (req) => {
     // external addresses (spam/relay abuse). To invite someone who is not yet
     // an app user, use the platform's user invite mechanism instead.
     const normalizedEmail = email.trim().toLowerCase();
-    const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 10000);
-    const isRegistered = allUsers.some(u => u.email?.toLowerCase().trim() === normalizedEmail);
+    // Look up just this address instead of loading every account: the old
+    // version read up to 10,000 user records on every invitation.
+    const matchingUsers = await base44.asServiceRole.entities.User.filter({
+      email: { $in: [email.trim(), normalizedEmail] },
+    });
+    const isRegistered = matchingUsers.some(u => u.email?.toLowerCase().trim() === normalizedEmail);
     if (!isRegistered) {
       return Response.json({ error: 'Recipient is not a registered app user. Use the platform invite mechanism to invite new users.' }, { status: 403 });
     }

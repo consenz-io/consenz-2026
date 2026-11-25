@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 import { Loader2, Trash2, AlertTriangle, X } from "lucide-react";
 
 const copy = {
@@ -43,6 +44,16 @@ const copy = {
     cancel: "ביטול",
     error: "המחיקה לא הושלמה. נסו שוב.",
     adminError: "חשבון מנהל מערכת לא נמחק מכאן. העבירו את הרשאת הניהול לחשבון אחר ואז נסו שוב.",
+    sendCode: "שליחת קוד אישור",
+    codeTitle: "שלחנו קוד לכתובת הדואר שלכם",
+    codeDesc: "הזינו את הקוד בן 6 הספרות כדי להשלים את המחיקה.",
+    codeLabel: "קוד אישור",
+    verify: "מחיקה סופית",
+    resend: "שליחת קוד חדש",
+    invalidCode: "הקוד שגוי. בדקו אותו ונסו שוב.",
+    expiredCode: "הקוד פג תוקף. בקשו קוד חדש.",
+    tooManyAttempts: "יותר מדי ניסיונות. בקשו קוד חדש.",
+    tooSoon: "הקוד נשלח ממש עכשיו. אפשר לבקש שוב בעוד רגע.",
   },
   en: {
     title: "Delete account",
@@ -70,6 +81,16 @@ const copy = {
     cancel: "Cancel",
     error: "The account was not deleted. Please try again.",
     adminError: "An admin account cannot be deleted here. Give admin rights to another account first, then try again.",
+    sendCode: "Email me a code",
+    codeTitle: "We sent a code to your email",
+    codeDesc: "Enter the 6-digit code to finish deleting your account.",
+    codeLabel: "Confirmation code",
+    verify: "Delete permanently",
+    resend: "Send a new code",
+    invalidCode: "That code is not correct. Check it and try again.",
+    expiredCode: "The code expired. Request a new one.",
+    tooManyAttempts: "Too many attempts. Request a new code.",
+    tooSoon: "A code was just sent. Try again in a moment.",
   },
   ar: {
     title: "حذف الحساب",
@@ -97,6 +118,16 @@ const copy = {
     cancel: "إلغاء",
     error: "لم يتم الحذف. حاول مرة أخرى.",
     adminError: "لا يمكن حذف حساب مدير من هنا. انقل صلاحية الإدارة إلى حساب آخر ثم حاول مرة أخرى.",
+    sendCode: "أرسل لي رمزاً",
+    codeTitle: "أرسلنا رمزاً إلى بريدك الإلكتروني",
+    codeDesc: "أدخل الرمز المكوّن من 6 أرقام لإتمام حذف الحساب.",
+    codeLabel: "رمز التأكيد",
+    verify: "حذف نهائي",
+    resend: "إرسال رمز جديد",
+    invalidCode: "الرمز غير صحيح. تحقق منه وحاول مرة أخرى.",
+    expiredCode: "انتهت صلاحية الرمز. اطلب رمزاً جديداً.",
+    tooManyAttempts: "محاولات كثيرة. اطلب رمزاً جديداً.",
+    tooSoon: "أُرسل الرمز للتو. حاول بعد لحظات.",
   },
 };
 
@@ -107,12 +138,38 @@ export default function DeleteAccountCard() {
   const [confirmed, setConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // "confirm" collects the checkbox, "code" takes the code we mailed to the
+  // account's own address. Nothing is deleted until that code comes back.
+  const [step, setStep] = useState("confirm");
+  const [code, setCode] = useState("");
+
+  const errorFor = (serverError) => {
+    if (serverError === "admin_account") return c.adminError;
+    if (serverError === "invalid_code") return c.invalidCode;
+    if (serverError === "code_expired") return c.expiredCode;
+    if (serverError === "too_many_attempts") return c.tooManyAttempts;
+    if (serverError === "too_soon") return c.tooSoon;
+    return c.error;
+  };
+
+  const requestCode = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await base44.functions.invoke("deleteAccount", { action: "request", language });
+      setCode("");
+      setStep("code");
+    } catch (err) {
+      setError(errorFor(err?.response?.data?.error));
+    }
+    setLoading(false);
+  };
 
   const handleDelete = async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await base44.functions.invoke("deleteAccount", { confirm: "DELETE" });
+      const response = await base44.functions.invoke("deleteAccount", { action: "confirm", code, language });
       if (response?.data?.success) {
         await base44.auth.logout("/");
         return;
@@ -120,8 +177,7 @@ export default function DeleteAccountCard() {
       setError(c.error);
       setLoading(false);
     } catch (err) {
-      const code = err?.response?.data?.error;
-      setError(code === "admin_account" ? c.adminError : c.error);
+      setError(errorFor(err?.response?.data?.error));
       setLoading(false);
     }
   };
@@ -163,6 +219,8 @@ export default function DeleteAccountCard() {
             setOpen(next);
             if (!next) {
               setConfirmed(false);
+              setStep("confirm");
+              setCode("");
               setError("");
             }
           }}
@@ -179,27 +237,56 @@ export default function DeleteAccountCard() {
               <AlertDialogDescription>{c.dialogDesc}</AlertDialogDescription>
             </AlertDialogHeader>
 
-            <label className="flex items-start gap-3 cursor-pointer py-2">
-              <Checkbox
-                checked={confirmed}
-                onCheckedChange={(value) => setConfirmed(value === true)}
-                className="mt-0.5"
-                aria-label={c.checkbox}
-              />
-              <span className="text-sm text-slate-700">{c.checkbox}</span>
-            </label>
+            {step === "confirm" ? (
+              <label className="flex items-start gap-3 cursor-pointer py-2">
+                <Checkbox
+                  checked={confirmed}
+                  onCheckedChange={(value) => setConfirmed(value === true)}
+                  className="mt-0.5"
+                  aria-label={c.checkbox}
+                />
+                <span className="text-sm text-slate-700">{c.checkbox}</span>
+              </label>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-slate-800">{c.codeTitle}</p>
+                <p className="text-sm text-slate-600">{c.codeDesc}</p>
+                <Input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  placeholder="000000"
+                  aria-label={c.codeLabel}
+                  className="text-center text-xl tracking-[0.4em] font-mono"
+                />
+              </div>
+            )}
 
             {error && (
               <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md p-2">{error}</p>
             )}
 
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={loading}>{c.cancel}</AlertDialogCancel>
-              <Button variant="destructive" onClick={handleDelete} disabled={!confirmed || loading}>
-                {loading && <Loader2 className="w-4 h-4 me-2 animate-spin" aria-hidden="true" />}
-                {c.confirm}
-              </Button>
-            </AlertDialogFooter>
+            {step === "confirm" ? (
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={loading}>{c.cancel}</AlertDialogCancel>
+                <Button variant="destructive" onClick={requestCode} disabled={!confirmed || loading}>
+                  {loading && <Loader2 className="w-4 h-4 me-2 animate-spin" aria-hidden="true" />}
+                  {c.sendCode}
+                </Button>
+              </AlertDialogFooter>
+            ) : (
+              <AlertDialogFooter>
+                <Button variant="outline" onClick={requestCode} disabled={loading}>
+                  {c.resend}
+                </Button>
+                <Button variant="destructive" onClick={handleDelete} disabled={code.length !== 6 || loading}>
+                  {loading && <Loader2 className="w-4 h-4 me-2 animate-spin" aria-hidden="true" />}
+                  {c.verify}
+                </Button>
+              </AlertDialogFooter>
+            )}
           </AlertDialogContent>
         </AlertDialog>
       </CardContent>
