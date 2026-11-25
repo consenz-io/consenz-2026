@@ -6,7 +6,7 @@ import ConversationList from "@/components/messages/ConversationList";
 import ChatView from "@/components/messages/ChatView";
 import NewConversationDialog from "@/components/messages/NewConversationDialog";
 import { MessageSquare } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Messages() {
   const { language, isRTL } = useLanguage();
@@ -15,6 +15,7 @@ export default function Messages() {
   const [newRecipientId, setNewRecipientId] = React.useState(null);
   const [showNewDialog, setShowNewDialog] = React.useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -140,7 +141,7 @@ export default function Messages() {
     () => allProfiles
       .filter((p) => p.userId !== user?.id)
       .filter((p) => (accountIds.length > 0 ? accountIds.includes(p.userId) : true))
-      .map((p) => ({ userId: p.userId, fullName: p.fullName, email: p.email }))
+      .map((p) => ({ userId: p.userId, fullName: p.fullName }))
       .filter((p) => p.fullName),
     [allProfiles, accountIds, user?.id]
   );
@@ -167,18 +168,24 @@ export default function Messages() {
   };
 
   const handleNewConversation = (recipientId) => {
-    // Check if conversation already exists
+    const id = typeof recipientId === "string" ? recipientId : recipientId?.userId;
+    setShowNewDialog(false);
+    if (!id) return;
+
+    // Drop any leftover deep-link parameters so the picker's choice wins.
+    if (location.search) navigate("/Messages", { replace: true });
+
+    // Open the existing conversation with that person, or a new empty one.
     const existing = conversations.find(
-      (c) => c.participants.includes(recipientId) && c.participants.includes(user.id)
+      (c) => (c.participants || []).includes(id) && (c.participants || []).includes(user?.id)
     );
     if (existing) {
       setActiveConversationId(existing.id);
       setNewRecipientId(null);
     } else {
-      setNewRecipientId(recipientId);
       setActiveConversationId(null);
+      setNewRecipientId(id);
     }
-    setShowNewDialog(false);
   };
 
   const handleBack = () => {

@@ -18,6 +18,7 @@ export default function ChatView({
   const queryClient = useQueryClient();
   const [input, setInput] = React.useState("");
   const [sending, setSending] = React.useState(false);
+  const [sendError, setSendError] = React.useState("");
   const messagesEndRef = React.useRef(null);
   const inputRef = React.useRef(null);
 
@@ -50,6 +51,7 @@ export default function ChatView({
     const content = input.trim();
     if (!content || !user || !recipientId || sending) return;
     setInput("");
+    setSendError("");
     setSending(true);
     try {
       const res = await base44.functions.invoke("sendMessage", { recipientId, content });
@@ -63,6 +65,11 @@ export default function ChatView({
       queryClient.invalidateQueries({ queryKey: ["unreadMessages"] });
     } catch (e) {
       setInput(content);
+      setSendError(
+        language === "he" ? "שליחת ההודעה נכשלה, נסה שוב" :
+        language === "ar" ? "تعذّر إرسال الرسالة، حاول مرة أخرى" :
+        "Message could not be sent, please try again"
+      );
     } finally {
       setSending(false);
     }
@@ -139,6 +146,9 @@ export default function ChatView({
 
       {/* Input */}
       <div className="p-3 border-t border-slate-200 bg-white flex-shrink-0">
+        {sendError && (
+          <p className="text-xs text-red-600 mb-2">{sendError}</p>
+        )}
         <div className="flex items-end gap-2">
           <textarea
             ref={inputRef}

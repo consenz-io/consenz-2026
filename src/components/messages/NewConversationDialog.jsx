@@ -16,16 +16,12 @@ export default function NewConversationDialog({
     const list = profiles.filter((p) => p.userId !== currentUserId);
     if (!search.trim()) return list;
     const q = search.toLowerCase();
-    return list.filter(
-      (p) =>
-        p.fullName?.toLowerCase().includes(q) ||
-        p.email?.toLowerCase().includes(q)
-    );
+    return list.filter((p) => p.fullName?.toLowerCase().includes(q));
   }, [profiles, currentUserId, search]);
 
   const title = language === "he" ? "שיחה חדשה" : language === "ar" ? "محادثة جديدة" : "New Conversation";
   const subtitle = language === "he" ? "בחר משתמש להתחלת שיחה" : language === "ar" ? "اختر مستخدمًا لبدء محادثة" : "Select a user to start a conversation";
-  const searchPlaceholder = language === "he" ? "חיפוש לפי שם או אימייל..." : language === "ar" ? "بحث بالاسم أو البريد..." : "Search by name or email...";
+  const searchPlaceholder = language === "he" ? "חיפוש לפי שם..." : language === "ar" ? "بحث بالاسم..." : "Search by name...";
   const emptyText = language === "he" ? "לא נמצאו משתמשים" : language === "ar" ? "لم يتم العثور على مستخدمين" : "No users found";
 
   return (
@@ -55,17 +51,15 @@ export default function NewConversationDialog({
           ) : (
             filtered.map((p) => (
               <button
-                key={p.id}
+                key={p.userId}
+                type="button"
                 onClick={() => onSelect(p.userId)}
                 className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-100 transition-colors text-start"
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold flex-shrink-0">
                   {p.fullName?.charAt(0).toUpperCase() || "U"}
                 </div>
-                <div className="flex-1 min-w-0 text-start">
-                  <p className="font-medium text-slate-900 truncate">{p.fullName}</p>
-                  <p className="text-xs text-slate-500 truncate">{p.email}</p>
-                </div>
+                <p className="flex-1 min-w-0 font-medium text-slate-900 truncate text-start">{p.fullName}</p>
               </button>
             ))
           )}
