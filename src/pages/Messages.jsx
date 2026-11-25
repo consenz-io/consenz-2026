@@ -14,20 +14,7 @@ export default function Messages() {
   const [activeConversationId, setActiveConversationId] = React.useState(null);
   const [newRecipientId, setNewRecipientId] = React.useState(null);
   const [showNewDialog, setShowNewDialog] = React.useState(false);
-
-  // Follow the conversation in the URL (deep links from notifications, including
-  // while the Messages page is already open)
   const location = useLocation();
-  React.useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const convId = params.get("conversation");
-    const recipientId = params.get("newRecipient");
-    if (convId) {
-      setActiveConversationId(convId);
-    } else if (recipientId) {
-      setNewRecipientId(recipientId);
-    }
-  }, [location.search]);
 
   const { data: user } = useQuery({
     queryKey: ["currentUser"],
@@ -42,6 +29,40 @@ export default function Messages() {
     // Real-time subscriptions already deliver new messages; polling is only a safety net.
     refetchInterval: 60000,
   });
+
+  // Resolve the URL once per link: a conversation link opens that conversation, and
+  // a "send message" link (from a user profile) opens the conversation with that
+  // person if one already exists — otherwise a new, empty one. Resolving against
+  // the loaded list also prevents a previously opened conversation from showing.
+  const resolvedSearchRef = React.useRef(null);
+  React.useEffect(() => {
+    if (!user?.id) return;
+    const params = new URLSearchParams(location.search);
+    const convId = params.get("conversation");
+    const recipientId = params.get("newRecipient");
+
+    if (convId) {
+      resolvedSearchRef.current = location.search;
+      setActiveConversationId(convId);
+      setNewRecipientId(null);
+      return;
+    }
+
+    if (!recipientId || resolvedSearchRef.current === location.search) return;
+    if (conversationsLoading) return;
+
+    const existing = conversations.find(
+      (c) => c.participants.includes(recipientId) && c.participants.includes(user.id)
+    );
+    resolvedSearchRef.current = location.search;
+    if (existing) {
+      setActiveConversationId(existing.id);
+      setNewRecipientId(null);
+    } else {
+      setActiveConversationId(null);
+      setNewRecipientId(recipientId);
+    }
+  }, [location.search, conversations, conversationsLoading, user?.id]);
 
   // Every real account, so a conversation can be started with anyone and every
   // participant resolves to a display name. Only admins may list accounts, so
