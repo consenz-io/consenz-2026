@@ -108,9 +108,9 @@ const en = {
       },
     ],
     loop: {
-      title: "The update does not close the discussion",
-      text: "Every update opens a new round: back to step 1, while each section runs its own debate — with its own timer and votes.",
-      chips: ["Back to step 1", "Parallel debates", "An ongoing cycle"],
+      title: "Nothing resets",
+      text: "The moment a proposal is accepted it is already in the text, and the document carries on from where it was. Every other open proposal keeps running exactly as before, each with its own timer and votes, and each section with its own discussion. The support threshold is recalculated from the number of participants, so the rule stays fair as the community grows.",
+      chips: ["The change is in the text immediately", "Open proposals keep running", "The threshold follows participants"],
     },
   },
   consensus: {
