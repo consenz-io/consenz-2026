@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     // Derive the invitation link base from a trusted server-side constant only.
     // The client-supplied appUrl is ignored — an attacker could otherwise point
     // the "Join" button at a phishing page from the app's verified sender domain.
-    const baseUrl = 'https://consenz-copy-4ca3772e.base44.app';
+    const baseUrl = 'https://consenz.net';
     const inviteUrl = `${baseUrl}?groupInvite=${token}`;
     const lang = language || 'he';
     const isRTL = lang === 'he' || lang === 'ar';

@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
   // domain while emails still come from the app's verified sender. Use a
   // trusted server-side constant instead (same approach as sendGroupEmail
   // and sendGroupInvitation).
-  const APP_BASE_URL = 'https://consenz-copy-4ca3772e.base44.app';
+  const APP_BASE_URL = 'https://consenz.net';
 
   const { documentId, summaryContent, isTestEmail, language } = await req.json();
   if (!documentId || !summaryContent) {

@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
   // appBaseUrl is intentionally NOT read from the request body — a client-
   // supplied value could point links at an attacker domain. Use a trusted
   // server-side constant instead (same approach as sendDocumentSummaryEmail).
-  const APP_BASE_URL = 'https://consenz-copy-4ca3772e.base44.app';
+  const APP_BASE_URL = 'https://consenz.net';
 
   // Authorization: verify against non-client-writable data (document ownership
   // or a DocumentAdmin record created by the document's original creator) —

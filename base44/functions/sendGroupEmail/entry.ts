@@ -4,7 +4,7 @@ import { verifyGroupMembership } from '../../shared/documentAuth.ts';
 // Trusted base URL — hardcoded, not derived from client-controlled request
 // headers (Origin/Referer), to prevent phishing of group admins via forged
 // headers that redirect the "Manage request" link to an attacker domain.
-const APP_BASE_URL = 'https://consenz-copy-4ca3772e.base44.app';
+const APP_BASE_URL = 'https://consenz.net';
 
 // HTML-escape user-controlled strings before interpolating into email bodies.
 // SendEmail treats `body` as HTML, so unescaped memberName / groupName / etc.
