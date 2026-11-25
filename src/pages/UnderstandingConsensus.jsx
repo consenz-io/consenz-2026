@@ -87,7 +87,18 @@ export default function UnderstandingConsensus() {
 
   // ה-threshold הקבוע מהמסמך - לא מחשבים אותו מחדש!
   // הוא מתעדכן רק כשהצעה מתקבלת
-  const threshold = Math.max(2, document?.threshold || 2);
+  //
+  // When the page is opened without a document (from the Learn More page) it
+  // shows the same explanation with sample numbers instead of a real document.
+  const isExample = !documentId;
+  const EXAMPLE_METER = 0.5;
+  const EXAMPLE_PARTICIPANTS = 20;
+
+  const meter = isExample ? EXAMPLE_METER : documentConsensusMeter;
+  const participants = isExample ? EXAMPLE_PARTICIPANTS : participantsForFormula;
+  const threshold = isExample ?
+  Math.round(EXAMPLE_METER * EXAMPLE_PARTICIPANTS) :
+  Math.max(2, document?.threshold || 2);
 
   if (docLoading || suggestionsLoading) {
     return (
@@ -101,7 +112,7 @@ export default function UnderstandingConsensus() {
 
   }
 
-  if (!document) {
+  if (!isExample && !document) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 md:p-6">
         <div className="max-w-4xl mx-auto text-center py-12 md:py-20">
@@ -119,13 +130,13 @@ export default function UnderstandingConsensus() {
       <div className={`max-w-4xl mx-auto space-y-6 ${isRTL ? 'text-right' : 'text-left'}`}>
         <PageHeader
           title={t('understandingConsensusTitle')}
-          backUrl={returnUrl || `${createPageUrl("DocumentView")}?id=${documentId}`} />
+          backUrl={isExample ? createPageUrl("LearnMore") : returnUrl || `${createPageUrl("DocumentView")}?id=${documentId}`} />
         
 
         {/* Animated consensus gauge */}
         <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-indigo-50/50">
           <CardContent className="p-2 md:p-4">
-            <ConsensusGaugeAnimation value={documentConsensusMeter} documentTitle={document?.title} />
+            <ConsensusGaugeAnimation value={meter} documentTitle={document?.title} />
           </CardContent>
         </Card>
 
@@ -266,12 +277,12 @@ export default function UnderstandingConsensus() {
             <div className="bg-slate-50 rounded-xl p-6">
               <div className={`flex flex-col md:flex-row items-center justify-center gap-4 text-center ${isRTL ? 'md:flex-row-reverse' : ''}`}>
                 <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-indigo-200 min-w-[140px]">
-                  <div className="text-2xl font-bold text-indigo-700">{(documentConsensusMeter * 100).toFixed(0)}%</div>
+                  <div className="text-2xl font-bold text-indigo-700">{(meter * 100).toFixed(0)}%</div>
                   <div className="text-xs text-slate-500 mt-1">{t('consensusMeterLabel')}</div>
                 </div>
                 <div className="text-3xl text-slate-400 font-light">×</div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border-2 border-blue-200 min-w-[140px]">
-                  <div className="text-2xl font-bold text-blue-700">{participantsForFormula}</div>
+                  <div className="text-2xl font-bold text-blue-700">{participants}</div>
                   <div className="text-xs text-slate-500 mt-1">{language === 'he' ? 'משתתפים' : language === 'ar' ? 'المشاركون عند القبول' : 'Participants at acceptance'}</div>
                 </div>
                 <div className="text-3xl text-slate-400 font-light">=</div>
@@ -281,29 +292,33 @@ export default function UnderstandingConsensus() {
                 </div>
               </div>
               <p className="text-center text-sm text-slate-500 mt-4">
-                {language === 'he' ? 'הסף הנוכחי חושב בעת יצירת גרסת המסמך העדכנית ביותר — מספר המשתתפים כפי שהיה בעת קבלת ההצעה האחרונה' : language === 'ar' ? 'تم حساب الحد الحالي عند قبول الاقتراح الأخير — عدد المشاركين في تلك اللحظة' : 'Current threshold was calculated when the last suggestion was accepted — participants count at that moment'}
+                {isExample ?
+                language === 'he' ? 'דוגמה בלבד: 50% הסכמה בקרב 20 משתתפים נותנת רף של 10 תומכים' : language === 'ar' ? 'مثال فقط: اتفاق بنسبة 50% بين 20 مشاركًا يعطي عتبة 10 مؤيدين' : 'Example only: 50% agreement among 20 participants gives a threshold of 10 supporters' :
+                language === 'he' ? 'הסף הנוכחי חושב בעת יצירת גרסת המסמך העדכנית ביותר — מספר המשתתפים כפי שהיה בעת קבלת ההצעה האחרונה' : language === 'ar' ? 'تم حساب الحد الحالي عند قبول الاقتراح الأخير — عدد المشاركين في تلك اللحظة' : 'Current threshold was calculated when the last suggestion was accepted — participants count at that moment'}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        {/* רשימת הצעות שהתקבלו עם חישוב הקונצנזוס */}
+        {/* רשימת הצעות שהתקבלו עם חישוב הקונצנזוס — only for a real document */}
+        {!isExample &&
         <Card>
-          <CardHeader>
-            <CardTitle className={`flex items-center gap-2 text-lg w-full ${isRTL ? 'justify-start' : 'justify-start'}`}>
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              {language === 'he' ? 'היסטוריית הצעות שהתקבלו וחישוב הקונצנזוס' : language === 'ar' ? 'سجل الاقتراحات المقبولة وحساب الإجماع' : 'Accepted Suggestions History & Consensus Calculation'}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AcceptedSuggestionsConsensusList
+            <CardHeader>
+              <CardTitle className={`flex items-center gap-2 text-lg w-full ${isRTL ? 'justify-start' : 'justify-start'}`}>
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                {language === 'he' ? 'היסטוריית הצעות שהתקבלו וחישוב הקונצנזוס' : language === 'ar' ? 'سجل الاقتراحات المقبولة وحساب الإجماع' : 'Accepted Suggestions History & Consensus Calculation'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AcceptedSuggestionsConsensusList
               suggestions={suggestions}
               consensuses={consensuses}
               currentMeter={documentConsensusMeter}
               documentId={documentId} />
             
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        }
 
       </div>
     </div>);
