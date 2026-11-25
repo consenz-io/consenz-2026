@@ -1,5 +1,47 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { waitUntil } from 'base44:runtime';
 import { buildTranslationsWithMessage } from '../../shared/notificationTranslations.ts';
+
+// Recipient-facing copy for the "you have a new message" email, per language.
+const MESSAGE_EMAIL_COPY = {
+  he: {
+    subject: 'הודעה חדשה מ{name}',
+    greeting: 'שלום',
+    preheader: '{name} שלח/ה לך הודעה חדשה ב-Consenz',
+    intro: '{name} שלח/ה לך הודעה חדשה במערכת המסרים של Consenz:',
+    ctaLabel: 'לצפייה בהודעה',
+    footer: 'קיבלת מייל זה כי יש לך חשבון ב-Consenz. אפשר להשיב להודעה מתוך המערכת.',
+  },
+  en: {
+    subject: 'New message from {name}',
+    greeting: 'Hello',
+    preheader: '{name} sent you a new message on Consenz',
+    intro: '{name} sent you a new message in the Consenz messaging system:',
+    ctaLabel: 'View message',
+    footer: 'You are receiving this email because you have a Consenz account. You can reply from inside the app.',
+  },
+  ar: {
+    subject: 'رسالة جديدة من {name}',
+    greeting: 'مرحباً',
+    preheader: '{name} أرسل لك رسالة جديدة على Consenz',
+    intro: '{name} أرسل لك رسالة جديدة في نظام الرسائل في Consenz:',
+    ctaLabel: 'عرض الرسالة',
+    footer: 'تلقيت هذا البريد لأن لديك حساباً في Consenz. يمكنك الرد من داخل التطبيق.',
+  },
+};
+
+// One email per conversation every 10 minutes — an active chat must not send
+// an email for every single message.
+const MESSAGE_EMAIL_THROTTLE_MS = 10 * 60 * 1000;
+const lastMessageEmailAt = new Map();
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 
 // Per-user rate limiter — prevents spam via the messaging system.
 // 20 messages per minute per user.
@@ -114,6 +156,41 @@ export default async function(req) {
       });
     } catch (e) {
       // Non-critical — message was still sent
+    }
+
+    // Email the recipient about the message (non-critical, sent after the response)
+    try {
+      const lastSent = lastMessageEmailAt.get(conversation.id) || 0;
+      if (Date.now() - lastSent > MESSAGE_EMAIL_THROTTLE_MS) {
+        const recipients = await base44.asServiceRole.entities.User.filter({ id: recipientId });
+        const recipient = recipients[0];
+        if (recipient?.email) {
+          lastMessageEmailAt.set(conversation.id, Date.now());
+          const senderName = user.full_name || 'User';
+          const copy = MESSAGE_EMAIL_COPY[recipient.preferredLanguage] || MESSAGE_EMAIL_COPY.he;
+          waitUntil(
+            base44.asServiceRole.integrations.Core.SendEmail({
+              to: recipient.email,
+              template_name: 'DirectMessage',
+              subject: copy.subject.replace('{name}', senderName),
+              category: 'transactional',
+              variables: {
+                greeting: copy.greeting,
+                recipient_name: escapeHtml(recipient.full_name || recipient.email),
+                preheader: copy.preheader.replace('{name}', escapeHtml(senderName)),
+                intro: copy.intro.replace('{name}', escapeHtml(senderName)),
+                sender_name: escapeHtml(senderName),
+                message_preview: escapeHtml(preview),
+                cta_label: copy.ctaLabel,
+                cta_url: `https://consenz.net/Messages?conversation=${conversation.id}`,
+                footer_note: copy.footer,
+              },
+            }).catch(() => {})
+          );
+        }
+      }
+    } catch (e) {
+      // Non-critical — the message was still delivered in the app
     }
 
     return Response.json({ conversation, message });
