@@ -69,6 +69,8 @@ export default function GlobalTourButton({ user }) {
   /\/Home/i.test(location.pathname) ||
   /\/LearnMore/i.test(location.pathname);
   const isDocumentPage = /\/(DocumentView|document)/i.test(location.pathname) && !/\/DocumentCleanView/i.test(location.pathname);
+  // The Messages page has no room for a floating tour button.
+  const isMessagesPage = /\/Messages/i.test(location.pathname);
 
   // Track whether the tour has been fully completed (persisted in localStorage).
   // Poll on an interval so the button swaps to "Sign in" as soon as the tour ends.
@@ -146,6 +148,8 @@ export default function GlobalTourButton({ user }) {
       </motion.div>
     );
   }
+
+  if (isMessagesPage) return null;
 
   const startTutorial = () => {
     try {
