@@ -189,8 +189,10 @@ export default async function(req) {
           lastMessageEmailAt.set(emailKey, Date.now());
           // The email follows the recipient's notification language
           // (User.preferredLanguage, the same setting the Profile page shows).
-          const lang = String(recipient.preferredLanguage || 'he').slice(0, 2).toLowerCase();
-          const copy = (MESSAGE_EMAIL_COPY as Record<string, typeof MESSAGE_EMAIL_COPY.he>)[lang] || MESSAGE_EMAIL_COPY.he;
+          // Every visitor picks a language on first entry, and the app's own
+          // default is English — so English is the fallback here too.
+          const lang = String(recipient.preferredLanguage || 'en').slice(0, 2).toLowerCase();
+          const copy = (MESSAGE_EMAIL_COPY as Record<string, typeof MESSAGE_EMAIL_COPY.en>)[lang] || MESSAGE_EMAIL_COPY.en;
           waitUntil(
             base44.asServiceRole.integrations.Core.SendEmail({
               to: recipient.email,
