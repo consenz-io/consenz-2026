@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CheckCircle2, FilePlus2, Pencil, Trash2 } from "lucide-react";
 import {
   SEQUENCE,
@@ -15,6 +15,7 @@ import ThresholdUpdate from "@/components/learnMore/consensus-lab/ThresholdUpdat
 import VoteSplit from "@/components/learnMore/consensus-lab/VoteSplit";
 import EditStats from "@/components/learnMore/consensus-lab/EditStats";
 import ConsensusTrail from "@/components/learnMore/consensus-lab/ConsensusTrail";
+import useAnimatedNumber from "@/components/learnMore/consensus-lab/useAnimatedNumber";
 
 const TYPES = {
   new_section: { Icon: FilePlus2, tone: "bg-blue-50 text-blue-800" },
@@ -33,6 +34,10 @@ export default function ConsensusStepsDemo({ s }) {
   const stateIndex = stateIndexFor(stage.meterAfter);
   const { Icon, tone } = TYPES[stage.type];
   const story = narrativeText(s, stage);
+  // Runs on the same timing as the threshold swap in the card below, so the
+  // group growing and the bar rising read as one movement.
+  const reducedMotion = useReducedMotion();
+  const participantsNow = useAnimatedNumber(stage.openedAt, stage.participants);
 
   const goTo = (next) => {
     const bounded = Math.min(total - 1, Math.max(0, next));
@@ -83,12 +88,20 @@ export default function ConsensusStepsDemo({ s }) {
               </bdi>
               <ArrowRight className="h-3.5 w-3.5 shrink-0 text-emerald-600 rtl:rotate-180" aria-hidden="true" />
               <bdi className="text-lg font-bold leading-none tabular-nums text-slate-900">
-                {fmt(stage.participants)}
+                {fmt(Math.round(participantsNow))}
               </bdi>
               <span className="text-xs font-medium text-slate-600">{s.participantsLabel}</span>
             </span>
             <span className="mt-0.5 text-[11px] font-bold tabular-nums text-emerald-700">
               +{fmt(stage.participants - stage.openedAt)}
+            </span>
+            <span className="mt-1 block h-1 self-stretch overflow-hidden rounded-full bg-slate-200">
+              <motion.span
+                className="block h-full rounded-full bg-emerald-500"
+                initial={{ width: `${(stage.openedAt / stage.participants) * 100}%` }}
+                animate={{ width: "100%" }}
+                transition={{ duration: reducedMotion ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
+              />
             </span>
           </span>
         </div>
