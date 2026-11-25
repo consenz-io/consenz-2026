@@ -57,10 +57,9 @@ export default function PointsSteps({ c }) {
             <h4 className="text-sm font-bold text-slate-900">{c.impactTitle}</h4>
           </div>
           <p className="mt-3 text-sm leading-relaxed text-slate-700">{c.impactText}</p>
+          <PointsBalanceScale s={c.spectrum} />
         </div>
       </div>
-
-      <PointsBalanceScale s={c.spectrum} />
     </div>
   );
 }

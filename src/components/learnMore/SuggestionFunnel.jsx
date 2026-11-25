@@ -23,7 +23,7 @@ export default function SuggestionFunnel() {
   return (
     <div
       dir="ltr"
-      className="relative mx-auto mt-2 w-full max-w-[320px] select-none"
+      className="relative mx-auto my-1.5 w-full max-w-[210px] select-none"
       aria-hidden="true"
     >
       <svg viewBox="0 0 320 232" className="w-full">

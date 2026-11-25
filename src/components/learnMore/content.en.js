@@ -288,16 +288,6 @@ const en = {
       focusLabel: "Focus",
       focusCaption: "What the community really wants moves into the document, and the rest closes on its own.",
       hint: "Points are the neck of the funnel: they never close the door on anyone, they just keep the document focused on what matters.",
-      markers: [
-        {
-          label: "Openness",
-          text: "No one approves or rejects proposals up front. Every participant can propose a change, and every proposal enters the process.",
-        },
-        {
-          label: "Focus",
-          text: "The price in points makes people propose only what really matters and spend their time voting on the rest, so the document keeps moving forward.",
-        },
-      ],
     },
     costsTitle: "What each action costs",
     costs: [
