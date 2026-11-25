@@ -19,6 +19,7 @@ import { formatLocalDate } from "@/components/utils/dateFormatter";
 import { useProfileActivity } from "@/components/profile/useProfileActivity";
 import ProfileActivityTabs from "@/components/profile/ProfileActivityTabs";
 import EmailPreferences from "@/components/profile/EmailPreferences";
+import DeleteAccountCard from "@/components/profile/DeleteAccountCard";
 import PointsHistoryList from "@/components/profile/PointsHistoryList";
 import { userProfileCache } from "@/components/utils/cache";
 
@@ -670,6 +671,8 @@ export default function Profile() {
             />
           </CardContent>
         </Card>
+
+        {isOwnProfile && <DeleteAccountCard />}
 
       </div>
     </div>);

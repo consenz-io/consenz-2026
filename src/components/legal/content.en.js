@@ -110,7 +110,7 @@ export const privacy = {
       heading: "9. How long we keep data",
       bullets: [
         "Account data is kept while your account is open. After you delete your account it is removed from active systems and disappears from backups within 30 days, unless the law requires us to keep it longer.",
-        "Your contributions may remain part of a document's history after your account is closed, because a group's decisions and their record belong to the group. Where possible they are shown as written by a deleted user.",
+        "When you delete your account in your profile we delete the account itself, your public profile, your private messages and conversations, your notifications, your points history, your group memberships and invitations, and our email delivery logs. Your proposals, comments and votes stay in the documents as they were given, detached from your identity and shown as written by a deleted participant: a group's decisions and the record that proves them belong to the group, and removing votes would change results other people relied on. Nothing we keep after deletion identifies you.",
         "Votes, version history and audit records are kept for the life of the document so that results can be verified.",
         "Security and error logs are kept for up to 12 months. Email delivery logs are kept for up to 24 months.",
         "We keep records needed for tax, accounting or legal claims for the period the law sets, even if you ask us to delete them, and delete them when that period ends.",
@@ -133,7 +133,7 @@ export const privacy = {
       bullets: [
         "Access: a copy of the personal data we hold about you, and information about how we use it.",
         "Correction: fixing data that is inaccurate or incomplete. Most of it you can edit yourself in your profile.",
-        "Deletion: deleting your account and the personal data attached to it, subject to the retention rules above.",
+        "Deletion: deleting your account and the personal data attached to it, from your profile or by writing to us, subject to the retention rules above.",
         "Restriction and objection: asking us to limit or stop a particular use, including direct marketing.",
         "Portability: receiving your data in a structured, machine-readable format, or having it sent to another provider where technically possible.",
         "Withdrawing consent: at any time, without affecting the lawfulness of what we did before. Optional email can be switched off in your profile.",
@@ -295,7 +295,7 @@ export const terms = {
       id: "termination",
       heading: "10. Termination",
       paragraphs: [
-        "You may close your account at any time. We may suspend or end your access for a serious or repeated breach of these terms.",
+        "You may close your account at any time, from your profile. Proposals, comments and votes you posted stay in the documents without your name, as described in the privacy policy. We may suspend or end your access for a serious or repeated breach of these terms.",
       ],
     },
     {
