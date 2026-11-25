@@ -183,6 +183,8 @@ export default function NotificationBell({ user }) {
         return '📝';
       case 'section_deleted':
         return '🗑️';
+      case 'admin_group_document_visitors':
+        return '👁️';
       default:
         return '🔔';
     }
