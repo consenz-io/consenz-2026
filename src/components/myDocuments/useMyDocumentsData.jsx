@@ -15,10 +15,14 @@ export function useMyDocumentsData() {
     enabled: !!user?.id,
   });
 
-  const { data: allDocuments = [], isLoading: documentsLoading } = useQuery({
-    queryKey: ['allDocuments'],
-    queryFn: () => base44.entities.Document.list('-created_date'),
-    enabled: !!user?.id,
+  // Only the documents this user created. This used to call Document.list()
+  // with no limit — every document on the platform, with its full description
+  // — just to find the handful the user owns.
+  const { data: createdDocuments = [], isLoading: createdDocsLoading } = useQuery({
+    queryKey: ['myCreatedDocuments', user?.id],
+    queryFn: () => base44.entities.Document.filter({ created_by: user.email }),
+    enabled: !!user?.email,
+    staleTime: 2 * 60 * 1000,
   });
 
   const { data: suggestions = [] } = useQuery({
@@ -56,13 +60,23 @@ export function useMyDocumentsData() {
   const myDocumentIds = useMemo(() => {
     const suggestedDocIds = suggestions.map(s => s.documentId);
     const interactedDocIds = userInteractions.map(ui => ui.documentId);
-    const createdDocIds = allDocuments.filter(d => d.created_by === user?.email).map(d => d.id);
+    const createdDocIds = createdDocuments.map(d => d.id);
     const votedDocIds = votedSuggestions.map(s => s.documentId);
     return [...new Set([...interactedDocIds, ...suggestedDocIds, ...createdDocIds, ...votedDocIds])].sort();
-  }, [suggestions, userInteractions, allDocuments, user?.email, votedSuggestions]);
+  }, [suggestions, userInteractions, createdDocuments, votedSuggestions]);
 
   // Stable string key — prevents cache miss due to array reference change on every render
   const myDocumentIdsKey = useMemo(() => myDocumentIds.join(','), [myDocumentIds]);
+
+  // Fetch just this user's documents by id, instead of the whole collection.
+  const { data: allDocuments = [], isLoading: documentsLoading } = useQuery({
+    queryKey: ['myDocuments', myDocumentIdsKey],
+    queryFn: () => myDocumentIds.length > 0
+      ? base44.entities.Document.filter({ id: { $in: myDocumentIds } })
+      : Promise.resolve([]),
+    enabled: !!user?.id && myDocumentIds.length > 0,
+    staleTime: 2 * 60 * 1000,
+  });
 
   const { data: allSuggestions = [] } = useQuery({
     queryKey: ['allSuggestions', myDocumentIdsKey],
@@ -205,7 +219,7 @@ export function useMyDocumentsData() {
     allSectionVotes,
     votes,
     myVotesCountByDoc,
-    isLoading: interactionsLoading || documentsLoading,
+    isLoading: interactionsLoading || documentsLoading || createdDocsLoading,
     getUnvotedCount,
   };
 }

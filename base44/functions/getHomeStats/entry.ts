@@ -84,13 +84,21 @@ Deno.serve(async (req) => {
         ? await base44.asServiceRole.entities.Group.filter({ id: { $in: memberGroupIds } }).catch(() => [])
         : [];
       for (const g of memberGroups) {
-        if (g.status !== 'private' && g.status !== 'hidden') {
-          verifiedMemberGroupIds.add(g.id);
-          continue;
-        }
-        const { isMember } = await verifyGroupMembership(base44, g, user);
-        if (isMember) verifiedMemberGroupIds.add(g.id);
+        if (g.status !== 'private' && g.status !== 'hidden') verifiedMemberGroupIds.add(g.id);
       }
+      // Verify the private/hidden groups in parallel. Each check issues up to
+      // four sequential queries, so awaiting them one at a time multiplied the
+      // request's latency by the number of private groups the caller belongs to.
+      const restrictedGroups = memberGroups.filter(
+        (g: any) => g.status === 'private' || g.status === 'hidden'
+      );
+      const verifications = await Promise.all(
+        restrictedGroups.map(async (g: any) => ({
+          id: g.id,
+          ...(await verifyGroupMembership(base44, g, user)),
+        }))
+      );
+      for (const v of verifications) if (v.isMember) verifiedMemberGroupIds.add(v.id);
     }
 
     const cacheKey = user ? (isAdmin ? 'admin' : 'user') : 'anonymous';

@@ -10,6 +10,15 @@ import { verifyGroupMembership } from '../../shared/documentAuth.ts';
  *
  * Only the final { groupId: count } map is sent to the client.
  */
+const CACHE_TTL_MS = 60 * 1000;
+const countsCache = new Map<string, { counts: Record<string, number>; expiresAt: number }>();
+
+function cacheCounts(key: string, counts: Record<string, number>) {
+  // Bound the map: keys are group-set combinations, which stay few, but never
+  // let it grow without limit in a long-lived isolate.
+  if (countsCache.size > 200) countsCache.clear();
+  countsCache.set(key, { counts, expiresAt: Date.now() + CACHE_TTL_MS });
+}
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -34,22 +43,37 @@ export default async function(req) {
     // verified with provenance via verifyGroupMembership.
     const groups = await svc.entities.Group.filter({ id: { $in: groupIds } }, null, 1000);
     const isAdmin = user.role === 'admin';
+    const groupById = new Map(groups.map((g: any) => [g.id, g]));
     const authorizedGroupIds: string[] = [];
+    const restrictedGroups: any[] = [];
     for (const gid of groupIds) {
-      const group = groups.find(g => g.id === gid);
+      const group = groupById.get(gid);
       if (!group) continue;
-      if (isAdmin || group.status === 'public') {
-        authorizedGroupIds.push(gid);
-        continue;
-      }
-      const { isMember } = await verifyGroupMembership(base44, group, user);
-      if (isMember) authorizedGroupIds.push(gid);
+      if (isAdmin || group.status === 'public') authorizedGroupIds.push(gid);
+      else restrictedGroups.push(group);
     }
+    // Verify restricted groups in parallel — each check is up to four
+    // sequential queries, so a serial loop scaled latency with the number of
+    // private/hidden groups the caller belongs to.
+    const verifications = await Promise.all(
+      restrictedGroups.map(async (group: any) => ({
+        id: group.id,
+        ...(await verifyGroupMembership(base44, group, user)),
+      }))
+    );
+    for (const v of verifications) if (v.isMember) authorizedGroupIds.push(v.id);
     if (authorizedGroupIds.length === 0) {
       return Response.json({ counts: {} });
     }
-    // From here on, only authorized groups are touched.
-    const authorizedSet = new Set(authorizedGroupIds);
+
+    // Counts depend only on the authorized group set, not on who asked, so a
+    // short TTL cache amortizes the seven table scans across every user viewing
+    // the same groups. Authorization is still re-checked per request above.
+    const cacheKey = [...authorizedGroupIds].sort().join(',');
+    const cached = countsCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return Response.json({ counts: cached.counts });
+    }
 
     // Step 1: Documents for these groups (just IDs + groupId)
     const documents = await svc.entities.Document.filter(
@@ -71,6 +95,7 @@ export default async function(req) {
         }
       }
       sets.forEach((s, gid) => { counts[gid] = s.size; });
+      cacheCounts(cacheKey, counts);
       return Response.json({ counts });
     }
 
@@ -188,6 +213,7 @@ export default async function(req) {
 
     const counts = {};
     groupSets.forEach((s, gid) => { counts[gid] = s.size; });
+    cacheCounts(cacheKey, counts);
 
     return Response.json({ counts });
   } catch (error) {
