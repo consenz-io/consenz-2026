@@ -154,7 +154,9 @@ export default async function(req) {
         translations: buildTranslations(titleKey, messageKey, replacements),
         relatedEntityId: interaction.documentId,
         relatedEntityType: 'document',
-        actionUrl: `/documentview?id=${interaction.documentId}`,
+        // The notification is about a person, so it opens that person's profile
+        // rather than the document they opened or joined.
+        actionUrl: `/Profile?userId=${interaction.userId}`,
         read: false,
       };
     };
