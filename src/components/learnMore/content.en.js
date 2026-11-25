@@ -288,12 +288,12 @@ const en = {
       hint: "The points place the document in the middle: open to everyone's proposals, without being flooded by them.",
       markers: [
         {
-          label: "Without points",
-          text: "Every proposal goes in immediately. Support scatters across versions of the same change, and the document struggles to move forward.",
+          label: "Noise",
+          text: "Without points every proposal goes in immediately. Support scatters across versions of the same change, and the document struggles to move forward.",
         },
         {
-          label: "With points",
-          text: "Every participant can still propose, but each proposal has a price, so people propose what really matters and spend their attention voting on the rest.",
+          label: "Signal",
+          text: "Points put a price on every proposal, so people propose what really matters and spend their attention voting on the rest. What the community wants becomes visible.",
         },
       ],
     },
