@@ -34,7 +34,7 @@ export function useDocumentData(documentId) {
     placeholderData: keepPreviousData,
   });
 
-  const { data: sections = [], isLoading: sectionsLoading } = useQuery({
+  const { data: sections = [], isLoading: sectionsLoading, isPlaceholderData: sectionsStale } = useQuery({
     queryKey: ['sections', documentId],
     queryFn: () => base44.entities.Section.filter({ documentId }, 'order', 1000),
     enabled: !!documentId,
@@ -47,7 +47,7 @@ export function useDocumentData(documentId) {
     placeholderData: keepPreviousData,
   });
 
-  const { data: suggestions = [], isLoading: suggestionsLoading } = useQuery({
+  const { data: suggestions = [], isLoading: suggestionsLoading, isPlaceholderData: suggestionsStale } = useQuery({
     queryKey: ['suggestions', documentId],
     queryFn: async () => {
       if (!documentId) return [];
@@ -66,19 +66,12 @@ export function useDocumentData(documentId) {
   const { data: aggregatedData } = useQuery({
     queryKey: ['documentAggregatedData', documentId],
     queryFn: async () => {
-      // Reuse cached sections/suggestions if available, otherwise fetch fresh.
-      // Falls back to fresh fetch to handle the case where a new section was created
-      // and the cache hasn't caught up yet.
-      const cachedSuggestions = queryClient.getQueryData(['suggestions', documentId]);
-      const cachedSections = queryClient.getQueryData(['sections', documentId]);
-      const [allSuggestions, allSections] = await Promise.all([
-        cachedSuggestions
-          ? Promise.resolve(cachedSuggestions)
-          : base44.entities.Suggestion.filter({ documentId }, '-created_date', 1000).catch(() => []),
-        cachedSections
-          ? Promise.resolve(cachedSections)
-          : base44.entities.Section.filter({ documentId }, 'order').catch(() => []),
-      ]);
+      // Reuse the section/suggestion lists the queries above already loaded.
+      // Reading them from the cache instead used to miss on a cold page load
+      // (both queries were still in flight), so the same 1,000 sections and
+      // 1,000 suggestions — full HTML included — were downloaded a second time.
+      const allSuggestions = suggestions;
+      const allSections = sections;
       const suggestionIds = allSuggestions.map(s => s.id);
       const sectionIds = allSections.map(s => s.id);
 
@@ -121,7 +114,10 @@ export function useDocumentData(documentId) {
 
       return { votes, users: publicProfiles, publicProfiles, args, comments, sectionVotes };
     },
-    enabled: !!documentId,
+    // Wait for this document's own sections/suggestions. `isPlaceholderData`
+    // covers the moment after switching documents, when the previous
+    // document's lists are still on screen.
+    enabled: !!documentId && !sectionsLoading && !suggestionsLoading && !sectionsStale && !suggestionsStale,
     staleTime: 15 * 1000,   // 15s — balances freshness with avoiding refetch on every mount
     gcTime: 5 * 60 * 1000,
     refetchOnMount: true,

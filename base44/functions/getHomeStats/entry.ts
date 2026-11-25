@@ -26,7 +26,43 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
+// In-flight computations, keyed like the cache. The home page is hit by many
+// visitors at the same moment; without this, every request that arrives right
+// after the cache expires starts its own copy of the same 11 table scans.
+const computeInflight = new Map<string, { promise: Promise<void>; release: () => void }>();
+
+/**
+ * Builds the per-caller response from a cached computation. Shared stats are
+ * identical for everyone; only group/document visibility depends on the caller,
+ * so this filter runs per request and never reuses another user's visibility.
+ */
+function buildResponse(entry: any, isAdmin: boolean, verifiedMemberGroupIds: Set<string>) {
+  const canSeeGroup = (gid: string) =>
+    isAdmin ||
+    verifiedMemberGroupIds.has(gid) ||
+    entry.groupStatusById.get(gid) === 'public';
+
+  const groupParticipantCounts: Record<string, number> = {};
+  for (const [gid, size] of entry.groupParticipantSizes.entries()) {
+    if (canSeeGroup(gid as string)) groupParticipantCounts[gid as string] = size as number;
+  }
+
+  const documentContributorCounts: Record<string, number> = {};
+  for (const [docId, size] of entry.docContributorSizes.entries()) {
+    const gid = entry.docIdToGroupId.get(docId as string);
+    if (gid && !canSeeGroup(gid)) continue;
+    documentContributorCounts[docId as string] = size as number;
+  }
+
+  return Response.json({
+    ...entry.sharedStats,
+    groupParticipantCounts,
+    documentContributorCounts,
+  });
+}
+
 Deno.serve(async (req) => {
+  let releaseKey: string | null = null;
   try {
     const base44 = createClientFromRequest(req);
     // Public app: anonymous visitors get public-only stats (no 401).
@@ -60,31 +96,21 @@ Deno.serve(async (req) => {
     const cacheKey = user ? (isAdmin ? 'admin' : 'user') : 'anonymous';
     const cached = statsCache.get(cacheKey);
     if (cached && Date.now() < cached.expiresAt) {
-      // Cache hit — shared stats are reused, but per-caller visibility
-      // (groupParticipantCounts, documentContributorCounts) is recomputed
-      // from the caller's own verified memberships so private-group counts
-      // never leak from another user's cached response.
-      const canSeeGroup = (gid: string) =>
-        isAdmin ||
-        verifiedMemberGroupIds.has(gid) ||
-        cached.groupStatusById.get(gid) === 'public';
+      return buildResponse(cached, isAdmin, verifiedMemberGroupIds);
+    }
 
-      const groupParticipantCounts: Record<string, number> = {};
-      for (const [gid, size] of cached.groupParticipantSizes.entries()) {
-        if (canSeeGroup(gid as string)) groupParticipantCounts[gid as string] = size as number;
-      }
-      const documentContributorCounts: Record<string, number> = {};
-      for (const [docId, size] of cached.docContributorSizes.entries()) {
-        const gid = cached.docIdToGroupId.get(docId as string);
-        if (gid && !canSeeGroup(gid)) continue;
-        documentContributorCounts[docId as string] = size as number;
-      }
-
-      return Response.json({
-        ...cached.sharedStats,
-        groupParticipantCounts,
-        documentContributorCounts,
-      });
+    // Single flight — if another request is already recomputing this key, wait
+    // for it and reuse its result instead of repeating the scans in parallel.
+    const inFlight = computeInflight.get(cacheKey);
+    if (inFlight) {
+      await inFlight.promise;
+      const fresh = statsCache.get(cacheKey);
+      if (fresh) return buildResponse(fresh, isAdmin, verifiedMemberGroupIds);
+    } else {
+      let release!: () => void;
+      const promise = new Promise<void>((resolve) => { release = resolve; });
+      computeInflight.set(cacheKey, { promise, release });
+      releaseKey = cacheKey;
     }
 
     const [
@@ -266,8 +292,13 @@ Deno.serve(async (req) => {
     // cache so private-group counts never leak across users.
     const groupParticipantSizes = new Map();
     groupParticipantSets.forEach((idSet, gid) => {
-      for (const p of publicProfiles) {
-        if (p.userId && p.email && idSet.has(p.userId)) idSet.delete(p.email);
+      // Walk the set, not every profile: this was O(groups × all users) — with
+      // 50 groups and a few thousand profiles that is hundreds of thousands of
+      // iterations on every recompute. Now it is O(entries in the set).
+      for (const key of idSet) {
+        if (typeof key !== 'string' || !key.includes('@')) continue;
+        const uid = emailToUserId.get(key);
+        if (uid && idSet.has(uid)) idSet.delete(key);
       }
       groupParticipantSizes.set(gid, idSet.size);
     });
@@ -343,24 +374,9 @@ Deno.serve(async (req) => {
       docContributorSizes.set(docId, set.size);
     });
 
-    // ── Per-caller visibility filter (runs on every request, never cached) ──
+    // Per-caller visibility filtering now lives in buildResponse(), so the
+    // cached entry only stores raw, unfiltered sizes.
     const groupStatusById = new Map(groups.map(g => [g.id, g.status]));
-    const canSeeGroup = (gid) =>
-      isAdmin ||
-      verifiedMemberGroupIds.has(gid) ||
-      groupStatusById.get(gid) === 'public';
-
-    const groupParticipantCounts = {};
-    groupParticipantSizes.forEach((size, gid) => {
-      if (canSeeGroup(gid)) groupParticipantCounts[gid] = size;
-    });
-
-    const documentContributorCounts = {};
-    docContributorSizes.forEach((size, docId) => {
-      const gid = docIdToGroupId.get(docId);
-      if (gid && !canSeeGroup(gid)) return;
-      documentContributorCounts[docId] = size;
-    });
 
     const sharedStats = {
       documentsCount: documents.length,
@@ -372,21 +388,25 @@ Deno.serve(async (req) => {
 
     // Cache shared stats + raw size maps (server-side only, never sent
     // unfiltered to any client). Per-caller filtering runs on every request.
-    statsCache.set(cacheKey, {
+    const entry = {
       sharedStats,
       groupParticipantSizes,
       docContributorSizes,
       docIdToGroupId,
       groupStatusById,
       expiresAt: Date.now() + CACHE_TTL_MS,
-    });
+    };
+    statsCache.set(cacheKey, entry);
 
-    return Response.json({
-      ...sharedStats,
-      groupParticipantCounts,
-      documentContributorCounts,
-    });
+    return buildResponse(entry, isAdmin, verifiedMemberGroupIds);
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
+  } finally {
+    // Always free the single-flight slot, so a failed computation never
+    // leaves later requests waiting on a promise that will never resolve.
+    if (releaseKey) {
+      computeInflight.get(releaseKey)?.release();
+      computeInflight.delete(releaseKey);
+    }
   }
 });
