@@ -81,7 +81,6 @@ const NotificationItem = React.memo(({
       case 'section_comment': return 'bg-amber-50 border-amber-200';
       case 'suggestion_expiring': return 'bg-orange-50 border-orange-200';
       case 'suggestion_reopened': return 'bg-blue-50 border-blue-200';
-      case 'admin_group_document_visitors': return 'bg-cyan-50 border-cyan-200';
       default: return 'bg-slate-50 border-slate-200';
     }
   };

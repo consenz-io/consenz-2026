@@ -89,7 +89,7 @@ export default async function(req) {
     //     Without this filter an admin is told "X joined the document" about a visitor
     //     who never appears in any participant list.
     const candidateIds = [...new Set(newInteractions.map((i) => i.userId).filter(Boolean))];
-    let participantFlags = newInteractions.map(() => true);
+    let verifiedInteractions = newInteractions;
 
     if (candidateIds.length > 0) {
       const memberships = await sr.entities.GroupMember.filter({
@@ -107,27 +107,28 @@ export default async function(req) {
         return participantCache.get(docId);
       };
 
-      participantFlags = await Promise.all(newInteractions.map(async (interaction) => {
+      const isParticipant = await Promise.all(newInteractions.map(async (interaction) => {
         if (!interaction.userId) return false;
         const groupId = docMap.get(interaction.documentId)?.groupId;
         if (groupId && memberKeys.has(`${groupId}|${interaction.userId}`)) return true;
         const participants = await participantsOf(interaction.documentId);
         return participants.has(interaction.userId);
       }));
+
+      verifiedInteractions = newInteractions.filter((_, idx) => isParticipant[idx]);
     }
 
-    const verifiedInteractions = newInteractions.filter((_, idx) => participantFlags[idx]);
-    // Everyone else only opened the document — reported separately as a visitor.
-    const visitorInteractions = newInteractions.filter((_, idx) => !participantFlags[idx]);
+    if (verifiedInteractions.length === 0) {
+      await sr.entities.User.update(user.id, { lastAdminDigestAt: new Date().toISOString() });
+      return Response.json({ success: true, newParticipants: 0, reason: 'no_new_participants' });
+    }
 
-    // 6. Resolve names (participants and visitors alike)
-    const allIds = [...new Set(newInteractions.map((i) => i.userId).filter(Boolean))];
-    const [participantUsers, participantProfiles] = allIds.length > 0
-      ? await Promise.all([
-        sr.entities.User.filter({ id: { $in: allIds } }),
-        sr.entities.UserPublicProfile.filter({ userId: { $in: allIds } }),
-      ])
-      : [[], []];
+    // 6. Resolve participant names
+    const participantIds = [...new Set(verifiedInteractions.map((i) => i.userId).filter(Boolean))];
+    const [participantUsers, participantProfiles] = await Promise.all([
+      sr.entities.User.filter({ id: { $in: participantIds } }),
+      sr.entities.UserPublicProfile.filter({ userId: { $in: participantIds } }),
+    ]);
 
     const nameFor = (uid) => {
       const profile = participantProfiles.find((p) => p.userId === uid);
@@ -135,9 +136,8 @@ export default async function(req) {
       return profile?.fullName || u?.full_name || 'User';
     };
 
+    // 7. Create one notification per new participant × document
     const userLang = user.preferredLanguage || 'he';
-
-    // 7a. One notification per new participant × document
     const notifications = verifiedInteractions.map((interaction) => {
       const doc = docMap.get(interaction.documentId);
       const participantName = nameFor(interaction.userId);
@@ -157,47 +157,15 @@ export default async function(req) {
       };
     });
 
-    // 7b. One notification per document listing the people who only viewed it
-    const visitorsByDoc = new Map();
-    for (const interaction of visitorInteractions) {
-      if (!interaction.documentId || !interaction.userId) continue;
-      if (!visitorsByDoc.has(interaction.documentId)) visitorsByDoc.set(interaction.documentId, new Set());
-      visitorsByDoc.get(interaction.documentId).add(interaction.userId);
-    }
-
-    const visitorNotifications = Array.from(visitorsByDoc.entries()).map(([docId, uids]) => {
-      const doc = docMap.get(docId);
-      const names = Array.from(uids).map(nameFor).join(', ');
-      const replacements = { names, doc: doc?.title || '' };
-      const translations = buildTranslations('adminVisitorsTitle', 'adminVisitorsMessage', replacements);
-
-      return {
-        userId: user.id,
-        type: 'admin_group_document_visitors',
-        title: t(userLang, 'adminVisitorsTitle', replacements),
-        message: t(userLang, 'adminVisitorsMessage', replacements),
-        translations,
-        relatedEntityId: docId,
-        relatedEntityType: 'document',
-        actionUrl: `/documentview?id=${docId}`,
-        read: false,
-      };
-    });
-
-    const allNotifications = [...notifications, ...visitorNotifications];
-    if (allNotifications.length > 0) {
-      await sr.entities.Notification.bulkCreate(allNotifications);
-      console.log('[ADMIN DIGEST] Created', notifications.length, 'participant and', visitorNotifications.length, 'visitor notifications for admin', user.id);
+    if (notifications.length > 0) {
+      await sr.entities.Notification.bulkCreate(notifications);
+      console.log('[ADMIN DIGEST] Created', notifications.length, 'new-participant notifications for admin', user.id);
     }
 
     // 8. Update lastAdminDigestAt
     await sr.entities.User.update(user.id, { lastAdminDigestAt: new Date().toISOString() });
 
-    return Response.json({
-      success: true,
-      newParticipants: notifications.length,
-      newVisitorNotifications: visitorNotifications.length,
-    });
+    return Response.json({ success: true, newParticipants: notifications.length });
   } catch (error) {
     console.error('[ADMIN DIGEST ERROR]', error);
     return Response.json({ error: error.message }, { status: 500 });
