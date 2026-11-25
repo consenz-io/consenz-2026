@@ -1,6 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { signLogId } from '../../shared/emailTrackingAuth.ts';
-import { signUnsubscribeToken } from '../../shared/emailUnsubscribeToken.ts';
 import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 
 // Sanitize admin-supplied HTML before inserting into email templates.
@@ -134,7 +133,6 @@ Deno.serve(async (req) => {
   // Use a high limit to avoid missing users beyond the default 50-record cap
   const allUsers = await base44.asServiceRole.entities.User.list('-created_date', 10000);
   const registeredEmails = new Set(allUsers.map(u => u.email?.toLowerCase()).filter(Boolean));
-  const userIdByEmail = new Map(allUsers.filter(u => u.email).map(u => [u.email.toLowerCase(), u.id]));
   // Optional mail: anyone who turned email off in their profile is skipped.
   const optedOutEmails = new Set(
     allUsers.filter(u => u.emailOptIn === false).map(u => u.email?.toLowerCase()).filter(Boolean)
@@ -212,21 +210,21 @@ Deno.serve(async (req) => {
       subject: `סיכום פעילות: ${safeTitle}`,
       viewDoc: 'לצפייה במסמך',
       footer: 'מייל זה נשלח אוטומטית על ידי פלטפורמת Consenz.',
-      unsub: 'לא רוצים לקבל מיילים כאלה? אפשר לכבות אותם כאן.',
+      unsub: 'לא רוצים לקבל מיילים כאלה? אפשר לכבות אותם בהגדרות הפרופיל.',
       sentBy: `נשלח על ידי ${safeSenderName}`,
     },
     ar: {
       subject: `ملخص النشاط: ${safeTitle}`,
       viewDoc: 'عرض الوثيقة',
       footer: 'تم إرسال هذا البريد الإلكتروني تلقائيًا بواسطة منصة Consenz.',
-      unsub: 'لا ترغب في تلقي رسائل كهذه؟ يمكنك إيقافها من هنا.',
+      unsub: 'لا ترغب في تلقي رسائل كهذه؟ يمكنك إيقافها من إعدادات ملفك.',
       sentBy: `أرسله ${safeSenderName}`,
     },
     en: {
       subject: `Activity Summary: ${safeTitle}`,
       viewDoc: 'View Document',
       footer: 'This email was sent automatically by the Consenz platform.',
-      unsub: 'Do not want emails like this? You can turn them off here.',
+      unsub: 'Do not want emails like this? Turn them off in your profile settings.',
       sentBy: `Sent by ${safeSenderName}`,
     },
   };
@@ -262,7 +260,7 @@ Deno.serve(async (req) => {
   // Separate signatures are generated for the open pixel and for click links so
   // that the event type is bound into each signature — a recipient cannot edit
   // `type=open` to `type=click` on the pixel URL and still pass verification.
-  const buildEmailHtml = (logId, openSig, clickSig, unsubUrl) => {
+  const buildEmailHtml = (logId, openSig, clickSig) => {
     const pixelUrl = `${trackBase}?logId=${logId}&type=open&sig=${openSig}`;
     const trackedDocUrl = trackClick(logId, clickSig, docUrl);
 
@@ -324,7 +322,7 @@ Deno.serve(async (req) => {
             <td style="background:#f8fafc;padding:16px 24px;border-top:1px solid #e2e8f0;text-align:center;">
               <div style="font-size:12px;color:#94a3b8;">${l.footer}</div>
               <div style="font-size:12px;margin-top:8px;">
-                <a href="${unsubUrl}" style="color:#4f46e5;text-decoration:underline;">${l.unsub}</a>
+                <a href="${appBase}/Profile" style="color:#4f46e5;text-decoration:underline;">${l.unsub}</a>
               </div>
             </td>
           </tr>
@@ -375,12 +373,7 @@ Deno.serve(async (req) => {
       const [openSig, clickSig] = logId
         ? await Promise.all([signLogId(logId, 'open'), signLogId(logId, 'click')])
         : ['', ''];
-      // One opt-out link per recipient: the signed token identifies this
-      // account, so the link works in any browser without signing in.
-      const recipientUserId = userIdByEmail.get(email) || '';
-      const unsubToken = await signUnsubscribeToken(recipientUserId, email);
-      const unsubUrl = unsubToken ? `${appBase}/unsubscribe#token=${unsubToken}` : `${appBase}/Profile`;
-      const emailHtml = buildEmailHtml(logId || 'unknown', openSig, clickSig, unsubUrl);
+      const emailHtml = buildEmailHtml(logId || 'unknown', openSig, clickSig);
       // Route ALL sends through Core.SendEmail — the platform's content
       // screening and recipient-hygiene provide server-side sanitization
       // and anti-abuse controls that the bypassable regex sanitizer and

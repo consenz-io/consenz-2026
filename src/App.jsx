@@ -7,7 +7,7 @@ import VisualEditAgent from '@/lib/VisualEditAgent'
 import CookieConsent from '@/components/consent/CookieConsent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -21,7 +21,6 @@ import Messages from './pages/Messages';
 import TranslationReview from './pages/TranslationReview';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
-import Unsubscribe from './pages/Unsubscribe';
 
 // Clear cache - EmailLogs has been removed
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -38,6 +37,15 @@ const PROTECTED_PAGES = new Set([
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
+
+// A protected page opened while signed out sends the visitor to login and then
+// straight back to it, so a link from an email (the profile page, for example)
+// lands where it promised.
+const LoginRedirect = () => {
+  const location = useLocation();
+  const returnTo = encodeURIComponent(location.pathname + location.search);
+  return <Navigate to={`/login?returnTo=${returnTo}`} replace />;
+};
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings } = useAuth();
@@ -73,8 +81,6 @@ const AuthenticatedApp = () => {
           </LayoutWrapper>
         }
       />
-      {/* Reached from the opt-out link in emails — public and outside the app nav */}
-      <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route
         path="/TermsOfUse"
         element={
@@ -96,7 +102,7 @@ const AuthenticatedApp = () => {
       ))}
 
       {/* Protected pages — require login */}
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+      <Route element={<ProtectedRoute unauthenticatedElement={<LoginRedirect />} />}>
         {Object.entries(Pages).filter(([path]) => PROTECTED_PAGES.has(path)).map(([path, Page]) => (
           <Route
             key={path}
