@@ -146,6 +146,13 @@ Deno.serve(async (req) => {
     for (const a of agreements) { addParticipant(a.userId, a.userEmail); }
     for (const s of suggestions) { addParticipant(s.created_by_id, s.created_by); }
 
+    // Every registered user counts as a participant of the platform, so someone
+    // who just signed up appears in the home page's general participants list
+    // even before they vote, comment or propose anything.
+    for (const p of publicProfiles) {
+      if (p.userId) uniqueParticipants.add(p.userId);
+    }
+
     // Collapse: if a user's userId is already counted, remove their email key too
     // (prevents double-count when email-only records didn't resolve to userId)
     for (const p of publicProfiles) {

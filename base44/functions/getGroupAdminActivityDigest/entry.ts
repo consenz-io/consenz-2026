@@ -90,6 +90,7 @@ export default async function(req) {
     //     who never appears in any participant list.
     const candidateIds = [...new Set(newInteractions.map((i) => i.userId).filter(Boolean))];
     let verifiedInteractions = newInteractions;
+    let viewerInteractions: any[] = [];
 
     if (candidateIds.length > 0) {
       const memberships = await sr.entities.GroupMember.filter({
@@ -116,15 +117,19 @@ export default async function(req) {
       }));
 
       verifiedInteractions = newInteractions.filter((_, idx) => isParticipant[idx]);
+      // Everyone else only opened the document — reported separately as a viewer.
+      viewerInteractions = newInteractions.filter((_, idx) => !isParticipant[idx]);
     }
 
-    if (verifiedInteractions.length === 0) {
+    if (verifiedInteractions.length === 0 && viewerInteractions.length === 0) {
       await sr.entities.User.update(user.id, { lastAdminDigestAt: new Date().toISOString() });
-      return Response.json({ success: true, newParticipants: 0, reason: 'no_new_participants' });
+      return Response.json({ success: true, newParticipants: 0, newViewers: 0, reason: 'no_new_activity' });
     }
 
-    // 6. Resolve participant names
-    const participantIds = [...new Set(verifiedInteractions.map((i) => i.userId).filter(Boolean))];
+    // 6. Resolve names for both participants and viewers
+    const participantIds = [...new Set(
+      [...verifiedInteractions, ...viewerInteractions].map((i) => i.userId).filter(Boolean)
+    )];
     const [participantUsers, participantProfiles] = await Promise.all([
       sr.entities.User.filter({ id: { $in: participantIds } }),
       sr.entities.UserPublicProfile.filter({ userId: { $in: participantIds } }),
@@ -136,36 +141,44 @@ export default async function(req) {
       return profile?.fullName || u?.full_name || 'User';
     };
 
-    // 7. Create one notification per new participant × document
+    // 7. One notification per new participant × document, plus one per viewer × document
     const userLang = user.preferredLanguage || 'he';
-    const notifications = verifiedInteractions.map((interaction) => {
+    const buildNotification = (interaction, type, titleKey, messageKey) => {
       const doc = docMap.get(interaction.documentId);
-      const participantName = nameFor(interaction.userId);
-      const replacements = { name: participantName, doc: doc?.title || '' };
-      const translations = buildTranslations('adminNewParticipantTitle', 'adminNewParticipantMessage', replacements);
-
+      const replacements = { name: nameFor(interaction.userId), doc: doc?.title || '' };
       return {
         userId: user.id,
-        type: 'admin_group_new_participant',
-        title: t(userLang, 'adminNewParticipantTitle', replacements),
-        message: t(userLang, 'adminNewParticipantMessage', replacements),
-        translations,
+        type,
+        title: t(userLang, titleKey, replacements),
+        message: t(userLang, messageKey, replacements),
+        translations: buildTranslations(titleKey, messageKey, replacements),
         relatedEntityId: interaction.documentId,
         relatedEntityType: 'document',
         actionUrl: `/documentview?id=${interaction.documentId}`,
         read: false,
       };
-    });
+    };
+
+    const notifications = [
+      ...verifiedInteractions.map((i) =>
+        buildNotification(i, 'admin_group_new_participant', 'adminNewParticipantTitle', 'adminNewParticipantMessage')),
+      ...viewerInteractions.map((i) =>
+        buildNotification(i, 'admin_group_document_view', 'adminDocumentViewTitle', 'adminDocumentViewMessage')),
+    ];
 
     if (notifications.length > 0) {
       await sr.entities.Notification.bulkCreate(notifications);
-      console.log('[ADMIN DIGEST] Created', notifications.length, 'new-participant notifications for admin', user.id);
+      console.log('[ADMIN DIGEST] Created', notifications.length, 'notifications for admin', user.id);
     }
 
     // 8. Update lastAdminDigestAt
     await sr.entities.User.update(user.id, { lastAdminDigestAt: new Date().toISOString() });
 
-    return Response.json({ success: true, newParticipants: notifications.length });
+    return Response.json({
+      success: true,
+      newParticipants: verifiedInteractions.length,
+      newViewers: viewerInteractions.length,
+    });
   } catch (error) {
     console.error('[ADMIN DIGEST ERROR]', error);
     return Response.json({ error: error.message }, { status: 500 });
