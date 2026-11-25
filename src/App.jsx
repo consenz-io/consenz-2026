@@ -21,6 +21,7 @@ import Messages from './pages/Messages';
 import TranslationReview from './pages/TranslationReview';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
+import Unsubscribe from './pages/Unsubscribe';
 
 // Clear cache - EmailLogs has been removed
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -72,6 +73,8 @@ const AuthenticatedApp = () => {
           </LayoutWrapper>
         }
       />
+      {/* Reached from the opt-out link in emails — public and outside the app nav */}
+      <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route
         path="/TermsOfUse"
         element={
