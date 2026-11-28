@@ -58,7 +58,7 @@ export default async function(req) {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { type, groupId, language, memberEmail, memberName } = await req.json();
+    const { type, groupId, memberEmail, memberName } = await req.json();
     if (!groupId) return Response.json({ error: 'Missing groupId' }, { status: 400 });
 
     const [group, members] = await Promise.all([
@@ -68,7 +68,9 @@ export default async function(req) {
     if (!group) return Response.json({ error: 'Group not found' }, { status: 404 });
 
     const baseUrl = APP_BASE_URL;
-    const lang = language || 'he';
+    // Every message goes out in the recipient's saved notification language,
+    // never the sender's UI language. English is the app default.
+    const pickLang = (u) => (['he', 'ar', 'en'].includes(u?.preferredLanguage) ? u.preferredLanguage : 'en');
     const userName = user.full_name || user.email?.split('@')[0] || 'משתמש';
 
     if (type === 'join_request') {
@@ -106,15 +108,20 @@ export default async function(req) {
       // Strip HTML tags from group name for the subject line — prevents
       // attacker-controlled markup from appearing in the email subject.
       const safeGroupName = String(group.name || '').replace(/<[^>]*>/g, '').trim() || 'Group';
-      const { subject, body } = joinRequestEmail(lang, userName, user.email, safeGroupName, manageUrl);
-
       await base44.asServiceRole.entities.GroupJoinRequest.create({
         groupId, userId: user.id, userEmail: user.email, userName, status: 'pending',
       });
-      await Promise.all(adminUsers.map(admin =>
-        base44.asServiceRole.integrations.Core.SendEmail({ to: admin.email, subject, body })
-      ));
-      return Response.json({ sent: adminUsers.length });
+
+      // One message per admin, in that admin's own language, and only to those
+      // who left email on — an explicit opt-out is respected here.
+      const recipients = adminUsers.filter(admin => admin.emailOptIn !== false);
+      await Promise.all(recipients.map(admin => {
+        const { subject, body } = joinRequestEmail(pickLang(admin), userName, user.email, safeGroupName, manageUrl);
+        return base44.asServiceRole.integrations.Core.SendEmail({
+          to: admin.email, subject, body, category: 'transactional',
+        });
+      }));
+      return Response.json({ sent: recipients.length });
     }
 
     if (type === 'member_added') {
@@ -154,10 +161,17 @@ export default async function(req) {
         return Response.json({ error: 'Recipient is not a member of this group' }, { status: 403 });
       }
 
+      // Respect an explicit opt-out — no email to a member who turned it off.
+      if (memberUser.emailOptIn === false) {
+        return Response.json({ sent: 0, skipped: 'opted_out' });
+      }
+
       const adminName = user.full_name || 'מנהל';
       const name = memberName || memberUser.full_name || memberEmail.split('@')[0];
-      const { subject, body } = memberAddedEmail(lang, name, adminName, group.name);
-      await base44.asServiceRole.integrations.Core.SendEmail({ to: memberEmail, subject, body });
+      const { subject, body } = memberAddedEmail(pickLang(memberUser), name, adminName, group.name);
+      await base44.asServiceRole.integrations.Core.SendEmail({
+        to: memberUser.email, subject, body, category: 'transactional',
+      });
       return Response.json({ sent: 1 });
     }
 

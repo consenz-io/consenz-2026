@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { groupId, email, language } = await req.json();
+    const { groupId, email } = await req.json();
 
     if (!groupId || !email) {
       return Response.json({ error: 'Missing or invalid parameters' }, { status: 400 });
@@ -36,8 +36,8 @@ Deno.serve(async (req) => {
     const matchingUsers = await base44.asServiceRole.entities.User.filter({
       email: { $in: [email.trim(), normalizedEmail] },
     });
-    const isRegistered = matchingUsers.some(u => u.email?.toLowerCase().trim() === normalizedEmail);
-    if (!isRegistered) {
+    const recipientUser = matchingUsers.find(u => u.email?.toLowerCase().trim() === normalizedEmail);
+    if (!recipientUser) {
       return Response.json({ error: 'Recipient is not a registered app user. Use the platform invite mechanism to invite new users.' }, { status: 403 });
     }
 
@@ -119,7 +119,9 @@ Deno.serve(async (req) => {
     // the "Join" button at a phishing page from the app's verified sender domain.
     const baseUrl = 'https://consenz.net';
     const inviteUrl = `${baseUrl}?groupInvite=${token}`;
-    const lang = language || 'he';
+    // The invitation is written in the recipient's saved notification language,
+    // not the sender's UI language. English is the app default.
+    const lang = ['he', 'ar', 'en'].includes(recipientUser.preferredLanguage) ? recipientUser.preferredLanguage : 'en';
     const isRTL = lang === 'he' || lang === 'ar';
     const senderName = user.full_name || (lang === 'he' ? 'מישהו' : lang === 'ar' ? 'شخص ما' : 'Someone');
     const safeGroupName = escapeHtml(groupName);
@@ -174,10 +176,11 @@ Deno.serve(async (req) => {
     `;
 
     await base44.asServiceRole.integrations.Core.SendEmail({
-      to: email,
+      to: recipientUser.email,
       subject: c.subject,
       body: emailHtml,
       from_name: 'Consenz',
+      category: 'transactional',
     });
 
     return Response.json({ success: true });

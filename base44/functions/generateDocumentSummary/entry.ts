@@ -10,16 +10,26 @@ import { checkDocumentAuthorization } from '../../shared/documentAuth.ts';
 const RATE_LIMIT = 3;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const DAILY_LIMIT = 10;
+// The same document cannot be summarized twice within this window.
+const PER_DOC_COOLDOWN_MS = 15 * 60 * 1000;
 
 function getTodayKey() {
   const d = new Date();
   return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
 }
 
-async function checkRateLimit(sr, userId) {
+async function checkRateLimit(sr, userId, documentId, isRefinement) {
   const records = await sr.entities.User.filter({ id: userId });
   const state = records[0]?.docSummaryRate || {};
   const now = Date.now();
+
+  // Asking again for the same document buys nothing and would still spend a
+  // model call, so it is refused before any quota is consumed. Refining the
+  // summary with new instructions is a different request and stays allowed.
+  const lastDocAt = state.lastDocumentAt ? new Date(state.lastDocumentAt).getTime() : 0;
+  if (!isRefinement && documentId && state.lastDocumentId === documentId && lastDocAt > 0 && now - lastDocAt < PER_DOC_COOLDOWN_MS) {
+    return { allowed: false, sameDocument: true, remainingMs: PER_DOC_COOLDOWN_MS - (now - lastDocAt) };
+  }
 
   const windowStart = state.windowStart ? new Date(state.windowStart).getTime() : 0;
   const inWindow = windowStart > 0 && now - windowStart < RATE_WINDOW_MS;
@@ -41,6 +51,8 @@ async function checkRateLimit(sr, userId) {
       windowCount: windowCount + 1,
       day: today,
       dayCount: dayCount + 1,
+      lastDocumentId: documentId || state.lastDocumentId,
+      lastDocumentAt: new Date(now).toISOString(),
     },
   };
 }
@@ -51,8 +63,16 @@ Deno.serve(async (req) => {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const rl = await checkRateLimit(base44.asServiceRole, user.id);
+  const { documentId, additionalInstructions, language } = await req.json();
+  if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });
+
+  const isRefinement = String(additionalInstructions || '').trim().length > 0;
+  const rl = await checkRateLimit(base44.asServiceRole, user.id, documentId, isRefinement);
   if (!rl.allowed) {
+    if (rl.sameDocument) {
+      const mins = Math.max(1, Math.ceil(rl.remainingMs / 60000));
+      return Response.json({ error: `This document was summarized a few minutes ago. Try again in ${mins} minute(s).` }, { status: 429 });
+    }
     if (rl.daily) {
       return Response.json({ error: 'Daily summary limit exceeded. Try again tomorrow.' }, { status: 429 });
     }
@@ -62,9 +82,6 @@ Deno.serve(async (req) => {
   // Count the attempt before the model call, so a failure mid-generation
   // cannot be used to skip the cap.
   await base44.asServiceRole.entities.User.update(user.id, { docSummaryRate: rl.next });
-
-  const { documentId, additionalInstructions, language } = await req.json();
-  if (!documentId) return Response.json({ error: 'Missing documentId' }, { status: 400 });
 
   // appBaseUrl is intentionally NOT read from the request body — a client-
   // supplied value could point links at an attacker domain. Use a trusted
